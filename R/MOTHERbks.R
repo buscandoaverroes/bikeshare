@@ -31,7 +31,6 @@
 
   # install.packages(dplyr)
 
-  library(dplyr)
   library(stargazer)
   library(tidyverse)
   library(readstata13)
@@ -58,7 +57,7 @@
                               #     2         6k
 
 
-  user <- 2
+  user <- 1
 
 
 
@@ -125,27 +124,27 @@
 
   # import
   if (s1 == 1) {
-    source(file.path(analysis, "import.R"))
+    source(file.path(scripts, "import.R"))
   }
 
   # construct
   if (s2 == 1) {
-    source(file.path(analysis, "construct.R"))
+    source(file.path(scripts, "construct.R"))
   }
 
   # gps
   if (s3 == 1) {
-    source(file.path(analysis, "gps.R"))
+    source(file.path(scripts, "gps.R"))
   }
 
   # plot
   if (s4 == 1) {
-    source(file.path(analysis, "plot.R"))
+    source(file.path(scripts, "plot.R"))
   }
 
   # leaf
   if (s4 == 1) {
-    source(file.path(analysis, "leaf.R"))
+    source(file.path(scripts, "leaf.R"))
   }
 
 

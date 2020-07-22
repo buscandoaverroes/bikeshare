@@ -19,10 +19,3 @@
                          radius = 4,
                          stroke = FALSE, fillOpacity = 0.75) #popup is when you click
       m
-      
-      
-      # urbn mapr 
-      counties <- get_urbn_map("counties", sf = TRUE)
-      counties %>%
-        ggplot(aes()) + 
-        geom(sf)

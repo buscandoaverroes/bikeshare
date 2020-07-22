@@ -47,13 +47,6 @@ ggplot(data = dlyrd) +
     
    
     
-    #  stack year by dif color: y = median minutes, split by member
-    # ggplot(data = dlyrd) + 
-    #   geom_smooth(mapping = aes(x = doystart, y = med_min, color = year  )) + 
-    #   facet_wrap(~ m)
-    
-    
-    
 # by hour, split by year 
     
     # y= med minutes

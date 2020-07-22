@@ -8,7 +8,6 @@
 
   library(sp)
   library(stringi)
-  library(dplyr)
   library(stringdist)
   library(GADMTools)
   library(rgeos)
@@ -17,18 +16,22 @@
                             #-------------#
                             # load data  # ----
                             #-------------#
-
+      imp <- 0
+      k   <- 1 
+      f   <- 0
+      
+      if (imp == 1) {
 
       bks <- readRDS(file.path(MotherData, "motherdata.Rda"))
               # load full dataset
 
+      }
 
-
-
+        
                             #-------------#
                             # clean+clpse # ----
                             #-------------#
-
+  if (k == 1) {
   # 1. obtain a full list of station name/id numbers
 
     # ensure only 1 unique value of station name string for each station id
@@ -135,7 +138,6 @@
 
       # import
       key <- read.csv(file.path(MotherData, "gpskey-in.csv")) %>%
-        select(-match, -X) %>%
         rename(stn = startstation, lat = start_lat, lng = start_lng)
 
 
@@ -147,13 +149,13 @@
 
 
 
-
-
+  } # close switch
+  
                             #-------------#
                             # add features # ----
                             #-------------#
 
-
+      if (f == 1) {
       #ie state, county, near metro, etc
 
       # import shp files : gadm_sf_import_shp
@@ -222,7 +224,7 @@
 
 
 
-
+      } # close switch
 
                             #-------------#
                             # map to dtas # ----
