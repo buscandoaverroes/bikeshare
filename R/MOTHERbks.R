@@ -27,22 +27,34 @@
 #                  readr
 #                  )
 #
-                              # doParallel
-
+      # library(stargazer)
+      # library(tidyverse)
+      # library(readstata13)
+      # library(reshape2)
+      # library(data.table)
+      # library(foreach)
+      # library(leaflet)
+      # library(doParallel)
+      # library(parallel)
+      # library(parallel)
+      # library(MASS)
+                              
   # install.packages(dplyr)
-
-  library(stargazer)
+                              
+  library(pacman)  
   library(tidyverse)
   library(readstata13)
-  # library(reshape2)
-  library(data.table)
-  library(foreach)
   library(leaflet)
-  # library(doParallel)
-  # library(parallel)
-  # library(parallel)
-   library(MASS)
-
+  library(sp)
+  library(tmap)
+                              
+      pacman::p_load(tidyverse,
+               readstata13,
+               data.table,
+               leaflet,
+               sp,
+               tmap)
+ 
 
 
 
