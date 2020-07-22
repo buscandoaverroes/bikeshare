@@ -155,4 +155,4 @@
   # add "other" dummy var -- maybe this incldues the low-cost fare
   # gen 30 min or less var dummy
 
-# credits:  Apple Maps, OpenStreetMaps, GADM
+# credits: OpenStreetMaps, GADM
