@@ -41,13 +41,17 @@
                               
   # install.packages(dplyr)
                               
-  library(pacman)  
-  library(tidyverse)
-  library(readstata13)
-  library(leaflet)
-  library(sp)
-  library(tmap)
+  # library(pacman)  
+  # library(tidyverse)
+  # library(readstata13)
+  # library(leaflet)
+  # library(sp)
+  # library(tmap)
+  # library(data.table)
+  #     
                               
+                              
+ # ----                             
       pacman::p_load(tidyverse,
                readstata13,
                data.table,
@@ -129,7 +133,7 @@
                                     #-------------#
 
             s1 <- 0   # import          imports from stata
-            s2 <- 1   # construct:      takes bks.Rda and makes other files
+            s2 <- 0   # construct:      takes bks.Rda and makes other files
             s3 <- 1   # gps             constructs all gps things
             s3 <- 0   # plot              tbd
             s4 <- 0   # leaf
@@ -167,3 +171,4 @@
   # gen 30 min or less var dummy
 
 # credits: OpenStreetMaps, GADM
+# ideas: map to a/g mobility data (use package covid19mobility?)

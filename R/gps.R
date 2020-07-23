@@ -16,22 +16,19 @@
                             #-------------#
                             # load data  # ----
                             #-------------#
-      imp <- 0
+      imp <- 1
       k   <- 1 
       f   <- 0
       
-      if (imp == 1) {
-
       bks <- readRDS(file.path(MotherData, "motherdata.Rda"))
               # load full dataset
 
-      }
 
         
                             #-------------#
                             # clean+clpse # ----
                             #-------------#
-  if (k == 1) {
+ 
   # 1. obtain a full list of station name/id numbers
 
     # ensure only 1 unique value of station name string for each station id
@@ -129,7 +126,7 @@
       #                             table = gpskey$startstation,
       #                             nomatch = 0,
       #                             maxDist = 10)
-      # }
+      # 
       #
 
 
@@ -155,31 +152,76 @@
                             # add features # ----
                             #-------------#
 
-      if (f == 1) {
-      #ie state, county, near metro, etc
+     
 
-      # import shp files : gadm_sf_import_shp
-        # note that this just imports the .shp files and makes a gadm_sf object
-
-        # states
-        usa1 <- gadm_sf_loadCountries(dir = file.path(gadm, "gadm36_USA_shp"),
-                           "gadm36_USA_1",
-                           level = 1,
-                           keepall = TRUE)
-
-        usa2 <- gadm_sf_import_shp(dir = file.path(gadm, "gadm36_USA_shp"),
-                                    level = 2,
-                                    keepall = TRUE)
-        # county/city
-        usa2 <- gadm_sf_import_shp(dir = file.path(gadm, "gadm36_USA_shp"),
-                                   "gadm36_USA_2",
-                                   level = 2,
-                                   keepall = TRUE)
-
-
-                # backup, import rds files
-                usa1rds <- readRDS(file.path(gadm, "gadm36_USA_shp/gadm36_USA_2_sf.Rds"))
-          # %%%% check out
+        # load shapefile
+       # us <- st_read(file.path(gadm, 
+       #                         "gadm36_USA_shp"))
+        
+        us <- read_sf(file.path(gadm, 
+                                "gadm36_USA_shp"),
+                      layer = "gadm36_USA_2")
+        
+        va <- filter(.data = us,
+                      us$NAME_1 == "Virginia")
+        
+        alx <- filter(.data = va,
+                      NAME_2 == "Alexandria")
+      
+        
+        # create dataframe with lng lat vars
+        points <- data.frame(lat = c(38.8637, 38.86215, 38.1234),
+                             lng = c(-77.0633, -77.068121, -77.1234))
+        
+        # make a spatial points dataframe 
+        points <- SpatialPointsDataFrame(coords = points[2:1], # original points
+                                           data = points # dataframe
+                                            ) #type of projection proj4string
+        # make a map 
+        tm_shape(us) + tm_borders(us) + 
+          tm_shape(points)
+        
+        #overlay 
+        obj <- over(points, us)
+        
+        
+        
+        
+        
+        
+        ## deviation to learn sf with stock files 
+        nc <- system.file("shape/nc.shp", package = "sf")
+        demo(nc, ask = FALSE, echo = TRUE)
+        plot(st_geometry(nc))
+       # plot(st_geometry(us))
+        plot(nc)
+        plot(nc["PERIMETER"])
+        
+        plot(st_geometry(alx))
+        
+# ----
+      # # import shp files : gadm_sf_import_shp
+      #   # note that this just imports the .shp files and makes a gadm_sf object
+      # 
+      #   # states
+      #   usa1 <- gadm_sf_loadCountries(dir = file.path(gadm, "gadm36_USA_shp"),
+      #                      "gadm36_USA_1",
+      #                      level = 1,
+      #                      keepall = TRUE)
+      # 
+      #   usa2 <- gadm_sf_import_shp(dir = file.path(gadm, "gadm36_USA_shp"),
+      #                               level = 2,
+      #                               keepall = TRUE)
+      #   # county/city
+      #   usa2 <- gadm_sf_import_shp(dir = file.path(gadm, "gadm36_USA_shp"),
+      #                              "gadm36_USA_2",
+      #                              level = 2,
+      #                              keepall = TRUE)
+      # 
+      # 
+      #           # backup, import rds files
+      #           usa1rds <- readRDS(file.path(gadm, "gadm36_USA_shp/gadm36_USA_2_sf.Rds"))
+      #     # %%%% check out
 
       # import the shp files using raster w shpfile we downloaded from gadm
                 #  usa2 <- raster::getData( "GADM",
