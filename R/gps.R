@@ -146,8 +146,7 @@
 
 
 
-  } # close switch
-  
+
                             #-------------#
                             # add features # ----
                             #-------------#
@@ -158,32 +157,59 @@
        # us <- st_read(file.path(gadm, 
        #                         "gadm36_USA_shp"))
         
-        us <- read_sf(file.path(gadm, 
+        us <- st_read(file.path(gadm, 
                                 "gadm36_USA_shp"),
                       layer = "gadm36_USA_2")
         
         va <- filter(.data = us,
                       us$NAME_1 == "Virginia")
         
+        dc <- filter(.data = us,
+                     us$NAME_1 == "District of Columbia")
+        
+        md <- filter(.data = us,
+                     us$NAME_1 == "Maryland")
+        
+        
+        
         alx <- filter(.data = va,
                       NAME_2 == "Alexandria")
-      
+        
+        arl <- filter(.data = va,
+                      NAME_2 == "Arlington")
+        
+        fx  <- filter(.data = va,
+                      NAME_2 == "Fairfax")
+        
+        mty <- filter(.data = md,
+                      NAME_2 == "Montgomery")
+        
+        pg  <- filter(.data = md,
+                     NAME_2 == "Prince George's")
+        
+        dmv <- bind_rows(alx, arl, fx, mty, pg, dc)
+        
+        # create a spatialpolygons object 
+        dmvply <- as(dmv, "Spatial")
+        
         
         # create dataframe with lng lat vars
         points <- data.frame(lat = c(38.8637, 38.86215, 38.1234),
                              lng = c(-77.0633, -77.068121, -77.1234))
         
-        # make a spatial points dataframe 
+        # make a spatial points dataframe(model uses spatialpoints())
         points <- SpatialPointsDataFrame(coords = points[2:1], # original points
-                                           data = points # dataframe
-                                            ) #type of projection proj4string
+                                           data = points, # dataframe
+                                          proj4string = CRS("+init=espg:4326")) #type of projection proj4string
+              # %%% start here. how to I pick an argument for this?? 
+        
         # make a map 
-        tm_shape(us) + tm_borders(us) + 
-          tm_shape(points)
+       # tm_shape(dmv) + tm_borders(dmv)
         
         #overlay 
-        obj <- over(points, us)
-        
+        obj <- sp::over(points, 
+                        dmvply) ## this should be spatialpolygons df 
+        points %over% dmvply
         
         
         
@@ -197,7 +223,7 @@
         plot(nc)
         plot(nc["PERIMETER"])
         
-        plot(st_geometry(alx))
+        plot(st_geometry(dmv))
         
 # ----
       # # import shp files : gadm_sf_import_shp
