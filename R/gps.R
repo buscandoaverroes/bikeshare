@@ -190,17 +190,32 @@
         
         dmv <- bind_rows(alx, arl, fx, mty, pg, dc)
         
+       # store points as sf object 
+        pts     <- st_as_sf(latlong,  ## tell r the object that contains the points
+                            coords = c("lng", "lat"), # tell the point vars
+                            crs = 4326) # tell the crs 
+       # harmonize points 
+        dmv <- st_transform(dmv, crs = st_crs(pts))
+        
+      # overlay
+        pts2 <- mutate(pts, 
+                       inx  = as.integer(st_intersects(pts, dmv)),
+                       name = if_else(is.na(inx), "", dmv$NAME_2[inx]),
+                       state= if_else(is.na(inx), "", dmv$NAME_1[inx])
+        )
+        
+        
+        
+        
+        
         # create a spatialpolygons dataframe 
         #dmvply <- as(dmv, "Spatial")
         arlply <- as(st_geometry(arl), "Spatial")
         arlply2 <- as_Spatial(arl_gp2, IDs = arl_gp2$NAME_2 ) ## this?
         
         
-        # create dataframe with lng lat vars
-        latlong <- data.frame(lat = c(38.8637, 38.86215, 38.1234),
-                             lng = c(-77.0633, -77.068121, -77.1234)
-                             )
-        dimnames(latlong)[[1]] <- c("a", "b", "c")
+       
+        
         
         # make a spatial points dataframe(model uses spatialpoints())
         points   <- SpatialPoints(latlong[2:1])

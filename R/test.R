@@ -8,7 +8,7 @@ usa <- st_read("/Volumes/Al-Hakem-II/other+files/gadm/gadm36_USA_gpkg/gadm36_USA
 arl <- filter(gpusa, gpusa$NAME_1 == "Virginia") %>%
   filter(NAME_2 == "Arlington")
 
-arlply <- as_Spatial(arl, IDs = arl$NAME_2 ) ## this?
+arlply <- as_Spatial(arl, IDs = arl$NAME_2 ) ##
 
 
 
@@ -16,7 +16,7 @@ arlply <- as_Spatial(arl, IDs = arl$NAME_2 ) ## this?
 latlong <- data.frame(lng = c(-77.0633, -77.068121, -77.1234) ,
                       lat = c(38.8637, 38.86215, 38.1234)
                       )
-pts     <- st_as_sf(latlong,  # tell r the object that contains the points
+pts     <- st_as_sf(latlong,  ## tell r the object that contains the points
                     coords = c("lng", "lat"), # tell the point vars
                     crs = 4326) # tell the crs 
 
@@ -30,7 +30,7 @@ pts     <- st_as_sf(latlong,  # tell r the object that contains the points
 
   # do sf_intersect , thx to https://gis.stackexchange.com/questions/282750/identify-polygon-containing-point-with-r-sf-package
   
-pts2 <- mutate(pts,
+pts2 <- mutate(pts, ##
   inx  = as.integer(st_intersects(pts, arl)),
   name = if_else(is.na(inx), "", arl$NAME_2[inx]),
   state= if_else(is.na(inx), "", arl$NAME_1[inx])
