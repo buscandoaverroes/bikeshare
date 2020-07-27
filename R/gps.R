@@ -12,6 +12,7 @@
   library(GADMTools)
   library(rgeos)
   library(raster)
+  library(rgdal)
 
                             #-------------#
                             # load data  # ----
@@ -189,27 +190,45 @@
         
         dmv <- bind_rows(alx, arl, fx, mty, pg, dc)
         
-        # create a spatialpolygons object 
-        dmvply <- as(dmv, "Spatial")
+        # create a spatialpolygons dataframe 
+        #dmvply <- as(dmv, "Spatial")
+        arlply <- as(st_geometry(arl), "Spatial")
+        arlply2 <- as_Spatial(arl_gp2, IDs = arl_gp2$NAME_2 ) ## this?
         
         
         # create dataframe with lng lat vars
-        points <- data.frame(lat = c(38.8637, 38.86215, 38.1234),
-                             lng = c(-77.0633, -77.068121, -77.1234))
+        latlong <- data.frame(lat = c(38.8637, 38.86215, 38.1234),
+                             lng = c(-77.0633, -77.068121, -77.1234)
+                             )
+        dimnames(latlong)[[1]] <- c("a", "b", "c")
         
         # make a spatial points dataframe(model uses spatialpoints())
-        points <- SpatialPointsDataFrame(coords = points[2:1], # original points
+        points   <- SpatialPoints(latlong[2:1])
+        pointsdf <- SpatialPointsDataFrame(coords = points, # original points
                                            data = points, # dataframe
-                                          proj4string = CRS("+init=espg:4326")) #type of projection proj4string
-              # %%% start here. how to I pick an argument for this?? 
-        
+                                          proj4string = CRS(2283))
+                      #type of projection proj4string
+
         # make a map 
        # tm_shape(dmv) + tm_borders(dmv)
+      
+        
+        # harmonize crs Coordinate Reference System: we want epsg 2283
+        crs_data = rgdal::make_EPSG() # makes df of list of epsg codes 
+        st_crs(arl_gp) # get the epsg code for arl 
+        st_set_crs(arl_gp, 2283) # change the crs of an object to 2nd arg
+        arl_gp2 <- st_transform(arl_gp, 2283)
+        
+        st_set_crs(points, 2283)
+        
+        
+        
         
         #overlay 
         obj <- sp::over(points, 
-                        dmvply) ## this should be spatialpolygons df 
-        points %over% dmvply
+                        arlply2,
+                        returnList = TRUE) ## this should be spatialpolygons df 
+        points %over% arlply2
         
         
         
