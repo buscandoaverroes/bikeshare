@@ -5,7 +5,7 @@
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
        library(leaflet)
-       library(urbnmapr)
+       #library(urbnmapr)
        
                             
                             #-------------#
@@ -13,7 +13,7 @@
                             #-------------#
                             
                             
-      m <- leaflet(key) %>%
+      m <- leaflet(stngps) %>%
         addTiles() %>%
         addCircleMarkers(~lng, ~lat, label = ~as.character(stn),
                          radius = 4,

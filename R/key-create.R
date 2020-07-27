@@ -7,9 +7,6 @@
 
 
   library(sp)
-  library(stringi)
-  library(stringdist)
-  library(GADMTools)
   library(rgeos)
   library(raster)
   library(rgdal)
@@ -17,10 +14,7 @@
                             #-------------#
                             # load data  # ----
                             #-------------#
-      imp <- 1
-      k   <- 1 
-      f   <- 0
-      
+
       bks <- readRDS(file.path(MotherData, "motherdata.Rda"))
               # load full dataset
 
@@ -116,90 +110,10 @@
 
 
 
-
-
   # 4. replace gps coordinates for stations that are actually the same w/ sim strings
-
-      # gpskey$match <- vector("double", nrow(gpskey))
-      #
-      # for (i in seq_along(gpskey$startstation)) {
-      #   gpskey$match[i] <- amatch(gpskey$startstation,
-      #                             table = gpskey$startstation,
-      #                             nomatch = 0,
-      #                             maxDist = 10)
-      # 
-      #
 
 
       # just export to CSV then edit and reimport
       #write.csv(gpskey, file.path(MotherData, "gpskey-out.csv"))
 
-      # import
-      key <- read.csv(file.path(MotherData, "gpskey-in.csv")) %>%
-        rename(stn = startstation, lat = start_lat, lng = start_lng)
-
-
-
-
-
-
-
-
-
-
-
-                            #-------------#
-                            # add features # ----
-                            #-------------#
-
-     
-
-        # load shapefile
-       # us <- st_read(file.path(gadm, 
-       #                         "gadm36_USA_shp"))
-        
-        us <- st_read(file.path(gadm, 
-                                "gadm36_USA_shp"),
-                      layer = "gadm36_USA_2")
-        
-        va <- filter(.data = us,
-                      us$NAME_1 == "Virginia")
-        
-        dc <- filter(.data = us,
-                     us$NAME_1 == "District of Columbia")
-        
-        md <- filter(.data = us,
-                     us$NAME_1 == "Maryland")
-        
-        
-        
-        alx <- filter(.data = va,
-                      NAME_2 == "Alexandria")
-        
-        arl <- filter(.data = va,
-                      NAME_2 == "Arlington")
-        
-        fx  <- filter(.data = va,
-                      NAME_2 == "Fairfax")
-        
-        mty <- filter(.data = md,
-                      NAME_2 == "Montgomery")
-        
-        pg  <- filter(.data = md,
-                     NAME_2 == "Prince George's")
-        
-        dmv <- bind_rows(alx, arl, fx, mty, pg, dc)
-        
-       # store points as sf object 
-        pts     <- st_as_sf(latlong,  ## tell r the object that contains the points
-                            coords = c("lng", "lat"), # tell the point vars
-                            crs = 4326) # tell the crs 
-       # harmonize points 
-        dmv <- st_transform(dmv, crs = st_crs(pts))
-        
-      # overlay
-        pts2 <- mutate(pts, 
-                       inx  = as.integer(st_intersects(pts, dmv)),
-                       name = if_else(is.na(inx), "", dmv$NAME_2[inx]),
-                       state= if_else(is.na(inx), "", dmv$NAME_1[inx])
-        )
+   
