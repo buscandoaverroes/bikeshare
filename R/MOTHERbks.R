@@ -57,7 +57,10 @@
                data.table,
                leaflet,
                sp,
-               tmap)
+               sf,
+               tmap,
+               osmdata,
+               ggmap)
  
 
 
@@ -134,7 +137,7 @@
 
             s1 <- 0   # import          imports from stata
             s2 <- 0   # construct:      takes bks.Rda and makes other files
-            s3 <- 1   # gps             constructs all gps things
+            s3 <- 0   # gps             constructs all gps things
             s3 <- 0   # plot              tbd
             s4 <- 0   # leaf
 
@@ -170,5 +173,7 @@
   # add "other" dummy var -- maybe this incldues the low-cost fare
   # gen 30 min or less var dummy
 
-# credits: OpenStreetMaps, GADM
+# credits: OpenStreetMaps, GADM, Dominic Royé, https://dominicroye.github.io/en/2018/accessing-openstreetmap-data-with-r/
+      # Matthias: https://www.gis-blog.com/nearest-neighbour-search-for-spatial-points-in-r/
+            
 # ideas: map to a/g mobility data (use package covid19mobility?)
