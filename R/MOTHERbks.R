@@ -175,5 +175,6 @@
 
 # credits: OpenStreetMaps, GADM, Dominic Royé, https://dominicroye.github.io/en/2018/accessing-openstreetmap-data-with-r/
       # Matthias: https://www.gis-blog.com/nearest-neighbour-search-for-spatial-points-in-r/
-            
+       # bzki: https://stackoverflow.com/questions/21977720/r-finding-closest-neighboring-point-and-number-of-neighbors-within-a-given-rad
+      # https://stackoverflow.com/questions/6778908/transpose-a-data-frame      
 # ideas: map to a/g mobility data (use package covid19mobility?)
