@@ -135,11 +135,11 @@
                                     # run scripts #
                                     #-------------#
 
-            s1 <- 0   # import          imports from stata
+            s1 <- 0   # import          imports from stata, constructs main parts of bks rda
             s2 <- 0   # construct:      takes bks.Rda and makes other files
-            s3 <- 0   # gps             constructs all gps things
-            s3 <- 0   # plot              tbd
-            s4 <- 0   # leaf
+            s3 <- 0   # over            constructs all gps things
+            s3 <- 0   # plot            tbd
+            s4 <- 0   # leaf            makes map with leaf 
 
   # import
   if (s1 == 1) {
@@ -153,7 +153,7 @@
 
   # gps
   if (s3 == 1) {
-    source(file.path(scripts, "gps.R"))
+    source(file.path(scripts, "over.R"))
   }
 
   # plot
@@ -166,13 +166,27 @@
     source(file.path(scripts, "leaf.R"))
   }
 
-
- # so try to re-import main csv, bks$member should be only 0 1.
- # some empty "" strings in some vars (stationnames )
-
+            
+            
+# things to do ----
+            
+# Ride-Level:            
   # add "other" dummy var -- maybe this incldues the low-cost fare
   # gen 30 min or less var dummy
+  # merge bks.key to bks using station names, string.
+    # indicator if ride was to metro, from metro.
 
+            
+# Station-Level
+  # (this is really station-[time] var level): generate cumulative flow, ie net input
+  
+
+# general
+  # (long term) migrate cleaning from Stata to R....
+            
+            
+            
+            
 # credits: OpenStreetMaps, GADM, Dominic Royé, https://dominicroye.github.io/en/2018/accessing-openstreetmap-data-with-r/
       # Matthias: https://www.gis-blog.com/nearest-neighbour-search-for-spatial-points-in-r/
        # bzki: https://stackoverflow.com/questions/21977720/r-finding-closest-neighboring-point-and-number-of-neighbors-within-a-given-rad

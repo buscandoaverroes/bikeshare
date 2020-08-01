@@ -10,6 +10,7 @@
   library(rgeos)
   library(raster)
   library(rgdal)
+  library(stringi)
 
                             #-------------#
                             # load data  # ----
@@ -38,7 +39,7 @@
     oldnames <- bks %>%
             group_by(startstation) %>%
             summarise() %>%
-            filter(oldnames, startstation != "")    # remove blank entries
+            filter(startstation != "")    # remove blank entries
 
 
 
@@ -74,17 +75,18 @@
 
     # create list of distinct names and coordinates
      newnames <- new2020 %>%
-      group_by(start_station_name, start_lat, start_lng) %>%
+      group_by(start_station_name, start_station_id, start_lat, start_lng) %>%
       summarise()
 
-    # then sort on name, lng
-     newnames %>% arrange(desc(start_station_name),
+    # then sort on name, lng, stationid
+     newnames %>% arrange(desc(start_station_id), 
+                          desc(start_station_name),
                           desc(start_lng))
 
     # remove the first item in the duplicate list of names
 
      # identify duplicate strings
-     newnames$dup <- stri_duplicated(newnames$start_station_name)
+     newnames$dup <- stri_duplicated(newnames$start_station_name) #newnames$start_station_id
 
      # remove those with duplicate entries
      newnames <-  filter(newnames, dup == "FALSE")

@@ -1,6 +1,6 @@
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 # Name: construct.R
-# Description: creates dataset where observations are by year
+# Description: creates various dataset from mother dataset
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
