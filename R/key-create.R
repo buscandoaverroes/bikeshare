@@ -37,10 +37,10 @@
 
     #create a dictionary of all unique stationnames
     oldnames <- bks %>%
-            group_by(startstation) %>%
-            summarise() %>%
-            filter(startstation != "")    # remove blank entries
-
+      group_by(startstation) %>%
+      summarise() %>%
+      filter(startstation != "")    # remove blank entries
+    
 
 
 

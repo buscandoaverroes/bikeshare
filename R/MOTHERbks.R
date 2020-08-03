@@ -191,4 +191,9 @@
       # Matthias: https://www.gis-blog.com/nearest-neighbour-search-for-spatial-points-in-r/
        # bzki: https://stackoverflow.com/questions/21977720/r-finding-closest-neighboring-point-and-number-of-neighbors-within-a-given-rad
       # https://stackoverflow.com/questions/6778908/transpose-a-data-frame      
+           # https://stackoverflow.com/questions/12925063/numbering-rows-within-groups-in-a-data-frame
+   # https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
+  # https://stackoverflow.com/questions/15344092/creating-a-new-variables-with-missing-values
+ # https://stackoverflow.com/questions/35697940/append-suffix-to-colnames
+            
 # ideas: map to a/g mobility data (use package covid19mobility?)
