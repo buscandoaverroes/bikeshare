@@ -244,10 +244,39 @@
                                         "start_lat",
                                         "start_lng"))
 
+      
+      
+      
+      
+                                    
+                                    #---------------------#
+                                    # run station-number.R # ----
+                                    #---------------------#
+      # this script creates a dictionary of station numbers because, at some point in 2020,
+      # the station number scheme changes
+      # output= object called "stnidkey"
+      
+      source(file.path(scripts, "station-number.R"))
+                                    
+                                    
+                                    
+      
+      
+  
+                                    #---------------------#
+                                    # export all as Rdata # ----
+                                    #---------------------#
+      
+      
+  save(bydow, bydoy, byhour, byhour, bymo, bymodow, bywoy, byyear, 
+       byyearmo, dlyrd, dlyrd_mbr, gps, stnyr, stnidkey, # objects
+       file = file.path(kpop, "bike-snippets.Rdata"))
+                                        
+      
 
-                                        #-------------#
-                                        # export as Rda # ----
-                                        #-------------#
+                                    #-------------------------#
+                                    # export each file as Rda # ----
+                                    #-------------------------#
 
 
 

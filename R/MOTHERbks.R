@@ -136,10 +136,11 @@
                                     #-------------#
 
             s1 <- 0   # import          imports from stata, constructs main parts of bks rda
-            s2 <- 0   # construct:      takes bks.Rda and makes other files
-            s3 <- 0   # over            constructs all gps things
-            s3 <- 0   # plot            tbd
-            s4 <- 0   # leaf            makes map with leaf 
+            s2 <- 1   # construct:      takes bks.Rda and makes other files
+            s3 <- 1   # geoprocessing   constructs all gps things
+            s4 <- 1   # geomerge           Merges geoprocessed data to main bks dataset. 
+            s5 <- 0   # plot            tbd
+            s6 <- 0   # leaf            makes map with leaf 
 
   # import
   if (s1 == 1) {
@@ -153,19 +154,22 @@
 
   # gps
   if (s3 == 1) {
-    source(file.path(scripts, "over.R"))
+    source(file.path(scripts, "geoprocessing.R"))
   }
 
   # plot
   if (s4 == 1) {
-    source(file.path(scripts, "plot.R"))
+    source(file.path(scripts, "geo-merge.R"))
   }
 
   # leaf
-  if (s4 == 1) {
+  if (s5 == 1) {
+    source(file.path(scripts, "plot.R"))
+  }
+  # leaf
+  if (s6 == 1) {
     source(file.path(scripts, "leaf.R"))
   }
-
             
             
 # things to do ----
