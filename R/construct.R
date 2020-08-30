@@ -8,7 +8,17 @@
 	                              #-------------#
 	                              # import Rda  # ----
 	                              #-------------#
-      bks <- readRDS(file.path(MotherData, "motherdata.Rda"))
+      bks <- readRDS(file.path(MotherData, "motherdata.Rda")) %>%
+        select(-yearend, -monthend, -dayend, -hourend, -minend, # remove unnecessary vars
+                 -bikenumber, -datestart, -dateend, -quarterend,
+                 -weekend, -dowend, -doyend, -is_equity)
+      
+      # save as Rda file.
+      saveRDS(object = bks, 
+              file = file.path(kpop, "bks.Rda"))
+      
+      
+      
 
       # create byyear: collapse by year ----
 
@@ -267,9 +277,11 @@
                                     # export all as Rdata # ----
                                     #---------------------#
       
+    # but remove bks first, 
+      remove(bks)
       
-  save(bydow, bydoy, byhour, byhour, bymo, bymodow, bywoy, byyear, 
-       byyearmo, dlyrd, dlyrd_mbr, gps, stnyr, stnidkey, # objects
+    # save
+  save.image(
        file = file.path(kpop, "bike-snippets.Rdata"))
                                         
       
@@ -278,31 +290,31 @@
                                     # export each file as Rda # ----
                                     #-------------------------#
 
+# delete?
 
-
-      saveRDS(bydow,
-              file.path(kpop, "bydow.Rda"))
-      saveRDS(bydoy,
-              file.path(kpop, "bydoy.Rda"))
-      saveRDS(byhour,
-              file.path(kpop, "byhour.Rda"))
-      saveRDS(byhouryr,
-              file.path(kpop, "byhouryr.Rda"))
-      saveRDS(bymo,
-              file.path(kpop, "bymo.Rda"))
-      saveRDS(bymodow,
-              file.path(kpop, "bymodow.Rda"))
-      saveRDS(bywoy,
-              file.path(kpop, "bywoy.Rda"))
-      saveRDS(byyear,
-              file.path(kpop, "byyear.Rda"))
-      saveRDS(byyearmo,
-              file.path(kpop, "byyearmo.Rda"))
-      saveRDS(dlyrd,
-              file.path(kpop, "dlyrd.Rda"))
-      saveRDS(dlyrd_mbr,
-              file.path(kpop, "dlyrd_mbr.Rda"))
-      saveRDS(gps,
-              file.path(kpop, "gps-import.Rda"))
-      saveRDS(stnyr,
-              file.path(kpop, "stnyr.Rda"))
+      # saveRDS(bydow,
+      #         file.path(kpop, "bydow.Rda"))
+      # saveRDS(bydoy,
+      #         file.path(kpop, "bydoy.Rda"))
+      # saveRDS(byhour,
+      #         file.path(kpop, "byhour.Rda"))
+      # saveRDS(byhouryr,
+      #         file.path(kpop, "byhouryr.Rda"))
+      # saveRDS(bymo,
+      #         file.path(kpop, "bymo.Rda"))
+      # saveRDS(bymodow,
+      #         file.path(kpop, "bymodow.Rda"))
+      # saveRDS(bywoy,
+      #         file.path(kpop, "bywoy.Rda"))
+      # saveRDS(byyear,
+      #         file.path(kpop, "byyear.Rda"))
+      # saveRDS(byyearmo,
+      #         file.path(kpop, "byyearmo.Rda"))
+      # saveRDS(dlyrd,
+      #         file.path(kpop, "dlyrd.Rda"))
+      # saveRDS(dlyrd_mbr,
+      #         file.path(kpop, "dlyrd_mbr.Rda"))
+      # saveRDS(gps,
+      #         file.path(kpop, "gps-import.Rda"))
+      # saveRDS(stnyr,
+      #         file.path(kpop, "stnyr.Rda"))

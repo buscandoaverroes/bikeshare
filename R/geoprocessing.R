@@ -10,13 +10,26 @@ library(tidyverse)
 library(RANN)
 library(stringi)
 
+                                #---------------------#
+                                # clear objects       # ----
+                                #---------------------#
+    # remove all existing objects except for essential ones.
+    keep("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
+         "csv", "s1", "s2", "s3", "s4", "s5", "s6", "user", "size", "baselist",
+         sure = TRUE)
+
+
 
                                 #---------------------#
-                                # import cabi key     # ----
+                                #     import keys     # ----
                                 #---------------------#
-# import 
+# import cabi.key
 key <- read.csv(file.path(MotherData, "gpskey-in.csv")) %>%
   rename(stn = startstation, lat = start_lat, lng = start_lng, cabi.id = X)
+
+# import stnidkey (generated in station-number.R)
+stnidkey <- readRDS(file.path(kpop, "stnidkey.Rda"))
+
 
     # we don't want to check for duplicate values here because if it's a value we want to 
     # preserve it for when we match to data.
@@ -161,12 +174,12 @@ metbkkey <- sf::st_join(osmkey, # bike points
            osm_id.y, name) %>% # metro info
     rename(
       osm.station.id = osm_id.x, # rename bike id
-      osm.station.name = name.x,   # osm bike name 
+      osm.station.name = name.y,   # osm bike name 
       #amenity.b = amenity.x,
       cabi.station.id   = cabi.id,
       cabi.station.name = stn,    
       gadm.cat = inx, 
-      gadm.loc = name.y,
+      gadm.loc = name.x,
       gadm.state = state,
       osm.metro.id = osm_id.y, 
       osm.metro.name = name,
@@ -214,10 +227,8 @@ cabi.geo.key <- left_join(bks.key,
       select(osm.station.id, osm.station.name, cabi.station.id.new, cabi.station.id.old, everything())
 
  
-  
-    
-    
+ 
     
 # Save/export as Rdata   
-  save(cabi.geo.key, osmkey, dmv, stngps,
+  save(cabi.geo.key, osmkey, dmv, stngps, bks.key,
        file = file.path(kpop, "geo-data.Rdata"))  

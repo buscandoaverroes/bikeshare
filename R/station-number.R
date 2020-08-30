@@ -1,7 +1,7 @@
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 # Name: station-number.R
 # Description: creates a dictionary of station numbers between old and new numbers 
-#
+# Note: this is run within the station-number script so no packages/data should be needed.
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
 
@@ -73,8 +73,13 @@ for (i in seq_along(nn.w$old)) {
 stnidkey <- data.frame(nn.w) %>%
   select(startstation, old, new) %>%
   rename( name = startstation, 
-          oldid = old,
-          newid = new)
+          oldid = new, # the short numbers are actually the newid!
+          newid = old)
+
+
+# export as Rda
+  saveRDS(stnidkey,
+          file = file.path(kpop, "stnidkey.Rda")) 
 
 remove(nn, nn.w, namenumb)
 

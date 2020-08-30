@@ -60,7 +60,8 @@
                sf,
                tmap,
                osmdata,
-               ggmap)
+               ggmap,
+               gdata)
  
 
 
@@ -128,7 +129,19 @@
 
 
 
-
+    
+                                    #------------------#
+                                    # store essentials #
+                                    #------------------#
+    
+                          # here we store all the important objects in a list 
+                          # that we can call to prevent delting when clearning objects
+    
+  baselist <- c("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
+                "csv", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8")
+    
+    
+    
 
 
                                     #-------------#
@@ -136,9 +149,9 @@
                                     #-------------#
 
             s1 <- 0   # import          imports from stata, constructs main parts of bks rda
-            s2 <- 1   # construct:      takes bks.Rda and makes other files
-            s3 <- 1   # geoprocessing   constructs all gps things
-            s4 <- 1   # geomerge           Merges geoprocessed data to main bks dataset. 
+            s2 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+            s3 <- 0   # geoprocessing   constructs all gps things
+            s4 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
             s5 <- 0   # plot            tbd
             s6 <- 0   # leaf            makes map with leaf 
 
