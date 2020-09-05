@@ -13,45 +13,11 @@
                               #-------------#
                               # packages    #
                               #-------------#
-
-# #   package names
-#   pacman::p_load(stargazer,
-#                  tidyverse,
-#                  readstata13,
-#                  reshape2,
-#                  data.table,
-#                  readstata13,
-#                  foreach,
-#                  parallel,
-#                  MASS,
-#                  readr
-#                  )
-#
-      # library(stargazer)
-      # library(tidyverse)
-      # library(readstata13)
-      # library(reshape2)
-      # library(data.table)
-      # library(foreach)
-      # library(leaflet)
-      # library(doParallel)
-      # library(parallel)
-      # library(parallel)
-      # library(MASS)
                               
-  # install.packages(dplyr)
-                              
-  # library(pacman)  
-  # library(tidyverse)
-  # library(readstata13)
-  # library(leaflet)
-  # library(sp)
-  # library(tmap)
-  # library(data.table)
-  #     
-                              
-                              
- # ----                             
+      if (!is.element("pacman", installed.packages())) {
+        install.packages("pacman", dep= T)
+      }
+                           
       pacman::p_load(tidyverse,
                readstata13,
                data.table,
