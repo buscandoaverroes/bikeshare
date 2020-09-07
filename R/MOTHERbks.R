@@ -97,8 +97,8 @@
                                     # run scripts #
                                     #-------------#
 
-            s1 <- 1   # import-csv          raw files from csv, appends into year, stores as R files
-            s2 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+            s1 <- 0   # import-csv          raw files from csv, appends into year, stores as R files
+            s2 <- 1   # construct:      takes bks.Rda and makes other files, runs station-number.R
             s3 <- 0   # geoprocessing   constructs all gps things
             s4 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
             s5 <- 0   # plot            tbd
