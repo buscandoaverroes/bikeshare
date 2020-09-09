@@ -14,9 +14,9 @@ library(stringi)
                                 # clear objects       # ----
                                 #---------------------#
     # remove all existing objects except for essential ones.
-    keep("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
-         "csv", "s1", "s2", "s3", "s4", "s5", "s6", "user", "size", "baselist",
-         sure = TRUE)
+    # keep("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
+    #      "csv", "s1", "s2", "s3", "s4", "s5", "s6", "user", "size", "baselist",
+    #      sure = TRUE)
 
 
 
@@ -199,8 +199,8 @@ metbkkey <- sf::st_join(osmkey, # bike points
   dups <- bks.key$cabi.station.id[bks.key$dups.cabi.station.id==TRUE] # name the dup values
   
   bks.key <- filter(bks.key, dups.cabi.station.id==FALSE)
-  
 
+  
 
    # remove uneeded objects ## issue is that the search function I think is putting all stations within 300m  
     remove(alx, arl, dc, fc, fx, key, metbkkey, mty, pg, q, q.m, us, va, md, dups)
@@ -226,6 +226,13 @@ cabi.geo.key <- left_join(bks.key,
              proj.station.id     = cabi.station.id) %>%
       select(osm.station.id, osm.station.name, cabi.station.id.new, cabi.station.id.old, everything())
 
+
+# remove other duplicates 
+    cabi.geo.key <-
+      group_by(cabi.geo.key,
+               cabi.station.id.new, cabi.station.id.old, cabi.station.name) %>%
+      filter(row_number() == 1)
+    
  
  
     

@@ -21,133 +21,287 @@ library(assertthat)
                   #                  (from geo-data): cabi.geo.key  
   
   # remove all existing objects except for essential ones.
-  keep("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
-       "csv", "s1", "s2", "s3", "s4", "s5", "s6", "user", "size", "baselist",
+  keep("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full",
+       "s1", "s2", "s3", "s4", "s5", "s6", "user", "baselist",
        sure = TRUE)
   
   # load rdata files with objects that we want
-  bks <- readRDS(file.path(kpop, "bks.Rda"))
+  load(file.path(full, "years.Rdata"))
   load(file.path(kpop, "geo-data.Rdata")) 
+
   
-  # keep only objects we want
-  keep(bks, cabi.geo.key,
-       "repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
-       "csv", "s1", "s2", "s3", "s4", "s5", "s6", "user", "size", "baselist",
-       sure = TRUE)
-  
-  
-                        #---------------------------------#
-                        #  Restrict Rows + remove geometry# ----
-                        #---------------------------------#
-                        
-                        
-  
-  # Note 2: we can't actually merge by string because it exhausts the memory, so we'll 
-  # restrict the cabi.geo.key to only the appropriate rows so that we don't have duplicate 
-  # observations. we can do this by filtering rows where the new/old id exists.
-  
-  # filter cabi.geo.key rows 
-  cabi.geo.key.new <- filter(cabi.geo.key,
-                             !is.na(cabi.station.id.new)) %>%
-    st_drop_geometry() %>%
-    select(c("osm.station.id", "cabi.station.id.new", "proj.station.id"))
-    
-  
-  cabi.geo.key.old <- filter(cabi.geo.key,
-                             !is.na(cabi.station.id.old)) %>%
-    st_drop_geometry() %>%
-    select(c("osm.station.id", "cabi.station.id.old", "proj.station.id"))
   
   
   #---------------------------------#
-  #       convert bks to data table        # ----
+  #  Merge geo dictionary to each yr# ----
   #---------------------------------#
-  # library(data.table)
-  # bks.dt <- data.table(bks)
-  # 
-                      #---------------------------------#
-                      #        Merge to Pre2020         # ----
-                      #---------------------------------#
-                      
-        # we merge by name here because the station name is actually the unique identifier for 
-            # the station since there are often misspellings in the raw data: there are sometimes 
-            # multiple entires for the same station number because there are multiple spellings 
-            # in the raw data, so if we merge by number we get double merges.
-        # note  bks is 33 x 27,034,374
+# Note that we will have to merge twice, once for the start station and once for the end station. Also, 
+#   we will only merge the project id to save space. This way we can merge to other geographic info 
+#   using the project id when needed
   
-                      # count number of missings for station number in bks #
-  bks.station.miss <- sum(is.na(bks$startstationnumber))
-  
-    
-                      
-                      # split bks into two: old and new ids #
-  # old
-bkspre2020 <- bks %>%
-    filter(is.na(startstationnumber) | startstationnumber > 1000 ) # all old ids are greater than 700, include missings
-  
-  # new
-  bkspost2020 <- bks %>%
-    filter(startstationnumber < 1000) # all old ids are greater than 700
-  
-  # check that no rows have been lost 
-  oldnrows <- nrow(bkspre2020) #store no rows in old
-  newnrows <- nrow(bkspost2020)#store no rows in new
-  totnrows <- oldnrows+newnrows
-  
-  assert_that(oldnrows+newnrows == nrow(bks)) # check to make sure we didn't lose any in the split.
-
-  # remove bks 
-  rm(bks)
+ # old numbering scheme (station.id.old)   
+  bks2010 <- 
+    left_join( bks2010, cabi.geo.key,
+              by = c("Start station number" = "cabi.station.id.old",
+                     "Start station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+  left_join(cabi.geo.key,
+            by = c("End station number" = "cabi.station.id.old",
+                   "End station"        = "cabi.station.name"),
+            na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
   
   
+  bks2011 <- 
+    left_join( bks2011, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
 
-### start here.  can't get memeory to not exhaust on the merge, remove geometry from cabi.geo.key
-  bkspre2020 %>%
-    left_join(., cabi.geo.key.old, # merge to startstation
-              by = c("startstationnumber" = "cabi.station.id.old"),
-              na_matches = "never", # don't mess with na's
-                ) 
-  left_join(y = cabi.geo.key.new, # merge to endstation
-            by = c("endstationnumber" = "cabi.station.id.new"),
-            na_matches = "never", # don't mess with na's
-  )
+  
+  bks2012 <- 
+    left_join( bks2012, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
 
-# add a prefix to indicate start
-  # note that this assumes that the merged columns 
-  # stay the same over time. check. 
-colnames(bkspre2020)[34:48] <- paste0("s", sep = '.', colnames(bkspre2020)[34:48])
-# add prefix to indicate end.
-colnames(bkspre2020)[49:63] <- paste0("e", sep = '.', colnames(bkspre2020)[49:63])
-
-# why does bks gain obs when we merge? becuase of multiple entires for same stationid (dif strings)
-
-
-
-
-
-                          #---------------------------------#
-                          #           Merge to post2020     # ----
-                          #---------------------------------#
-
-
-bkspost2020 <- bks %>%
-  filter(startstationnumber < 1000) %>% # all new ids are greater less than 1000
-  left_join(., cabi.geo.key, # merge to startstation
-            by = c("startstation" = "cabi.station.name"),
-            keep = FALSE
-  ) %>%
-  left_join(., cabi.geo.key, # merge to endstation
-            by = c("endstation" = "cabi.station.name"),
-            keep = FALSE)
-
-# add a prefix to indicate start
-# note that this assumes that the merged columns 
-# stay the same over time. check. 
-colnames(bkspost2020)[34:48] <- paste0("s", sep = '.', colnames(bkspost2020)[34:48])
-# add prefix to indicate end.
-colnames(bkspost2020)[49:63] <- paste0("e", sep = '.', colnames(bkspost2020)[49:63])
-
-save(bks, bkspost2020, bkspre2020, cabi.geo.key,
-     bydow, bydoy, byhour, byhour, bymo, bymodow, bywoy, byyear, 
-     byyearmo, dlyrd, dlyrd_mbr, gps, stnyr, stnidkey, # objects
-     file = file.path(kpop, "bks-full-data.Rdata"))
+  bks2013 <- 
+    left_join( bks2013, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
+  
+  bks2014 <- 
+    left_join( bks2014, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
+  
+  
+  bks2015 <- 
+    left_join( bks2015, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
+  bks2016 <- 
+    left_join( bks2016, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
+  bks2017 <- 
+    left_join( bks2017, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
+  
+  
+  bks2018 <- 
+    left_join( bks2018, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+ 
+  bks2019 <- 
+    left_join( bks2019, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
+  bks2020.1 <- 
+    left_join( bks2020.1, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.old",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.old",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.new, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+ 
+  
+  # new numbering scheme (station.id.new)
+  bks2020.2 <-
+    left_join( bks2020.2, cabi.geo.key,
+               by = c("Start station number" = "cabi.station.id.new",
+                      "Start station"        = "cabi.station.name"),
+               na_matches = "never") %>% 
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.old, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename(start.pid = proj.station.id) %>% # rename to start station, repeat for end station
+    left_join(cabi.geo.key,
+              by = c("End station number" = "cabi.station.id.new",
+                     "End station"        = "cabi.station.name"),
+              na_matches = "never") %>%
+    select(-osm.station.id, -osm.station.name, -cabi.station.id.old, # only keep proj.station.id
+           -gadm.loc, -gadm.cat, -gadm.state, -osm.metro.id,
+           -osm.metro.name, -metro200m, -dups.cabi.station.id,
+           -geometry) %>%
+    rename( end.pid = proj.station.id) # rename to end station
+  
+  
+  # remove items, save dataset 
+  save(bks2010, bks2011, bks2012, bks2013, bks2014, bks2015, bks2016, bks2017, 
+       bks2018, bks2019, bks2020.1,bks2020.2,
+       file = file.path(full, "years.Rdata"))

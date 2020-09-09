@@ -99,7 +99,7 @@
 
             s1 <- 0   # import-csv          raw files from csv, appends into year, stores as R files
             s2 <- 1   # construct:      takes bks.Rda and makes other files, runs station-number.R
-            s3 <- 0   # geoprocessing   constructs all gps things
+            s3 <- 1   # geoprocessing   constructs all gps things
             s4 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
             s5 <- 0   # plot            tbd
             s6 <- 0   # leaf            makes map with leaf 
@@ -161,5 +161,6 @@
    # https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
   # https://stackoverflow.com/questions/15344092/creating-a-new-variables-with-missing-values
  # https://stackoverflow.com/questions/35697940/append-suffix-to-colnames
+            # https://stackoverflow.com/questions/22959635/remove-duplicated-rows-using-dplyr
             
 # ideas: map to a/g mobility data (use package covid19mobility?)

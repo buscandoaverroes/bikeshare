@@ -152,13 +152,3 @@ library(lubridate)
       bks2018, bks2019, bks2020.1,bks2020.2,
       file = file.path(full, "years.Rdata"))
  
- # this produces a list of data frames, detach? ----
- # dflist <- lapply(list(r2010, r2011, r2012, r2013, r2014), function(x) {
- #    x %>% rename("member" = `Member type`) %>%
- #     mutate(
- #           member = fct_recode(member,
- #                "Guest" = "Casual",
- #                "Guest" = "Unknown",
- #                "Member"= "Member"))
- #      })
- # 
