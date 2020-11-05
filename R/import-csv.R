@@ -922,6 +922,67 @@
             )
             
             
+            r2020m7 <- read_csv(file.path(raw, "2020/202007-capitalbikeshare-tripdata.csv"),
+                                col_names = TRUE, 
+                                na = c("", " ", "  "), 
+                                cols(
+                                        ride_id = col_character(),
+                                        rideable_type = col_factor(),
+                                        started_at = col_datetime(format = ""),
+                                        ended_at = col_datetime(format = ""),
+                                        start_station_name = col_character(),
+                                        start_station_id = col_integer(),
+                                        end_station_name = col_character(),
+                                        end_station_id = col_integer(),
+                                        start_lat = col_double(),
+                                        start_lng = col_double(),
+                                        end_lat = col_double(),
+                                        end_lng = col_double(),
+                                        member_casual = col_factor()
+                                )
+            )
+            
+            r2020m8 <- read_csv(file.path(raw, "2020/202008-capitalbikeshare-tripdata.csv"),
+                                col_names = TRUE, 
+                                na = c("", " ", "  "), 
+                                cols(
+                                        ride_id = col_character(),
+                                        rideable_type = col_factor(),
+                                        started_at = col_datetime(format = ""),
+                                        ended_at = col_datetime(format = ""),
+                                        start_station_name = col_character(),
+                                        start_station_id = col_integer(),
+                                        end_station_name = col_character(),
+                                        end_station_id = col_integer(),
+                                        start_lat = col_double(),
+                                        start_lng = col_double(),
+                                        end_lat = col_double(),
+                                        end_lng = col_double(),
+                                        member_casual = col_factor()
+                                )
+            )
+            
+            r2020m9 <- read_csv(file.path(raw, "2020/202009-capitalbikeshare-tripdata.csv"),
+                                col_names = TRUE, 
+                                na = c("", " ", "  "), 
+                                cols(
+                                        ride_id = col_character(),
+                                        rideable_type = col_factor(),
+                                        started_at = col_datetime(format = ""),
+                                        ended_at = col_datetime(format = ""),
+                                        start_station_name = col_character(),
+                                        start_station_id = col_integer(),
+                                        end_station_name = col_character(),
+                                        end_station_id = col_integer(),
+                                        start_lat = col_double(),
+                                        start_lng = col_double(),
+                                        end_lat = col_double(),
+                                        end_lng = col_double(),
+                                        member_casual = col_factor()
+                                )
+            )
+            
+            
             
             
             
@@ -931,18 +992,18 @@
                         #---------------------#
         # years 2010 and 2011 are already in a year 
             
-r2012 <- bind_rows(r2012q1, r2012q2, r2012q3, r2012q4)
-r2013 <- bind_rows(r2013q1, r2013q2, r2013q3, r2013q4)
-r2014 <- bind_rows(r2014q1, r2014q2, r2014q3, r2014q4)
-r2015 <- bind_rows(r2015q1, r2015q2, r2015q3, r2015q4)
-r2016 <- bind_rows(r2016q1, r2016q2, r2016q3, r2016q4)
-r2017 <- bind_rows(r2017q1, r2017q2, r2017q3, r2017q4)
-r2018 <- bind_rows(r2018m1, r2018m2, r2018m3, r2018m4, r2018m5, r2018m6,
-                   r2018m7, r2018m8, r2018m9, r2018m10,r2018m11,r2018m12)
-r2019 <- bind_rows(r2019m1, r2019m2, r2019m3, r2019m4, r2019m5, r2019m6,
-                   r2019m7, r2019m8, r2019m9, r2019m10,r2019m11,r2019m12)
-r2020.1 <- bind_rows(r2020m1, r2020m2, r2020m3)
-r2020.2 <- bind_rows(r2020m4, r2020m5, r2020m6)
+r2012 <- as.data.table(bind_rows(r2012q1, r2012q2, r2012q3, r2012q4))
+r2013 <- as.data.table(bind_rows(r2013q1, r2013q2, r2013q3, r2013q4))
+r2014 <- as.data.table(bind_rows(r2014q1, r2014q2, r2014q3, r2014q4))
+r2015 <- as.data.table(bind_rows(r2015q1, r2015q2, r2015q3, r2015q4))
+r2016 <- as.data.table(bind_rows(r2016q1, r2016q2, r2016q3, r2016q4))
+r2017 <- as.data.table(bind_rows(r2017q1, r2017q2, r2017q3, r2017q4))
+r2018 <- as.data.table(bind_rows(r2018m1, r2018m2, r2018m3, r2018m4, r2018m5, r2018m6,
+                   r2018m7, r2018m8, r2018m9, r2018m10,r2018m11,r2018m12))
+r2019 <- as.data.table(bind_rows(r2019m1, r2019m2, r2019m3, r2019m4, r2019m5, r2019m6,
+                   r2019m7, r2019m8, r2019m9, r2019m10,r2019m11,r2019m12))
+r2020.1 <- as.data.table(bind_rows(r2020m1, r2020m2, r2020m3))
+r2020.2 <- as.data.table(bind_rows(r2020m4, r2020m5, r2020m6, r2020m7, r2020m8, r2020m9))
 
 
         remove(r2012q1, r2012q2, r2012q3, r2012q4,
@@ -955,7 +1016,8 @@ r2020.2 <- bind_rows(r2020m4, r2020m5, r2020m6)
                r2018m7, r2018m8, r2018m9, r2018m10,r2018m11,r2018m12,
                r2019m1, r2019m2, r2019m3, r2019m4, r2019m5, r2019m6,
                r2019m7, r2019m8, r2019m9, r2019m10,r2019m11,r2019m12,
-               r2020m1, r2020m2, r2020m3, r2020m4, r2020m5, r2020m6)
+               r2020m1, r2020m2, r2020m3, r2020m4, r2020m5, r2020m6,
+               r2020m7, r2020m8, r2020m9)
         
         
         

@@ -6,13 +6,15 @@
 
        library(leaflet)
        #library(urbnmapr)
+       load(file.path(kpop, "geo-data.Rdata"))
        
 # convert geometry to points 
   cabi.geo.key <- cabi.geo.key %>%
     mutate(
       lon = st_coordinates(geometry)[,1],
       lat = st_coordinates(geometry)[,2]
-    )
+    ) %>%
+    filter(is.na(cabi.station.id.new) == FALSE)
        
                                 
                             #-------------#

@@ -31,10 +31,10 @@ library(assertthat)
 
   
   
-  
-  #---------------------------------#
-  #  Merge geo dictionary to each yr# ----
-  #---------------------------------#
+                    
+                    #---------------------------------#
+                    #  Merge geo dictionary to each yr# ----
+                    #---------------------------------#
 # Note that we will have to merge twice, once for the start station and once for the end station. Also, 
 #   we will only merge the project id to save space. This way we can merge to other geographic info 
 #   using the project id when needed

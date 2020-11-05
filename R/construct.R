@@ -12,7 +12,7 @@ library(lubridate)
                             #---------------------#
   load(file = file.path(full, "rawdata.Rdata"))
 
-                            
+
                             
                             #---------------------#
                             #   Data harmonization ----
@@ -55,10 +55,10 @@ library(lubridate)
                   r2019, r2020.1, bks2020.2)
  
  # create duration for bks2020.2
- bks2020.2$Duration <-bks2020.2$`End date` - bks2020.2$`Start date`
+ bks2020.2$Duration <-lubridate::as.duration(bks2020.2$`End date` - bks2020.2$`Start date`)
 
  
- # Change factor levels to member/guest binarym----
+ # Change factor levels to member/guest binary----
  bks2010 <- r2010 %>%
    rename("member" = `Member type`) %>%
    mutate(

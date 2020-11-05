@@ -27,7 +27,9 @@
                tmap,
                osmdata,
                ggmap,
-               gdata)
+               gdata,
+               lubridate,
+               data.table)
  
 
 
@@ -97,12 +99,14 @@
                                     # run scripts #
                                     #-------------#
 
-            s1 <- 0   # import-csv          raw files from csv, appends into year, stores as R files
+            s1 <- 1   # import-csv          raw files from csv, appends into year, stores as R files
             s2 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             s3 <- 0   # geoprocessing   constructs all gps things
             s4 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
-            s5 <- 0   # plot            tbd
-            s6 <- 0   # leaf            makes map with leaf 
+            s5 <- 0   # station summary     
+            
+            s6 <- 0   # summary objects          
+            s7 <- 0   # leaf. 
 
   # import
   if (s1 == 1) {
@@ -118,18 +122,23 @@
   if (s3 == 1) {
     source(file.path(scripts, "geoprocessing.R"))
   }
-
+            
   # plot
   if (s4 == 1) {
     source(file.path(scripts, "geo-merge.R"))
   }
-
-  # leaf
+            
+  # summary objects 
   if (s5 == 1) {
-    source(file.path(scripts, "plot.R"))
+    source(file.path(scripts, "station-summary.R"))
+  }          
+
+  # plot
+  if (s6 == 1) {
+    source(file.path(scripts, "daily-rides.R"))
   }
   # leaf
-  if (s6 == 1) {
+  if (s7 == 1) {
     source(file.path(scripts, "leaf.R"))
   }
             
@@ -163,5 +172,6 @@
  # https://stackoverflow.com/questions/35697940/append-suffix-to-colnames
             # https://stackoverflow.com/questions/22959635/remove-duplicated-rows-using-dplyr
   # https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column
+  # https://stackoverflow.com/questions/32766325/fastest-way-of-determining-most-frequent-factor-in-a-grouped-data-frame-in-dplyr
             
 # ideas: map to a/g mobility data (use package covid19mobility?)
