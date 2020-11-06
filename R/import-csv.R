@@ -1029,7 +1029,6 @@ r2020.2 <- as.data.table(bind_rows(r2020m4, r2020m5, r2020m6, r2020m7, r2020m8, 
           r2010, r2011, r2012, r2013, r2014, r2015, r2015, r2016,
           r2017, r2018, r2019, r2020.1,r2020.2,
           file = file.path(full, "rawdata.Rdata")
-          
         )
         
             

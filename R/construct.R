@@ -142,13 +142,16 @@ library(lubridate)
                          "Member"= "Member"))
  
  
- # remove original dataframes 
+# remove original dataframes 
  remove(r2010, r2011, r2012, r2013, r2014, r2015, r2016, r2017, r2018,
         r2019, r2020.1, r2020.2)
  
  
- # save 
- save(bks2010, bks2011, bks2012, bks2013, bks2014, bks2015, bks2016, bks2017, 
+# append dataframes 
+
+ 
+# save 
+save(bks2010, bks2011, bks2012, bks2013, bks2014, bks2015, bks2016, bks2017, 
       bks2018, bks2019, bks2020.1,bks2020.2,
       file = file.path(full, "years.Rdata"))
  

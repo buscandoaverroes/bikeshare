@@ -18,18 +18,20 @@
         install.packages("pacman", dep= T)
       }
                            
-      pacman::p_load(tidyverse,
-               readstata13,
-               data.table,
-               leaflet,
-               sp,
-               sf,
-               tmap,
-               osmdata,
-               ggmap,
-               gdata,
-               lubridate,
-               data.table)
+      pacman::p_load(
+        tidyverse,
+         readstata13,
+         data.table,
+         leaflet,
+         sp,
+         sf,
+         tmap,
+         osmdata,
+         ggmap,
+         gdata,
+         lubridate,
+         data.table
+        )
  
 
 
