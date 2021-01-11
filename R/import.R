@@ -1,40 +1,188 @@
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
-# Name: compress.R
+# Name: import.R
 # Description: compresses the .dta file into R, hopefully faster.
 #
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
 
-                        # ---- Import the dta file ----
+# create functions for importing ======================================
+# note, x will always be a number
+
+# by years 
+import_year <- function(x) {
+  data.table::fread(
+    file.path(raw, x, paste0(x, "-capitalbikeshare-tripdata.csv")),
+    na.strings = ""
+  )
+}
 
 
-      if (size == 1) {
 
-    bks2 <- read.dta13(file.path(tiny),
-                      convert.factors = TRUE,
-                      nonint.factors = TRUE) # keep the factor labels for all
+# by quarter:
+  # note: this will import all 4 quarters and append
+import_quarter <- function(x) {
+  
+# Q1
+  q1 <- 
+    data.table::fread(
+    file.path(raw, x, paste0(x, "Q1-capitalbikeshare-tripdata.csv")),
+    na.strings = ""
+  )
 
-      }
+# Q2
+  q2 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "Q2-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )
+
+# Q3
+  q3 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "Q3-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+# Q4
+  q4 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "Q4-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+# append and return year object
+year <- bind_rows(q1, q2, q3, q4)
+  
+year 
+  
+}
 
 
-      if (size == 2) {
 
-    bks <- read.dta13(file.path(master),
-                        convert.factors = TRUE,
-                        nonint.factors = TRUE) # keep the factor labels for all
+# by month
+  # note: will also return a year object with all months
+import_month <- function(x) {
 
-      }
+  
+  # janurary: file name for 2018 is different
+  if (x == 2018) {
+    m1 <- 
+      data.table::fread(
+        file.path(raw, x, paste0(x, "01_capitalbikeshare_tripdata.csv")),
+        na.strings = ""
+      ) 
+  }
+  else {
+    m1 <- 
+      data.table::fread(
+        file.path(raw, x, paste0(x, "01-capitalbikeshare-tripdata.csv")),
+        na.strings = ""
+      )  
+  }
+
+  
+  # feb 
+  m2 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "02-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    ) 
+  
+  # march 
+  m3 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "03-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # april 
+  m4 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "04-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # may 
+  m5 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "05-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # june 
+  m6 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "06-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # july 
+  m7 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "07-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # august 
+  m8 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "08-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # september 
+  m9 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "09-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    ) 
+  
+  # october 
+  m10 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "10-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # november 
+  m11 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "11-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  # december 
+  m12 <- 
+    data.table::fread(
+      file.path(raw, x, paste0(x, "12-capitalbikeshare-tripdata.csv")),
+      na.strings = ""
+    )  
+  
+  
+  # append + return
+  year <- bind_rows(m1, m2, m3, m4,
+                    m5, m6, m7, m8,
+                    m9, m10,m11,m12)
+  
+  
+  year 
+  
+}
 
 
-      if (size == 3) {
 
-        bks <- data.table::fread(file.path(csv),
-                                 header = TRUE,
-                                 na.strings = ".",  # tell characters to be read as missing
-                                 stringsAsFactors = TRUE,
-                                 showProgress = TRUE,
-                                 data.table = FALSE
-                                 ) # return data frame, not table
 
-        saveRDS(bks, file.path(MasterData, "motherdata.Rda"))
-      }
+
+# import files using above functions ===================================
+r2010 <- import_year(2010)
+r2011 <- import_year(2011)
+
+r2012 <- import_quarter(2012)
+r2013 <- import_quarter(2013)
+r2014 <- import_quarter(2014)
+r2015 <- import_quarter(2015)
+r2016 <- import_quarter(2016)
+r2017 <- import_quarter(2017)
+
+r2018 <- import_month(2018)
+r2019 <- import_month(2019)
