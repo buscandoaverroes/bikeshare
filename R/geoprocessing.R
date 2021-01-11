@@ -107,7 +107,6 @@ arl.map<- get_map(getbb("Washington, DC"),
 
 
 # extract bikeshare info 
-
 q <- getbb("Washington, DC") %>% # query...and add features
   opq() %>%
   add_osm_feature("amenity", "bicycle_rental")
@@ -124,28 +123,6 @@ q.m <- getbb("Washington, DC") %>% # query and add metro features
 metrostn <- osmdata_sf(q.m) # save as sf object
 
 
-                  # this is just map sh*tt
-
-# ggmap(arl.map) + 
-#   geom_sf(data = bkrnt$osm_points,
-#           inherit.aes = FALSE,
-#           size = 2,
-#           alpha = 0.5, 
-#           shape = 20
-#   ) +
-#   labs(x = "", y = "")
-# 
-
-# ggmap(dc.map) +
-#   geom_sf(data = bks.key$geometry,
-#           inherit.aes = FALSE,
-#           size = 2,
-#           alpha = 0.4,
-#           shape = 20,
-#           color =
-#   ) +
-#   labs(x = "", y = "")
-
 
 
                   # ----------------------------------------------------------#
@@ -153,7 +130,6 @@ metrostn <- osmdata_sf(q.m) # save as sf object
                   # ----------------------------------------------------------#
 
 # Join OSM and GADM bikeshare data to one key. Joins by closest gps point 
-
 osmkey <- sf::st_join(stngps,  # imported gps coordinates of bikeshare stations from cabi
                       bkrnt$osm_points, # bikeshare station info from osm
                       join = st_nearest_feature, # merge by nearest proximity
