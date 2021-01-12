@@ -41,41 +41,41 @@ nn <- namenumb %>%
 nn.w <- spread(nn,
                key = id, 
                value = start_number) %>%
-  rename(old = "1" , # change names
-         new = "2",
+  rename(new = "1" , # change names
+         old = "2",
          misc = "3")
 
-# move values to correct old and new columns ---------------------------------
+# move values to correct new and old columns ---------------------------------
 
-# move low new values to old 
-for (i in seq_along(nn.w$old)) {
-  nn.w$old[i] <- ifelse((nn.w$new[i] < 30000) 
-                        & (!is.na(nn.w$new[i])) , # new value should be < 30000
-                        nn.w$new[i], # if true, replace old with new
-                        nn.w$old[i]) # if false, replace with self, true for row 120
+# move low old values to new 
+for (i in seq_along(nn.w$new)) {
+  nn.w$new[i] <- ifelse((nn.w$old[i] < 30000) 
+                        & (!is.na(nn.w$old[i])) , # old value should be < 30000
+                        nn.w$old[i], # if true, replace new with old
+                        nn.w$new[i]) # if false, replace with self, true for row 120
 }
 
-# move high values in old to new
-for (i in seq_along(nn.w$new)) {
-  nn.w$new[i] <- ifelse((nn.w$old[i] > 30000) 
-                        & (!is.na(nn.w$old[i])) , # new value should be < 30000
-                        nn.w$old[i], # 
-                        nn.w$new[i]) # 
+# move high values in new to old
+for (i in seq_along(nn.w$old)) {
+  nn.w$old[i] <- ifelse((nn.w$new[i] > 30000) 
+                        & (!is.na(nn.w$new[i])) , # old value should be < 30000
+                        nn.w$new[i], # 
+                        nn.w$old[i]) # 
 }
 
 # do for column 3 
-for (i in seq_along(nn.w$new)) {
-  nn.w$new[i] <- ifelse((nn.w$misc[i[]] > 30000) & 
-                          (!is.na(nn.w$misc[i])), # new value should be < 30000
+for (i in seq_along(nn.w$old)) {
+  nn.w$old[i] <- ifelse((nn.w$misc[i[]] > 30000) & 
+                          (!is.na(nn.w$misc[i])), # old value should be < 30000
                         nn.w$misc[i], #
-                        nn.w$new[i]) # 
+                        nn.w$old[i]) # 
 }
 
-# (for those with no 'old' value) replace old with missing
-for (i in seq_along(nn.w$old)) {
-  nn.w$old[i] <- ifelse((nn.w$old[i] > 30000) & (!is.na(nn.w$old[i])) , # new value should be < 30000
-                        NA, #  replace with missing, indicating not in old cat system
-                        nn.w$old[i]) # otherwise replace with valid, old number 
+# (for those with no 'new' value) replace new with missing
+for (i in seq_along(nn.w$new)) {
+  nn.w$new[i] <- ifelse((nn.w$new[i] > 30000) & (!is.na(nn.w$new[i])) , # old value should be < 30000
+                        NA, #  replace with missing, indicating not in new cat system
+                        nn.w$new[i]) # otherwise replace with valid, new number 
 }
 
 
@@ -123,7 +123,8 @@ station_key <-
   station_key %>%
   left_join(., 
             cabi_coords,
-            by = c("number_new" = "start_number"))
+            by = c("number_new" = "start_number")) %>%
+  rename(lat = start_lat, lng = start_lng)
 
 
 
