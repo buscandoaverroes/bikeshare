@@ -16,6 +16,12 @@ names_bks <-
   as_tibble(names(bks)) %>%
   gather()
 
+# determine no of unique stations 
+station_old <- bks %>% filter(start_number > 30000) %>% distinct(start_number) # old numbers are all greater than 30,000
+n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
+
+station_new <- bks %>% filter(start_number < 30000) %>% distinct(start_number) # old numbers are all less than 30,000
+n_station_new <- n_distinct(station_new$start_number, na.rm = TRUE)
 
                   # ---------------------------------------------------------#
                   #  create unique internal cabi key for name string to old-new number =================
@@ -125,6 +131,55 @@ station_key <-
             cabi_coords,
             by = c("number_new" = "start_number")) %>%
   rename(lat = start_lat, lng = start_lng)
+
+
+
+
+
+
+# eliminate duplicates ------------------------------------------------------------
+# if there are two different station name strings under the same old or new station
+# number, just keep the row with the valid gps coords since the authoritative 
+# source will be the station number anyway
+
+
+station_key <- 
+  station_key %>%
+  add_count(number_old) %>% # add number of rows with same number_old
+  group_by(number_old) %>%
+  arrange(number_new, .by_group = TRUE) %>% # sorting by number_new always puts NA last
+  filter( # keep if theres only one value per id OR if there are more than 1 value, keep only 
+    (n == 1) |     # those that have lat not missing
+      (is.na(lat) == FALSE & n>1)
+    )
+
+
+# checking unique station numbers in the background
+
+# math
+n_distinct(station_key$number_new) # 613, should be 614
+n_distinct(station_key$number_old, na.rm = TRUE) # 587, should be 587
+
+# what is the station id that is not in this key but in bks?
+station_new$start_number %in% station_key$number_new # it's new station number 285
+bks %>% filter(start_number == 285) # identify obs at station 285
+
+# final checks 
+# note that new station number 285 is the motivate tech office, with only 8 observations 
+# and no GPS info. We will omit this station. Therefore, the unique new station number count
+# should be 1 fewer than station_new object
+
+# new stations
+assertthat::assert_that(
+  n_distinct(station_key$number_new) + 1 == n_station_new
+)
+
+# old stations
+assertthat::assert_that(
+  n_distinct(station_key$number_old, na.rm = TRUE) == n_station_old
+)
+
+
 
 
 
