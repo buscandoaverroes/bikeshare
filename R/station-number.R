@@ -4,20 +4,29 @@
 # Note: this is run within the station-number script so no packages/data should be needed.
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
+# load csv 
+bks <- data.table::fread(
+  file.path(raw, "bks-import.csv"),
+  header = TRUE,
+  na.strings = "" 
+)
 
-
+# make names object 
+names_bks <- 
+  as_tibble(names(bks)) %>%
+  gather()
 
 
                   # ---------------------------------------------------------#
-                  # try to add stationnumbers to dictionaries to merge by number   ----
+                  #    ----
                   # ---------------------------------------------------------#
 
 # create old/new from bks
 # this should have dup strings with first row as "new" number and second "old" number
 namenumb <- bks %>%
-  group_by(startstation, startstationnumber) %>%
+  group_by(start_name, start_number) %>%
   summarise() %>%
-  filter(startstation != "")   # remove blank entries
+  filter(start_name != "")   # remove blank entries
 
 # generate group id 
 namenumb$group <- group_indices(namenumb)
@@ -31,7 +40,7 @@ nn <- namenumb %>%
 # pivot to wider 
 nn.w <- spread(nn,
                key = id, 
-               value = startstationnumber) %>%
+               value = start_number) %>%
   rename(old = "1" , # change names
          new = "2",
          misc = "3")
@@ -46,7 +55,7 @@ for (i in seq_along(nn.w$old)) {
                         nn.w$old[i]) # if false, replace with self, true for row 120
 }
 
-# move high values in old to new and replace high olds with NA
+# move high values in old to new
 for (i in seq_along(nn.w$new)) {
   nn.w$new[i] <- ifelse((nn.w$old[i] > 30000) 
                         & (!is.na(nn.w$old[i])) , # new value should be < 30000
@@ -71,15 +80,15 @@ for (i in seq_along(nn.w$old)) {
 
 # remove misc var, drop unecessary objects
 stnidkey <- data.frame(nn.w) %>%
-  select(startstation, old, new) %>%
-  rename( name = startstation, 
+  select(start_name, old, new) %>%
+  rename( name = start_name, 
           oldid = new, # the short numbers are actually the newid!
           newid = old)
 
 
 # export as Rda
   saveRDS(stnidkey,
-          file = file.path(kpop, "stnidkey.Rda")) 
+          file = file.path(processed, "station_key.Rda")) 
 
 remove(nn, nn.w, namenumb)
 

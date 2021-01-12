@@ -101,7 +101,7 @@
                                     # run scripts #
                                     #-------------#
 
-            s1 <- 1   # import-csv          raw files from csv, appends into year, stores as R files
+            s1 <- 0   # import          variable harmonization, append. no data wrangling.
             s2 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             s3 <- 0   # geoprocessing   constructs all gps things
             s4 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
@@ -112,7 +112,7 @@
 
   # import
   if (s1 == 1) {
-    source(file.path(scripts, "import-csv.R"))
+    source(file.path(scripts, "import.R"))
   }
 
   # construct
