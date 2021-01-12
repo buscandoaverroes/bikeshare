@@ -355,11 +355,22 @@ m9 <-
 
 r2020 <-
   r2020 %>%
-  bind_rows(m4,m5,m6,m7,m8,m9)
+  bind_rows(m4,m5,m6,m7,m8,m9) %>%
+  select(-is_equity) # remove empty column
 
 rm(m4,m5,m6,m7,m8,m9)
 
 
-head(r2020) %>% view()
-r2020 %>% select(-is_equity) %>%
-object.size() 
+
+
+
+# append all years+export ====================================================
+bind_rows(
+  r2010, r2011, r2012, r2013, r2014, r2015,
+  r2016, r2017, r2018, r2019, r2020
+) %>%
+  fwrite(., 
+         file = ,
+         na = "", # make missings ""
+         compress = "none" # do not compress
+         )
