@@ -18,7 +18,7 @@ names_bks <-
 
 
                   # ---------------------------------------------------------#
-                  #    ----
+                  #  create unique internal cabi key for name string to old-new number =================
                   # ---------------------------------------------------------#
 
 # create old/new from bks
@@ -45,7 +45,7 @@ nn.w <- spread(nn,
          new = "2",
          misc = "3")
 
-# move values to correct places 
+# move values to correct old and new columns ---------------------------------
 
 # move low new values to old 
 for (i in seq_along(nn.w$old)) {
@@ -78,16 +78,66 @@ for (i in seq_along(nn.w$old)) {
                         nn.w$old[i]) # otherwise replace with valid, old number 
 }
 
-# remove misc var, drop unecessary objects
-stnidkey <- data.frame(nn.w) %>%
+
+# add and remove variables -----------------------------------------------------------
+
+# remove misc var, drop unecessary objects 
+station_key <- data.frame(nn.w) %>%
   select(start_name, old, new) %>%
-  rename( name = start_name, 
-          oldid = new, # the short numbers are actually the newid!
-          newid = old)
+  rename(
+    number_old = old,
+    number_new = new,
+    name = start_name
+  )
+
+
+# generate project id
+station_key <- 
+  station_key %>%
+  arrange(name) %>%
+  mutate(
+    idproj = row_number()
+  ) 
+
+
+
+
+
+
+
+
+
+            
+            # ---------------------------------------------------------#
+            #       incorporate open street map id numbers              =======================
+            # ---------------------------------------------------------#
+
+
+# extract bikeshare info 
+q <- getbb("Washington, DC") %>% # query...and add features
+  opq() %>%
+  add_osm_feature("amenity", "bicycle_rental")
+
+bkrnt <- osmdata_sf(q) # save as sf object
+
+
+
+# extract metro stations info 
+q.m <- getbb("Washington, DC") %>% # query and add metro features
+  opq() %>%
+  add_osm_feature("railway", "station")
+
+metrostn <- osmdata_sf(q.m) # save as sf object
+
+
+
+
+
+
 
 
 # export as Rda
-  saveRDS(stnidkey,
+  saveRDS(station_key,
           file = file.path(processed, "station_key.Rda")) 
 
 remove(nn, nn.w, namenumb)

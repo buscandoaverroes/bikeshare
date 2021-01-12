@@ -77,6 +77,7 @@
 
   gadm              <- "/Volumes/Al-Hakem-II/other+files/gadm"
   raw               <- file.path(data, "raw")
+  processed         <- file.path(data, "bks")
   MotherData        <- file.path(data, "MotherData")
     kpop            <- file.path(MotherData, "kpop")
     full            <- file.path(MotherData, "years")
@@ -102,21 +103,28 @@
                                     #-------------#
 
             s1 <- 0   # import          variable harmonization, append. no data wrangling.
-            s2 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
-            s3 <- 0   # geoprocessing   constructs all gps things
-            s4 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
-            s5 <- 0   # station summary     
+            s2 <- 0   # station #'s     creates old/new station number dictionary
             
-            s6 <- 0   # summary objects          
-            s7 <- 0   # leaf. 
+            x1 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+            x2 <- 0   # geoprocessing   constructs all gps things
+            x3 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
+            x4 <- 0   # station summary     
+            
+            x6 <- 0   # summary objects          
+            x7 <- 0   # leaf. 
 
   # import
   if (s1 == 1) {
     source(file.path(scripts, "import.R"))
   }
+            
+  # create dictionary of station numbers 
+  if (s2 == 1) {
+    source(file.path(scripts, "station-number.R"))
+  }
 
   # construct
-  if (s2 == 1) {
+  if () {
     source(file.path(scripts, "construct.R"))
   }
 
