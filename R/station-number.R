@@ -102,8 +102,28 @@ station_key <-
 
 
 
+# merge with gps coordinates from "new" stations ----------------------------------------------------
+
+# set random number seed
+set.seed(4747) 
 
 
+# create subset of station numbrs and gps coordinates
+cabi_coords <- 
+  bks %>%
+  filter(is.na(start_lat) == FALSE & is.na(start_lng) == FALSE & is.na(start_number) == FALSE) %>% 
+  mutate(r = runif(nrow(.)) ) %>%
+  group_by(start_number) %>%
+  filter(row_number() == 1) %>% # keep only row of each station, determined by random number generation
+  select(start_number, start_lat, start_lng)
+
+
+# merge coordinates with main key
+station_key <- 
+  station_key %>%
+  left_join(., 
+            cabi_coords,
+            by = c("number_new" = "start_number"))
 
 
 
@@ -112,31 +132,39 @@ station_key <-
             #       incorporate open street map id numbers              =======================
             # ---------------------------------------------------------#
 
+# extract features ------------------------------------------------------------------
 
-# extract bikeshare info 
-q <- getbb("Washington, DC") %>% # query...and add features
+# extract bikeshare info as sf object
+osm_bike <- getbb("Washington, DC") %>% # query...and add features
   opq() %>%
-  add_osm_feature("amenity", "bicycle_rental")
+  add_osm_feature("amenity", "bicycle_rental") %>%
+  osmdata_sf()
 
-bkrnt <- osmdata_sf(q) # save as sf object
-
-
-
-# extract metro stations info 
-q.m <- getbb("Washington, DC") %>% # query and add metro features
+# extract metro stations info, save as sf object
+osm_metro <- getbb("Washington, DC") %>% # query and add metro features
   opq() %>%
-  add_osm_feature("railway", "station")
-
-metrostn <- osmdata_sf(q.m) # save as sf object
-
+  add_osm_feature("railway", "station") %>%
+  osmdata_sf()
 
 
 
 
+# join features with main dictionary ------------------------------------------------------
+
+# join by closest name
+
+station_key <- 
+  st_join(stngps,  # imported gps coordinates of bikeshare stations from cabi
+          osm_bike$osm_points, # bikeshare station info from osm
+          join = st_nearest_feature, # merge by nearest proximity
+          left = TRUE # return the left join
+  )
 
 
 
-# export as Rda
+
+
+# export as Rda ---------------------------------------------------------------------------
   saveRDS(station_key,
           file = file.path(processed, "station_key.Rda")) 
 
