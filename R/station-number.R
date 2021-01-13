@@ -309,8 +309,11 @@ assertthat::assert_that(
 
 
 # export as Rda ---------------------------------------------------------------------------
-  saveRDS(station_key,
-          file = file.path(processed, "station_key.Rda")) 
+  
+# export
+saveRDS(station_key,
+        file = file.path(processed, "station_key.Rda")) 
 
-remove(nn, nn.w, namenumb) # should remove all other objects here.
+# remove objects not needed
+remove(nn, nn.w, namenumb) 
 

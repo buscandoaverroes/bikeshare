@@ -107,8 +107,8 @@
 
             s1 <- 0   # import          variable harmonization, append. no data wrangling.
             s2 <- 0   # station #'s     creates old/new station number dictionary
+            s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             
-            x1 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             x2 <- 0   # geoprocessing   constructs all gps things
             x3 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
             x4 <- 0   # station summary     
@@ -127,34 +127,34 @@
   }
 
   # construct
-  if () {
+  if (s3 == 1) {
     source(file.path(scripts, "construct.R"))
   }
 
-  # gps
-  if (s3 == 1) {
-    source(file.path(scripts, "geoprocessing.R"))
-  }
-            
-  # plot
-  if (s4 == 1) {
-    source(file.path(scripts, "geo-merge.R"))
-  }
-            
-  # summary objects 
-  if (s5 == 1) {
-    source(file.path(scripts, "station-summary.R"))
-  }          
-
-  # plot
-  if (s6 == 1) {
-    source(file.path(scripts, "daily-rides.R"))
-  }
-  # leaf
-  if (s7 == 1) {
-    source(file.path(scripts, "leaf.R"))
-  }
-            
+  # # gps
+  # if (s3 == 1) {
+  #   source(file.path(scripts, "geoprocessing.R"))
+  # }
+  #           
+  # # plot
+  # if (s4 == 1) {
+  #   source(file.path(scripts, "geo-merge.R"))
+  # }
+  #           
+  # # summary objects 
+  # if (s5 == 1) {
+  #   source(file.path(scripts, "station-summary.R"))
+  # }          
+  # 
+  # # plot
+  # if (s6 == 1) {
+  #   source(file.path(scripts, "daily-rides.R"))
+  # }
+  # # leaf
+  # if (s7 == 1) {
+  #   source(file.path(scripts, "leaf.R"))
+  # }
+  #           
             
 # things to do ----
             
