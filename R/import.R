@@ -363,14 +363,48 @@ rm(m4,m5,m6,m7,m8,m9)
 
 
 
-# append all years+export ====================================================
-bind_rows(
-  r2010, r2011, r2012, r2013, r2014, r2015,
-  r2016, r2017, r2018, r2019, r2020
-) %>%
+# append all years+export =======================================================
+
+
+# manage duplicates, export another version -------------------------------------
+
+# Eliminate duplicates for number_old
+# starting on 01 June, 2018 (inclusive), station number 31607 appears to be moved from
+# 14th/D to 13th/E  with the name change made accordingly. the station id number was not
+# changed even though the name was not. In this scenario, I will create a "new" station id
+# number, starting with 999, congruent to the numbering schema at the time it was made. This way
+# will be able to distinguish the station from its two points in time: before it was moved, and after
+# it was moved locations. The actual number I will replace the id with is 99901
+
+
+append <-
+  bind_rows(
+    r2010, r2011, r2012, r2013, r2014, r2015,
+    r2016, r2017, r2018, r2019, r2020
+  ) %>%
   select(-is_equity, -ride_id) %>%  # remove unwanted columns
-  fwrite(., 
-         file = file.path(raw, "bks-import.csv"),
-         na = "", # make missings ""
-         compress = "none" # do not compress
-         )
+  mutate( # change start stations
+    start_number2 = case_when(
+      start_name == "13th & E St SE" & start_number == 31607 ~ as.integer(99901),
+      TRUE                                                   ~ start_number,
+    ), # change end stations
+    end_number2 = case_when(
+      end_name == "13th & E St SE" & end_number == 31607 ~ as.integer(99901),
+      TRUE                                                   ~ end_number,
+    )
+  ) %>%
+  select(-start_number, -end_number) %>% # drop original number columns
+  rename(start_number = start_number2, # rename variables to match key variable names
+         end_number   = end_number2)
+
+
+# export raw
+fwrite(append, 
+       file = file.path(raw, "bks-import.csv"),
+       na = "", # make missings ""
+       compress = "none" # do not compress
+)
+
+rm(append)
+
+
