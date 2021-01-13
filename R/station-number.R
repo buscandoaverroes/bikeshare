@@ -235,7 +235,7 @@ station_key <-
 st_crs(station_key) <- crs
 
 # join station_key <- metro by nearest feature
-station_key2 <- 
+station_key <- 
   station_key %>%
   st_join(.,  # imported gps coordinates of bikeshare stations from cabi
           osm_metro$osm_points, # bikeshare station info from osm
@@ -257,29 +257,32 @@ station_key2 <-
 
 
 
-# control for duplicate and na-matches 
+# control for duplicate and na-matches ----------------------------------------------------------
 # note: st_join doesn't have a way to control for NA matches or duplicates. What this
 # means is that if there's an observation with (NA) for geometry, it seems to get
 # matched to all observations in y. Also if there are two stations within the distnace
 # threshold, I think it creates two lines, one for each station within the threshold.
 
 # replace metro data with missing if geometry is missing (correct for no "na_matches=never")
-station_key2$osm_id[st_is_empty(station_key2$geometry)] <- NA
-station_key2$metro[st_is_empty(station_key2$geometry)] <- NA
-station_key2$name_metro[st_is_empty(station_key2$geometry)] <- NA
+station_key$osm_id[st_is_empty(station_key$geometry)] <- NA
+station_key$metro[st_is_empty(station_key$geometry)] <- NA
+station_key$name_metro[st_is_empty(station_key$geometry)] <- NA
+
 
 # eliminate duplicates with the same project/bike station ID AND osmid
-station_key2 <- 
-  station_key2 %>%
+station_key <- 
+  station_key %>%
   distinct(idproj, osm_id, .keep_all = TRUE) # unique across project id for station and osm id
+
 
 # pivot wider to make mutliple cols for each station within threshold
 # note: at this point the duplicates are because there are mutliple stations 
 # within the distance threshold, or there are stations with the same name but potentially
 # two different entraces, etc -- but they have different ids in OpenStreetMap. We'll make
 # all stations listed across horizonally 
-test <-
-station_key2 %>%
+
+station_key <-  
+  station_key %>%
   group_by(idproj) %>%
   st_drop_geometry() %>% # remove geometry to avoid disaster when pivoting
   mutate(n = row_number()) %>%
