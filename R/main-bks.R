@@ -30,7 +30,8 @@
          ggmap,
          gdata,
          lubridate,
-         data.table
+         data.table,
+         janitor
         )
  
 
