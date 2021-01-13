@@ -308,12 +308,21 @@ assertthat::assert_that(
 
 
 
-# export as Rda ---------------------------------------------------------------------------
+# export ---------------------------------------------------------------------------
   
-# export
+# export station_key
 saveRDS(station_key,
-        file = file.path(processed, "station_key.Rda")) 
+        file = file.path(processed, "keys/station_key.Rda")) 
+
+
+# export objects we may need later as Rdata
+save(
+  osm_bike, osm_metro, station_new, station_old, cabi_coords,
+  station_new, station_old,
+  file = file.path(processed, "data/station-geo-objects.Rdata")
+)
 
 # remove objects not needed
-remove(nn, nn.w, namenumb) 
+remove(cabi_coords, namenumb, names_bks, nn, nn.w, osm_bike,
+       osm_metro, station_key, station_new, station_old, bks) 
 
