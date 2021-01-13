@@ -35,6 +35,13 @@ n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
 station_new <- bks %>% filter(start_number < 30000) %>% distinct(start_number) # old numbers are all less than 30,000
 n_station_new <- n_distinct(station_new$start_number, na.rm = TRUE)
 
+
+
+
+
+
+
+
                   # ---------------------------------------------------------#
                   #  create unique internal cabi key for name string to old-new number =================
                   # ---------------------------------------------------------#
@@ -305,5 +312,5 @@ assertthat::assert_that(
   saveRDS(station_key,
           file = file.path(processed, "station_key.Rda")) 
 
-remove(nn, nn.w, namenumb)
+remove(nn, nn.w, namenumb) # should remove all other objects here.
 
