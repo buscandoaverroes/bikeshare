@@ -4,6 +4,18 @@
 # Note: this is run within the station-number script so no packages/data should be needed.
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
+# key variables: first applied after merge with OSM data 
+key_df_vars <- c(
+    "name_bks",   "number_old",
+    "number_new","idproj",
+    "lat",       "lng",
+    "geometry",
+    "osm_id", "metro",    "name_metro"
+)
+
+
+
+
 # load csv 
 bks <- data.table::fread(
   file.path(raw, "bks-import.csv"),
@@ -151,7 +163,8 @@ station_key <-
   filter( # keep if theres only one value per id OR if there are more than 1 value, keep only 
     (n == 1) |     # those that have lat not missing
       (is.na(lat) == FALSE & n>1)
-    )
+    ) %>%
+  select(-n) # remove n column
 
 
 # checking unique station numbers in the background
@@ -180,8 +193,8 @@ assertthat::assert_that(
 )
 
 
-
-
+# store number of rows 
+rowcheck1 <- nrow(station_key)
 
             
             # ---------------------------------------------------------#
@@ -196,27 +209,92 @@ osm_bike <- getbb("Washington, DC") %>% # query...and add features
   add_osm_feature("amenity", "bicycle_rental") %>%
   osmdata_sf()
 
+# set crs
+st_crs(osm_bike$osm_points) <- crs
+
+
 # extract metro stations info, save as sf object
 osm_metro <- getbb("Washington, DC") %>% # query and add metro features
   opq() %>%
   add_osm_feature("railway", "station") %>%
-  osmdata_sf()
+  osmdata_sf() 
 
+# set crs
+st_crs(osm_metro$osm_points) <- crs
 
 
 
 # join features with main dictionary ------------------------------------------------------
 
-# join by closest name
-
+# make sf class
 station_key <- 
-  st_join(stngps,  # imported gps coordinates of bikeshare stations from cabi
-          osm_bike$osm_points, # bikeshare station info from osm
-          join = st_nearest_feature, # merge by nearest proximity
-          left = TRUE # return the left join
-  )
+  station_key %>%
+  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) 
+
+# set crs
+st_crs(station_key) <- crs
+
+# join station_key <- metro by nearest feature
+station_key2 <- 
+  station_key %>%
+  st_join(.,  # imported gps coordinates of bikeshare stations from cabi
+          osm_metro$osm_points, # bikeshare station info from osm
+          join = st_is_within_distance,
+          left = TRUE,  # keep all obs from station key
+          dist = bike_metro_dist,
+          suffix = c(".x", ".y"),
+          na_matches = "never",
+          largest = FALSE
+          ) %>%  # only match first within x meters, otherwise NA.
+  rename(  # first rename BEFORE dropping vars
+    name_bks   = name.x, 
+    name_metro = name.y
+  ) %>%
+  mutate(
+    metro = !is.na(osm_id) # make an indicator if station is close to metro
+  ) %>% 
+  select(key_df_vars) # keep only vars defined above
 
 
+
+# control for duplicate and na-matches 
+# note: st_join doesn't have a way to control for NA matches or duplicates. What this
+# means is that if there's an observation with (NA) for geometry, it seems to get
+# matched to all observations in y. Also if there are two stations within the distnace
+# threshold, I think it creates two lines, one for each station within the threshold.
+
+# replace metro data with missing if geometry is missing (correct for no "na_matches=never")
+station_key2$osm_id[st_is_empty(station_key2$geometry)] <- NA
+station_key2$metro[st_is_empty(station_key2$geometry)] <- NA
+station_key2$name_metro[st_is_empty(station_key2$geometry)] <- NA
+
+# eliminate duplicates with the same project/bike station ID AND osmid
+station_key2 <- 
+  station_key2 %>%
+  distinct(idproj, osm_id, .keep_all = TRUE) # unique across project id for station and osm id
+
+# pivot wider to make mutliple cols for each station within threshold
+# note: at this point the duplicates are because there are mutliple stations 
+# within the distance threshold, or there are stations with the same name but potentially
+# two different entraces, etc -- but they have different ids in OpenStreetMap. We'll make
+# all stations listed across horizonally 
+test <-
+station_key2 %>%
+  group_by(idproj) %>%
+  st_drop_geometry() %>% # remove geometry to avoid disaster when pivoting
+  mutate(n = row_number()) %>%
+  pivot_wider(
+    names_from =  n,
+    values_from = c(osm_id, name_metro),
+    values_fill = NA
+    ) %>%
+  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) # replace geometry
+
+
+# check that the number of rows is the same as before the duplicate checking 
+assertthat::assert_that(
+  nrow(station_key) == rowcheck1
+)
 
 
 

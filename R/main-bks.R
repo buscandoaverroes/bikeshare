@@ -93,8 +93,11 @@
     
   baselist <- c("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
                 "csv", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8")
-    
-    
+  
+  
+  # values   
+  crs               <- 4326 # main crs for project  
+  bike_metro_dist   <- 250 # distance in meters; determines if bike station is "near" a metro station.
     
 
 
