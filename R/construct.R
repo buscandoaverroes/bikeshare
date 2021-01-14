@@ -19,6 +19,11 @@ bks <- data.table::fread(
 )
 
 
+# drop bike number col 
+bks <- bks %>%
+   select(-bike)
+
+
 # make names object 
 names_bks <- 
    as_tibble(names(bks)) %>%
@@ -63,9 +68,6 @@ bks %>%
        compress = "none" # do not compress
       )
 
-# drop bike number col 
-bks <- bks %>%
-   select(-bike)
 
 # 
 # # make subsample for easy processing
