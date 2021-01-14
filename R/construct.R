@@ -67,18 +67,18 @@ bks %>%
 bks <- bks %>%
    select(-bike)
 
-
-# make subsample for easy processing
-# note: here I don't set the seed because I actually want a difference each time.
-sample <- bks %>%
-   mutate(r = runif(nrow(.)) ) %>% # make random variable
-   arrange(r) %>%
-   filter(row_number() <= 1000) %>% # keep only first 1000 rows
-   select(-r) %>% # eliminate random variable
-   mutate(id_ride = row_number()) # generate rideid
-   
-   
-   saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
+# 
+# # make subsample for easy processing
+# # note: here I don't set the seed because I actually want a difference each time.
+# sample <- bks %>%
+#    mutate(r = runif(nrow(.)) ) %>% # make random variable
+#    arrange(r) %>%
+#    filter(row_number() <= 1000) %>% # keep only first 1000 rows
+#    select(-r) %>% # eliminate random variable
+#    mutate(id_ride = row_number()) # generate rideid
+#    
+#    
+#    saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
 
 
    
@@ -100,8 +100,8 @@ station_key <- readRDS(file.path(processed, "keys/station_key.Rda"))
 
 # OLD numbering schema joins --------------------------------------------------------------
 # join 1: OLD.start: start_number <<< number_old
-test <-
-   sample %>%
+bks <-
+   bks %>%
    left_join(., station_key,
              by = c("start_number" = "number_old"),
              na_matches = "never") %>%
@@ -150,8 +150,8 @@ test <-
 
 
 # create duration 
-test <- 
-   test %>%
+bks <- 
+   bks %>%
    mutate( # generate components of duration
       leave  = ymd_hms(start_date, tz = "US/Eastern"),
       arrive = ymd_hms(end_date, tz = "US/Eastern")
@@ -163,7 +163,7 @@ test <-
 
 # 
 # 
-#    test %>%
+#    bks %>%
 #    mutate(
 #       leave  = ymd_hms(start_date, tz = "US/Eastern"),
 #       arrive = ymd_hms(end_date, tz = "US/Eastern"),
@@ -179,8 +179,8 @@ test <-
 
 
 # Change factor levels to member/guest binary----
-test <-
-   test %>%
+bks <-
+   bks %>%
    rename(member_str = member) %>%
    mutate(
       electric = case_when(
