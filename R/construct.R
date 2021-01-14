@@ -84,7 +84,7 @@ bks %>%
 #    
 #    
 #    saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
-   sample <- readRDS(file.path(processed, "sample.Rda"))
+#   sample <- readRDS(file.path(processed, "sample.Rda"))
 
 
 
@@ -195,6 +195,16 @@ bks <-
 # check that there is only 1 unique value per pair of old-new start and old-new end values
 
 
+# export as csv 
+fwrite(bks, 
+       file = file.path(processed, "data/bks-full.csv"),
+       na = "", # make missings ""
+       compress = "none" # do not compress
+)
+
+# save as Rda
+saveRDS(bks,
+        file = file.path(processed, "data/bks-full.Rda"), compress = FALSE)
 
 
 
