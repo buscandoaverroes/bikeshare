@@ -26,17 +26,32 @@ names_bks <-
 
 # make string of variable names 
 vars_bks1 <- names(bks)             # raw varnames 
-vars_bks2 <- c(
-   "duration",     "bike",         "member",       "start_date",  
+
+vars_bks2 <- c(                     # variables after merge with project id
+   "duration", "member",       "start_date",  
    "end_date",     "type",        
-   "idride",      "id_start",      "id_end" , 
+   "id_ride",      "id_start",      "id_end" , 
    "start_lat",    "start_lng",    "end_lat",      "end_lng"    
 )
+
+
+vars_bks3 <- c(                     # variables variable generation
+   "id_ride",      "id_start",      "id_end" , 
+   "start_lat",    "start_lng",    "end_lat",      "end_lng",
+   "leave", "dur", "electric", "member"
+)
+
  
 
 # create ride id
+
+set.seed(47)
+
 bks <- bks %>%
-   mutate(id_ride = row_number())
+   mutate(r = runif(nrow(.)) ) %>% # make random variable
+   arrange(r) %>%
+   mutate(id_ride = row_number()) %>%
+   select(-r)
 
 
 # create a subset with only id_ride and bike number so we can get ride of bike nummber 
@@ -90,25 +105,25 @@ test <-
    left_join(., station_key,
              by = c("start_number" = "number_old"),
              na_matches = "never") %>%
-   select(vars_bks1, idride, idproj)  %>%
+   select(vars_bks1, id_ride, idproj)  %>%
    rename(id_start_old = idproj) %>%
    # join 2: OLD.end: end_number <<< number_old
    left_join(., station_key,
           by = c("end_number" = "number_old"),
           na_matches = "never") %>%
-   select(vars_bks1, idride, idproj, id_start_old) %>%
+   select(vars_bks1, id_ride, idproj, id_start_old) %>%
    rename(id_end_old = idproj) %>%
    # join 3: NEW.start: start_number <<< number_new
    left_join(., station_key,
           by = c("start_number" = "number_new"),
           na_matches = "never") %>%
-   select(vars_bks1, idride, idproj, id_start_old, id_end_old) %>%
+   select(vars_bks1, id_ride, idproj, id_start_old, id_end_old) %>%
    rename(id_start_new = idproj) %>%
    # join 4: NEW.end: end_number <<< number_new
    left_join(., station_key,
           by = c("end_number" = "number_new"),
           na_matches = "never") %>%
-   select(vars_bks1, idride, idproj, id_start_old, id_end_old, id_start_new) %>%
+   select(vars_bks1, id_ride, idproj, id_start_old, id_end_old, id_start_new) %>%
    rename(id_end_new = idproj) %>%    # assert that there's only 1 id for between id %%?
    mutate(
       id_start = coalesce(id_start_old, id_start_new),
@@ -144,10 +159,7 @@ test <-
    select(-start_date, -end_date) %>% # remove start and end cols
    mutate( # create duration in rounded minutes
       dur = as.integer(round((leave %--% arrive) / minutes(1)))
-   ) %>%
-   select(-arrive, -duration) # remove arrive and duration cols
-
-
+   ) 
 
 # 
 # 
@@ -185,7 +197,7 @@ test <-
          member_str == "casual"  ~ FALSE
       )
    ) %>% 
-   select(-member_str) # remove string member variable
+   select(vars_bks3) # remove string member variable
 
 
 object.size(test$duration)
@@ -193,3 +205,4 @@ object.size(test$dur)
 object.size(test$leave)
 object.size(test$electric)
 object.size(test$bike)
+object.size(test$start_lat)
