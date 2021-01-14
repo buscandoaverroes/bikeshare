@@ -105,8 +105,9 @@ test <-
 # check that there is only 1 unique value per pair of old-new start and old-new end values
 
 
-#test %>% get_dupes(idride) %>% view() # idproj nos 26 and 33 have different names but same oldstation no. compbine?
-# 4 duplicates
+
+
+
 
 
 
@@ -115,25 +116,62 @@ test <-
                              #---------------------#
 
 
-# create duration for bks2020.2
-sample$dur <-lubridate::as.duration(bks2020.2$`End date` - bks2020.2$`Start date`)
+# create duration 
+test <- 
+   test %>%
+   mutate( # generate components of duration
+      leave  = ymd_hms(start_date, tz = "US/Eastern"),
+      arrive = ymd_hms(end_date, tz = "US/Eastern")
+   ) %>%
+   select(-start_date, -end_date) %>% # remove start and end cols
+   mutate( # create duration in rounded minutes
+      dur = as.integer(round((leave %--% arrive) / minutes(1)))
+   ) %>%
+   select(-arrive, -duration) # remove arrive and duration cols
+
+
+
+# 
+# 
+#    test %>%
+#    mutate(
+#       leave  = ymd_hms(start_date, tz = "US/Eastern"),
+#       arrive = ymd_hms(end_date, tz = "US/Eastern"),
+#       interval= leave %--% arrive,
+#       dur    = interval / dminutes(1),
+#       dur2   = interval / minutes(1),
+#       dur_int= interval %/% dminutes(1),
+#       dur_round= round(interval / minutes(1)),
+#       seconds= interval %/% dseconds(1)
+#      # period = as.period(interval)
+#    )
+#    
 
 
 # Change factor levels to member/guest binary----
+test <-
+   test %>%
+   rename(member_str = member) %>%
+   mutate(
+      electric = case_when(
+         type == "electric_bike" ~ TRUE,
+         type == "docked_bike"   ~ FALSE,
+         is.na(type) == TRUE     ~ FALSE
+         ),
+      member = case_when(
+         member_str == "member"  ~ TRUE,
+         member_str == "Member"  ~ TRUE,
+         member_str == "guest"   ~ FALSE,
+         member_str == "Guest"   ~ FALSE,
+         member_str == "Casual"  ~ FALSE,
+         member_str == "casual"  ~ FALSE
+      )
+   ) %>% 
+   select(-member_str) # remove string member variable
 
 
-
-
-# check factor levels of membership type, bike type
-bks2020.2 <- 
- mutate(bks2020.2,
-        `Member type` = fct_recode(`Member type`,
-                                   "Member" = "member",
-                                   "Guest" = "casual"),
-        `Bike type` = fct_recode(`Bike type`,
-                                 "Electric" = "electric_bike",
-                                 "Classic"  = "docked_bike")
-        
- )
-
-
+object.size(test$duration)
+object.size(test$dur)
+object.size(test$leave)
+object.size(test$electric)
+object.size(test$bike)
