@@ -32,19 +32,22 @@ names_bks <-
 # make string of variable names 
 vars_bks1 <- names(bks)             # raw varnames 
 
-vars_bks2 <- c(                     # variables after merge with project id
-   "duration", "member",       "start_date",  
-   "end_date",     "type",        
-   "id_ride",      "id_start",      "id_end" , 
-   "start_lat",    "start_lng",    "end_lat",      "end_lng"    
+
+vars_bks2 <- c(                     # variables variable generation
+   
+   "id_ride", 
+   "start_number", "end_number",  
+   "leave", "dur",         
+   "electric", "member"   
 )
 
-
-vars_bks3 <- c(                     # variables variable generation
-   "id_ride",      "id_start",      "id_end" , 
-   "start_lat",    "start_lng",    "end_lat",      "end_lng",
-   "leave", "dur", "electric", "member"
+vars_bks3 <- c(                     # variables after merge with project id
+   "id_ride", 
+   "leave", "dur",         
+   "electric", "member", 
+   "id_start", "id_end"
 )
+
 
  
 
@@ -81,9 +84,59 @@ bks %>%
 #    
 #    
 #    saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
+   sample <- readRDS(file.path(processed, "sample.Rda"))
 
 
-   
+
+
+
+
+                           
+                           #---------------------#
+                           #   New Variables      ====================================
+                           #---------------------#
+
+
+# create duration, year, month, day, etc
+bks <-
+   bks %>%
+   mutate( # generate components of duration
+      leave  = ymd_hms(start_date, tz = "US/Eastern"),
+      arrive = ymd_hms(end_date, tz = "US/Eastern")
+   ) %>%
+   select(-start_date, -end_date) %>% # remove start and end cols
+   mutate( # create duration in rounded minutes
+      dur   = as.integer(round((leave %--% arrive) / minutes(1)))
+      # year  = as.integer(year(leave)),
+      # month = month(leave, label = TRUE, abbr = TRUE),
+      # day   = day(leave),
+      # wday  = as.integer(wday(leave, label = TRUE, abbr = TRUE)),
+      # hour  = as.integer(hour(leave)),
+      # min   = as.integer(min(leave))
+   )
+
+
+# Change factor levels to member/guest binary
+bks <-
+   bks %>%
+   rename(member_str = member) %>%
+   mutate(
+      electric = case_when(
+         type == "electric_bike" ~ TRUE,
+         type == "docked_bike"   ~ FALSE,
+         is.na(type) == TRUE     ~ FALSE
+      ),
+      member = case_when(
+         member_str == "member"  ~ TRUE,
+         member_str == "Member"  ~ TRUE,
+         member_str == "guest"   ~ FALSE,
+         member_str == "Guest"   ~ FALSE,
+         member_str == "Casual"  ~ FALSE,
+         member_str == "casual"  ~ FALSE
+      )
+   ) %>%
+   select(vars_bks2) # remove string member variable
+
 
                               
                               #---------------------#
@@ -97,36 +150,37 @@ bks %>%
 
 
 # load station key
-station_key <- readRDS(file.path(processed, "keys/station_key.Rda"))
+station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
+   rename(id_proj = idproj)
 
 
-# OLD numbering schema joins --------------------------------------------------------------
+# joins --------------------------------------------------------------
 # join 1: OLD.start: start_number <<< number_old
 bks <-
    bks %>%
    left_join(., station_key,
              by = c("start_number" = "number_old"),
              na_matches = "never") %>%
-   select(vars_bks1, id_ride, idproj)  %>%
-   rename(id_start_old = idproj) %>%
+   select(vars_bks2, id_proj)  %>%
+   rename(id_start_old = id_proj) %>%
    # join 2: OLD.end: end_number <<< number_old
    left_join(., station_key,
           by = c("end_number" = "number_old"),
           na_matches = "never") %>%
-   select(vars_bks1, id_ride, idproj, id_start_old) %>%
-   rename(id_end_old = idproj) %>%
+   select(vars_bks2, id_proj, id_start_old) %>%
+   rename(id_end_old = id_proj) %>%
    # join 3: NEW.start: start_number <<< number_new
    left_join(., station_key,
           by = c("start_number" = "number_new"),
           na_matches = "never") %>%
-   select(vars_bks1, id_ride, idproj, id_start_old, id_end_old) %>%
-   rename(id_start_new = idproj) %>%
+   select(vars_bks2, id_proj, id_start_old, id_end_old) %>%
+   rename(id_start_new = id_proj) %>%
    # join 4: NEW.end: end_number <<< number_new
    left_join(., station_key,
           by = c("end_number" = "number_new"),
           na_matches = "never") %>%
-   select(vars_bks1, id_ride, idproj, id_start_old, id_end_old, id_start_new) %>%
-   rename(id_end_new = idproj) %>%    # assert that there's only 1 id for between id %%?
+   select(vars_bks2, id_proj, id_start_old, id_end_old, id_start_new) %>%
+   rename(id_end_new = id_proj) %>%    # assert that there's only 1 id for between id %%?
    mutate(
       id_start = coalesce(id_start_old, id_start_new),
       id_end   = coalesce(id_end_old, id_end_new)
@@ -136,7 +190,7 @@ bks <-
       n_id_start = sum(!is.na(id_start_new)) + sum(!is.na(id_start_old)),
       n_id_end = sum(!is.na(id_end_new)) + sum(!is.na(id_end_old))
    ) %>%
-   select(vars_bks2)
+   select(vars_bks3)
 
 # check that there is only 1 unique value per pair of old-new start and old-new end values
 
@@ -145,66 +199,22 @@ bks <-
 
 
 
-
-                             #---------------------#
-                             #   New Variables      ====================================
-                             #---------------------#
-
-
-# create duration 
-bks <- 
-   bks %>%
-   mutate( # generate components of duration
-      leave  = ymd_hms(start_date, tz = "US/Eastern"),
-      arrive = ymd_hms(end_date, tz = "US/Eastern")
-   ) %>%
-   select(-start_date, -end_date) %>% # remove start and end cols
-   mutate( # create duration in rounded minutes
-      dur = as.integer(round((leave %--% arrive) / minutes(1)))
-   ) 
-
-# 
-# 
-#    bks %>%
-#    mutate(
-#       leave  = ymd_hms(start_date, tz = "US/Eastern"),
-#       arrive = ymd_hms(end_date, tz = "US/Eastern"),
-#       interval= leave %--% arrive,
-#       dur    = interval / dminutes(1),
-#       dur2   = interval / minutes(1),
-#       dur_int= interval %/% dminutes(1),
-#       dur_round= round(interval / minutes(1)),
-#       seconds= interval %/% dseconds(1)
-#      # period = as.period(interval)
-#    )
-#    
-
-
-# Change factor levels to member/guest binary----
-bks <-
-   bks %>%
-   rename(member_str = member) %>%
-   mutate(
-      electric = case_when(
-         type == "electric_bike" ~ TRUE,
-         type == "docked_bike"   ~ FALSE,
-         is.na(type) == TRUE     ~ FALSE
-         ),
-      member = case_when(
-         member_str == "member"  ~ TRUE,
-         member_str == "Member"  ~ TRUE,
-         member_str == "guest"   ~ FALSE,
-         member_str == "Guest"   ~ FALSE,
-         member_str == "Casual"  ~ FALSE,
-         member_str == "casual"  ~ FALSE
-      )
-   ) %>% 
-   select(vars_bks3) # remove string member variable
-
-
 object.size(test$duration)
 object.size(test$dur)
 object.size(test$leave)
 object.size(test$electric)
 object.size(test$bike)
 object.size(test$start_lat)
+
+
+# fyi:
+# > object.size(bks)
+# [1] 6,707,810,384 bytes
+# > object.size(bks$start_date)
+# [1] 2,245,481,096 bytes
+# > object.size(bks$id_ride)
+#  [1] 111,056,416 bytes
+# > object.size(bks$start_lat)      # not bad, but times 4
+#  [1] 222,112,776 bytes
+# > object.size(bks$start_number)
+#  [1] 111,056,416 bytes
