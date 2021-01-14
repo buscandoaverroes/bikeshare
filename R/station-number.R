@@ -328,7 +328,7 @@ station_key_newmiss <-
 # remove this subset from the main dataset, spread across new number
 # Note: this will only work properly if you have a nonmissing value 
 # for number_new
-test <- 
+station_key <- 
   station_key %>%
   filter(!is.na(number_new)) %>%
   ungroup() %>% # undo previous grouping
@@ -368,18 +368,18 @@ test <-
 
 # new stations
 assertthat::assert_that(
-  n_distinct(test$number_new) + 1 == n_station_new
+  n_distinct(station_key$number_new) + 1 == n_station_new
 )
 
 # old stations
 assertthat::assert_that(
   # note: must include id's in the second column
-  n_distinct(c(test$number_old, test$number_old_2), na.rm = TRUE) == n_station_old
+  n_distinct(c(station_key$number_old, station_key$number_old_2), na.rm = TRUE) == n_station_old
 )
 
 # check that idproject is unique project id
 assertthat::assert_that(
-  n_distinct(test$idproj) == nrow(test)
+  n_distinct(station_key$idproj) == nrow(station_key)
 )
 
 
