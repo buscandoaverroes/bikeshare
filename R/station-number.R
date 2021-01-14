@@ -395,11 +395,11 @@ saveRDS(station_key,
 # export objects we may need later as Rdata
 save(
   osm_bike, osm_metro, station_new, station_old, cabi_coords,
-  station_new, station_old,
+  station_new, station_old, station_key_newmiss,
   file = file.path(processed, "data/station-geo-objects.Rdata")
 )
 
 # remove objects not needed
 remove(cabi_coords, namenumb, names_bks, nn, nn.w, osm_bike,
-       osm_metro, station_key, station_new, station_old, bks) 
+       osm_metro, station_key, station_new, station_old, bks, station_key_newmiss) 
 

@@ -25,7 +25,14 @@ names_bks <-
    gather()
 
 # make string of variable names 
-vars_bks1 <- names(bks)
+vars_bks1 <- names(bks)             # raw varnames 
+vars_bks2 <- c(
+   "duration",     "bike",         "member",       "start_date",  
+   "end_date",     "type",        
+   "idride",      "id_start",      "id_end" , 
+   "start_lat",    "start_lng",    "end_lat",      "end_lng"    
+       
+)
  
 
 # make subsample for easy processing
@@ -35,7 +42,7 @@ sample <- bks %>%
    arrange(r) %>%
    filter(row_number() <= 1000) %>% # keep only first 1000 rows
    select(-r) %>% # eliminate random variable
-   mutate(idride = row_number()) # generate rideid
+   mutate(id_ride = row_number()) # generate rideid
    
    
 saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
@@ -59,28 +66,47 @@ station_key <- readRDS(file.path(processed, "keys/station_key.Rda"))
 
 # OLD numbering schema joins --------------------------------------------------------------
 # join 1: OLD.start: start_number <<< number_old
-
 test <-
    sample %>%
    left_join(., station_key,
              by = c("start_number" = "number_old"),
              na_matches = "never") %>%
-   select(vars_bks1, idride, idproj) 
+   select(vars_bks1, idride, idproj)  %>%
+   rename(id_start_old = idproj) %>%
+   # join 2: OLD.end: end_number <<< number_old
+   left_join(., station_key,
+          by = c("end_number" = "number_old"),
+          na_matches = "never") %>%
+   select(vars_bks1, idride, idproj, id_start_old) %>%
+   rename(id_end_old = idproj) %>%
+   # join 3: NEW.start: start_number <<< number_new
+   left_join(., station_key,
+          by = c("start_number" = "number_new"),
+          na_matches = "never") %>%
+   select(vars_bks1, idride, idproj, id_start_old, id_end_old) %>%
+   rename(id_start_new = idproj) %>%
+   # join 4: NEW.end: end_number <<< number_new
+   left_join(., station_key,
+          by = c("end_number" = "number_new"),
+          na_matches = "never") %>%
+   select(vars_bks1, idride, idproj, id_start_old, id_end_old, id_start_new) %>%
+   rename(id_end_new = idproj) %>%    # assert that there's only 1 id for between id %%?
+   mutate(
+      id_start = coalesce(id_start_old, id_start_new),
+      id_end   = coalesce(id_end_old, id_end_new)
+   ) %>% 
+   rowwise() %>% # work rowwise
+   mutate( # create a var that sums nonmissing values for start and end number
+      n_id_start = sum(!is.na(id_start_new)) + sum(!is.na(id_start_old)),
+      n_id_end = sum(!is.na(id_end_new)) + sum(!is.na(id_end_old))
+   ) %>%
+   select(vars_bks2)
 
-test %>% get_dupes(idride) %>% view() # idproj nos 26 and 33 have different names but same oldstation no. compbine?
+# check that there is only 1 unique value per pair of old-new start and old-new end values
 
+
+#test %>% get_dupes(idride) %>% view() # idproj nos 26 and 33 have different names but same oldstation no. compbine?
 # 4 duplicates
-
-
-# join 2: OLD.end: end_number <<< number_old
-
-
-# join 1: NEW.start: start_number <<< number_new
-
-
-# join 1: NEW.end: end_number <<< number_new
-
-
 
 
 
