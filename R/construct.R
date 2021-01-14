@@ -31,9 +31,27 @@ vars_bks2 <- c(
    "end_date",     "type",        
    "idride",      "id_start",      "id_end" , 
    "start_lat",    "start_lng",    "end_lat",      "end_lng"    
-       
 )
  
+
+# create ride id
+bks <- bks %>%
+   mutate(id_ride = row_number())
+
+
+# create a subset with only id_ride and bike number so we can get ride of bike nummber 
+bks %>%
+   select(id_ride, bike) %>%
+   fwrite(
+       file = file.path(processed, "data/bks-bikenos.csv"),
+       na = "", # make missings ""
+       compress = "none" # do not compress
+      )
+
+# drop bike number col 
+bks <- bks %>%
+   select(-bike)
+
 
 # make subsample for easy processing
 # note: here I don't set the seed because I actually want a difference each time.
@@ -45,9 +63,10 @@ sample <- bks %>%
    mutate(id_ride = row_number()) # generate rideid
    
    
-saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
+   saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
 
 
+   
 
                               
                               #---------------------#
@@ -103,7 +122,6 @@ test <-
    select(vars_bks2)
 
 # check that there is only 1 unique value per pair of old-new start and old-new end values
-
 
 
 
