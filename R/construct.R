@@ -106,7 +106,7 @@ bks <-
    ) %>%
    select(-start_date, -end_date) %>% # remove start and end cols
    mutate( # create duration in rounded minutes
-      dur   = as.integer(round((leave %--% arrive) / minutes(1)))
+      dur   = as.integer(round((leave %--% arrive) / minutes(1))),
       year  = as.integer(year(leave)),
       month = month(leave, label = FALSE), # leave as numeric
       wday  = as.integer(wday(leave, label = FALSE)), # leave as numeric
