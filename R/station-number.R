@@ -119,7 +119,7 @@ station_key <- data.frame(nn.w) %>%
 # generate project id
 station_key <- 
   station_key %>%
-  arrange(name) %>%
+  arrange(name) %>% 
   mutate(
     idproj = row_number()
   ) 
@@ -307,6 +307,81 @@ station_key <-
 assertthat::assert_that(
   nrow(station_key) == rowcheck1
 )
+
+
+
+# pivot wider to accomodate for stations with multiple names
+# some stations appear to have name changes over time but do
+# not seem to move locations in any practical sense (it may be
+# that the stations move across the street, for example, but  
+# not 3 blocks away, etc). For these cases, we want to make sure
+# that there are no duplicate old or new id numbers for each row
+# of the station names. Thus, we'll pivot wider to allow for 
+# multiple name columns. 
+
+# store subset of dataset that does not have a valid value for number_new
+station_key_newmiss <- 
+  station_key %>%
+  filter(is.na(number_new))
+
+
+# remove this subset from the main dataset, spread across new number
+# Note: this will only work properly if you have a nonmissing value 
+# for number_new
+test <- 
+  station_key %>%
+  filter(!is.na(number_new)) %>%
+  ungroup() %>% # undo previous grouping
+  #mutate(row = row_number()) %>%
+  st_drop_geometry() %>% # remove geometry to avoid disaster when pivoting
+  group_by(number_new) %>% # is this right?
+  arrange(idproj) %>% # keep the project id of the lowest one
+  mutate( # make numbers for each of the unique names per number_new, only if number_new is nonmissing
+    it = if_else(!is.na(number_new), # condition
+                true = row_number(),
+                false= as.integer(1))
+  ) %>%
+  ungroup() %>%
+  pivot_wider(
+    names_from =  it,
+    values_from = c(name_bks, idproj, number_old), # should be number_old, but get not unique
+    values_fill = NA
+  ) %>%
+  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) %>% # replace geometry
+  rename(  # rename old variables
+    name_bks = name_bks_1,
+    name_metro = name_metro_1,
+    osm_id = osm_id_1,
+    idproj = idproj_1,
+    number_old = number_old_1
+    ) %>%
+  bind_rows(station_key_newmiss) %>% # reincorporate 
+  select(key_df_vars, everything()) %>% # reorder
+  arrange(idproj) # sort 
+  
+# check that there are no duplicates in number_old, number_new, idproj -----------------------
+
+# final checks 
+# note that new station number 285 is the motivate tech office, with only 8 observations 
+# and no GPS info. We will omit this station. Therefore, the unique new station number count
+# should be 1 fewer than station_new object
+
+# new stations
+assertthat::assert_that(
+  n_distinct(test$number_new) + 1 == n_station_new
+)
+
+# old stations
+assertthat::assert_that(
+  # note: must include id's in the second column
+  n_distinct(c(test$number_old, test$number_old_2), na.rm = TRUE) == n_station_old
+)
+
+# check that idproject is unique project id
+assertthat::assert_that(
+  n_distinct(test$idproj) == nrow(test)
+)
+
 
 
 
