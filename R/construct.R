@@ -107,12 +107,10 @@ bks <-
    select(-start_date, -end_date) %>% # remove start and end cols
    mutate( # create duration in rounded minutes
       dur   = as.integer(round((leave %--% arrive) / minutes(1)))
-      # year  = as.integer(year(leave)),
-      # month = month(leave, label = TRUE, abbr = TRUE),
-      # day   = day(leave),
-      # wday  = as.integer(wday(leave, label = TRUE, abbr = TRUE)),
-      # hour  = as.integer(hour(leave)),
-      # min   = as.integer(min(leave))
+      year  = as.integer(year(leave)),
+      month = month(leave, label = FALSE), # leave as numeric
+      wday  = as.integer(wday(leave, label = FALSE)), # leave as numeric
+      hour  = as.integer(hour(leave))
    )
 
 
@@ -208,6 +206,10 @@ saveRDS(bks,
 
 
 
+
+# test query
+bks %>% 
+   filter(as.integer(hour(leave)) == 8)
 
 object.size(test$duration)
 object.size(test$dur)
