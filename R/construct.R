@@ -37,13 +37,15 @@ vars_bks2 <- c(                     # variables variable generation
    
    "id_ride", 
    "start_number", "end_number",  
-   "leave", "dur",         
+   "leave", "dur", 
+   "year", "month", "wday", "hour",
    "electric", "member"   
 )
 
 vars_bks3 <- c(                     # variables after merge with project id
    "id_ride", 
-   "leave", "dur",         
+   "leave", "dur", 
+   "year", "month", "wday", "hour",
    "electric", "member", 
    "id_start", "id_end"
 )
