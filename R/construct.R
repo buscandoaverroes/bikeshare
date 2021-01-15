@@ -18,6 +18,9 @@ bks <- data.table::fread(
    na.strings = "" 
 )
 
+# store number of rows 
+n_rides <- nrow(bks)
+
 
 # drop bike number col 
 bks <- bks %>%
@@ -53,7 +56,7 @@ vars_bks3 <- c(                     # variables after merge with project id
 
  
 
-# create ride id
+# create ride id ------------------------------------------------------------------------------
 
 set.seed(47)
 
@@ -64,7 +67,7 @@ bks <- bks %>%
    select(-r)
 
 
-# create a subset with only id_ride and bike number so we can get ride of bike nummber 
+# export a subset with only id_ride and bike number so we can get ride of bike number ---------- 
 bks %>%
    select(id_ride, bike) %>%
    fwrite(
@@ -176,7 +179,9 @@ bks <-
 # check that there is only 1 unique value per pair of old-new start and old-new end values
 
 # check that the number of rows didn't change.
-
+assertthat::assert_that(
+   n_rides == nrow(bks) # where n_rides is the original number of rows
+)
 
 # export as csv 
 fwrite(bks, 
