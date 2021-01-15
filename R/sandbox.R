@@ -46,8 +46,6 @@ bks1820 <-
   )
 
 
-
-
 # descriptive stats =============================================================
 
 # station summaries
@@ -71,21 +69,31 @@ sum_station <-
 # try station summary with altered standard deviation forumla
 sum_station_end <-
   bks2020 %>%
+  filter(!is.na(id_start)) %>%
   group_by(id_start, id_end, year) %>%
   summarize(
     n_trip_to_end = n() # by destination number of trips
   ) %>%
   ungroup() %>% group_by(id_start, year) %>% # ungroup, regroup only by start id and year
   summarise(
-    n_depart = sum(n_trip_to_end), # if you add all the by-destination number of trips = total number of station departures
+    departures = sum(n_trip_to_end), # if you add all the by-destination number of trips = total number of station departures
     n_dest   = n_distinct(id_end), # number of distinct end stations
-    sd       = round(sd(n_trip_to_end, na.rm = TRUE), 2) 
+    sd       = round(sd(n_trip_to_end, na.rm = TRUE), 2) # this is our temporary measure of 'parity' in destination distribution
     # here what we want is the exact same formula as sd() but using max instead of sample mean
-
   )
 
 
+
 # graphing break!
+
+sum_station_end %>%
+  filter(departures >= 100) %>% # include only stations at least 100 departures
+  ggplot(., aes(n_dest,sd, size=departures)) +
+  geom_point(alpha = 0.5) + 
+  ylim(0,300) 
+ # scale_x_log10() +
+  facet_grid(rows=vars(year)) 
+
 
 
 
