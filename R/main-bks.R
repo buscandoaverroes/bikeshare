@@ -133,7 +133,13 @@
   if (s3 == 1) {
     source(file.path(scripts, "construct.R"))
   }
-
+  
+  # query
+  if (s4 == 1) {
+    source(file.path(scripts, "query.R"))
+  }         
+            
+            
   # # gps
   # if (s3 == 1) {
   #   source(file.path(scripts, "geoprocessing.R"))
