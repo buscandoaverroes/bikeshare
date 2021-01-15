@@ -194,6 +194,8 @@ bks <-
 
 # check that there is only 1 unique value per pair of old-new start and old-new end values
 
+# check that the number of rows didn't change.
+
 
 # export as csv 
 fwrite(bks, 
@@ -206,19 +208,6 @@ fwrite(bks,
 saveRDS(bks,
         file = file.path(processed, "data/bks-full.Rda"), compress = FALSE)
 
-
-
-
-# test query
-bks %>% 
-   filter(as.integer(hour(leave)) == 8)
-
-object.size(test$duration)
-object.size(test$dur)
-object.size(test$leave)
-object.size(test$electric)
-object.size(test$bike)
-object.size(test$start_lat)
 
 
 # fyi:
