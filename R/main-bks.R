@@ -109,6 +109,8 @@
             s1 <- 0   # import          variable harmonization, append. no data wrangling.
             s2 <- 0   # station #'s     creates old/new station number dictionary
             s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+            s4 <- 0   # query:          filters/queries main database and exports files.
+            
             
             x2 <- 0   # geoprocessing   constructs all gps things
             x3 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
