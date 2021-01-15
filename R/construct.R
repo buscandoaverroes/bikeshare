@@ -21,12 +21,6 @@ bks <- data.table::fread(
 # store number of rows 
 n_rides <- nrow(bks)
 
-
-# drop bike number col 
-bks <- bks %>%
-   select(-bike)
-
-
 # make names object 
 names_bks <- 
    as_tibble(names(bks)) %>%
@@ -77,7 +71,16 @@ bks %>%
       )
 
 
-                           
+# drop bike number col 
+bks <- bks %>%
+   select(-bike)
+
+                       
+
+
+
+
+    
                            #---------------------#
                            #   New Variables      ====================================
                            #---------------------#
