@@ -82,7 +82,59 @@ sum_station_end <-
     # here what we want is the exact same formula as sd() but using max instead of sample mean
   )
 
+# create top proportion
+# tells us what percent of departures from a station go to a station that is in the 
+# top 5% most gone-to stations
+top05p <-
+  bks2020 %>%
+    #create list of total departures by station 
+    group_by(id_start, id_end, year) %>%
+    summarize(
+      n_trip_to_end = n() # by destination number of trips
+    ) %>%
+    ungroup() %>% group_by(id_start, year) %>%
+    slice_max(order_by = n_trip_to_end, prop = 0.05, with_ties = TRUE) %>% # create list of top 5% of destinations
+    summarise( # note that using proportion rounds down, so if prop=0.1 and there are fewer than 10 destinations, the station is excluded.
+      n_top05 = sum(n_trip_to_end)
+    )
 
+
+# create top n=3
+# tells us what percent of departures from a station go to a station that is in the 
+# top 3 most gone-to stations
+top3n <-
+  bks2020 %>%
+  #create list of total departures by station 
+  group_by(id_start, id_end, year) %>%
+  summarize(
+    n_trip_to_end = n() # by destination number of trips
+  ) %>%
+  ungroup() %>% group_by(id_start, year) %>%
+  slice_max(order_by = n_trip_to_end, n = 3, with_ties = TRUE) %>% # create list of top 5% of destinations
+  summarise( # note that using proportion rounds down, so if prop=0.1 and there are fewer than 10 destinations, the station is excluded.
+    n_top3 = sum(n_trip_to_end)
+  )
+
+
+# join sum_station_end with top, create pct top p variable 
+# This variable will tell us: what percent of rides that leave
+# a station go to one of the stations in the top 5 % of destinations
+# for that station. This is one measure of flow 'parity'.
+sum_station_end <- 
+  sum_station_end %>%
+  left_join(top05p, # join to top percent
+            by = c("id_start", "year"),
+            na_matches = "never") %>%
+  left_join(top3n, # join to top percent
+            by = c("id_start", "year"),
+            na_matches = "never") %>%
+  mutate(
+    departures_pct_top05 = round( (n_top05/departures), 3), 
+    departures_n_top3    = round( (n_top3/departures), 3),
+  )
+
+  
+  
 
 # graphing break!
 
@@ -93,6 +145,14 @@ sum_station_end %>%
   ylim(0,300) 
  # scale_x_log10() +
   facet_grid(rows=vars(year)) 
+
+sum_station_end %>%
+  filter(departures >= 100) %>% # include only stations at least 100 departures
+  ggplot(., aes(departures, departures_pct_top05)) +
+  geom_point(alpha = 0.5) + 
+# scale_x_log10() +
+facet_grid(rows=vars(year)) 
+  
 
 
 
