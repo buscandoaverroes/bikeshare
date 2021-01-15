@@ -7,7 +7,7 @@
 # key variables: first applied after merge with OSM data 
 key_df_vars <- c(
     "name_bks",   "number_old",
-    "number_new","idproj",
+    "number_new","id_proj",
     "lat",       "lng",
     "geometry",
     "osm_id", "metro",    "name_metro"
@@ -121,7 +121,7 @@ station_key <-
   station_key %>%
   arrange(name) %>% 
   mutate(
-    idproj = row_number()
+    id_proj = row_number()
   ) 
 
 
@@ -279,7 +279,7 @@ station_key$name_metro[st_is_empty(station_key$geometry)] <- NA
 # eliminate duplicates with the same project/bike station ID AND osmid
 station_key <- 
   station_key %>%
-  distinct(idproj, osm_id, .keep_all = TRUE) # unique across project id for station and osm id
+  distinct(id_proj, osm_id, .keep_all = TRUE) # unique across project id for station and osm id
 
 
 
@@ -292,7 +292,7 @@ station_key <-
 
 station_key <-  
   station_key %>%
-  group_by(idproj) %>%
+  group_by(id_proj) %>%
   st_drop_geometry() %>% # remove geometry to avoid disaster when pivoting
   mutate(n = row_number()) %>%
   pivot_wider(
@@ -335,7 +335,7 @@ station_key <-
   #mutate(row = row_number()) %>%
   st_drop_geometry() %>% # remove geometry to avoid disaster when pivoting
   group_by(number_new) %>% # is this right?
-  arrange(idproj) %>% # keep the project id of the lowest one
+  arrange(id_proj) %>% # keep the project id of the lowest one
   mutate( # make numbers for each of the unique names per number_new, only if number_new is nonmissing
     it = if_else(!is.na(number_new), # condition
                 true = row_number(),
@@ -344,7 +344,7 @@ station_key <-
   ungroup() %>%
   pivot_wider(
     names_from =  it,
-    values_from = c(name_bks, idproj, number_old), # should be number_old, but get not unique
+    values_from = c(name_bks, id_proj, number_old), # should be number_old, but get not unique
     values_fill = NA
   ) %>%
   st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) %>% # replace geometry
@@ -352,14 +352,14 @@ station_key <-
     name_bks = name_bks_1,
     name_metro = name_metro_1,
     osm_id = osm_id_1,
-    idproj = idproj_1,
+    id_proj = id_proj_1,
     number_old = number_old_1
     ) %>%
   bind_rows(station_key_newmiss) %>% # reincorporate 
   select(key_df_vars, everything()) %>% # reorder
-  arrange(idproj) # sort 
+  arrange(id_proj) # sort 
   
-# check that there are no duplicates in number_old, number_new, idproj -----------------------
+# check that there are no duplicates in number_old, number_new, id_proj -----------------------
 
 # final checks 
 # note that new station number 285 is the motivate tech office, with only 8 observations 
@@ -377,9 +377,9 @@ assertthat::assert_that(
   n_distinct(c(station_key$number_old, station_key$number_old_2), na.rm = TRUE) == n_station_old
 )
 
-# check that idproject is unique project id
+# check that id_project is unique project id
 assertthat::assert_that(
-  n_distinct(station_key$idproj) == nrow(station_key)
+  n_distinct(station_key$id_proj) == nrow(station_key)
 )
 
 
