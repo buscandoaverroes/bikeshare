@@ -74,25 +74,6 @@ bks %>%
       )
 
 
-# 
-# # make subsample for easy processing
-# # note: here I don't set the seed because I actually want a difference each time.
-# sample <- bks %>%
-#    mutate(r = runif(nrow(.)) ) %>% # make random variable
-#    arrange(r) %>%
-#    filter(row_number() <= 1000) %>% # keep only first 1000 rows
-#    select(-r) %>% # eliminate random variable
-#    mutate(id_ride = row_number()) # generate rideid
-#    
-#    
-#    saveRDS(sample, file.path(processed, "sample.Rda")) # save as RDA
-#   sample <- readRDS(file.path(processed, "sample.Rda"))
-
-
-
-
-
-
                            
                            #---------------------#
                            #   New Variables      ====================================
