@@ -4,7 +4,7 @@
 library(scales)
 
 
-# load 2020 + stations
+# load 2020 + stations ----------------------------------------------------------------------------------
 bks2020 <- readRDS(file.path(processed, "data/years/bks_2020.Rda"))
 bks1820 <- readRDS(file.path(processed, "data/years/bks_2018-20.Rda"))
 
@@ -13,7 +13,9 @@ station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
   st_drop_geometry() # remove sf object
 
-# merege with stations?
+
+
+# merege with stations information -----------------------------------------------------------------------
 
 bks2020 <-
   left_join( # join to start station
@@ -44,9 +46,6 @@ bks1820 <-
   )
 
 
-# export ?
-
-
 
 
 # descriptive stats =============================================================
@@ -67,6 +66,9 @@ sum_station <-
     metro_end_pct= round(mean(metro_end_int, na.rm = TRUE), 3),
     member_pct = round(mean(member_int, na.rm = TRUE), 3)
   )
+
+
+# try station summary with altered standard deviation forumla
   
 
 
