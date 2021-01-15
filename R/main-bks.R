@@ -30,7 +30,8 @@
          ggmap,
          gdata,
          lubridate,
-         data.table
+         data.table,
+         janitor
         )
  
 
@@ -77,6 +78,7 @@
 
   gadm              <- "/Volumes/Al-Hakem-II/other+files/gadm"
   raw               <- file.path(data, "raw")
+  processed         <- file.path(data, "bks")
   MotherData        <- file.path(data, "MotherData")
     kpop            <- file.path(MotherData, "kpop")
     full            <- file.path(MotherData, "years")
@@ -92,8 +94,11 @@
     
   baselist <- c("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
                 "csv", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8")
-    
-    
+  
+  
+  # values   
+  crs               <- 4326 # main crs for project  
+  bike_metro_dist   <- 250 # distance in meters; determines if bike station is "near" a metro station.
     
 
 
@@ -102,48 +107,63 @@
                                     #-------------#
 
             s1 <- 0   # import          variable harmonization, append. no data wrangling.
-            s2 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
-            s3 <- 0   # geoprocessing   constructs all gps things
-            s4 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
-            s5 <- 0   # station summary     
+            s2 <- 0   # station #'s     creates old/new station number dictionary
+            s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+            s4 <- 0   # query:          filters/queries main database and exports files.
             
-            s6 <- 0   # summary objects          
-            s7 <- 0   # leaf. 
+            
+            x2 <- 0   # geoprocessing   constructs all gps things
+            x3 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
+            x4 <- 0   # station summary     
+            
+            x6 <- 0   # summary objects          
+            x7 <- 0   # leaf. 
 
   # import
   if (s1 == 1) {
     source(file.path(scripts, "import.R"))
   }
+            
+  # create dictionary of station numbers 
+  if (s2 == 1) {
+    source(file.path(scripts, "station-number.R"))
+  }
 
   # construct
-  if (s2 == 1) {
+  if (s3 == 1) {
     source(file.path(scripts, "construct.R"))
   }
-
-  # gps
-  if (s3 == 1) {
-    source(file.path(scripts, "geoprocessing.R"))
-  }
-            
-  # plot
+  
+  # query
   if (s4 == 1) {
-    source(file.path(scripts, "geo-merge.R"))
-  }
+    source(file.path(scripts, "query.R"))
+  }         
             
-  # summary objects 
-  if (s5 == 1) {
-    source(file.path(scripts, "station-summary.R"))
-  }          
-
-  # plot
-  if (s6 == 1) {
-    source(file.path(scripts, "daily-rides.R"))
-  }
-  # leaf
-  if (s7 == 1) {
-    source(file.path(scripts, "leaf.R"))
-  }
             
+  # # gps
+  # if (s3 == 1) {
+  #   source(file.path(scripts, "geoprocessing.R"))
+  # }
+  #           
+  # # plot
+  # if (s4 == 1) {
+  #   source(file.path(scripts, "geo-merge.R"))
+  # }
+  #           
+  # # summary objects 
+  # if (s5 == 1) {
+  #   source(file.path(scripts, "station-summary.R"))
+  # }          
+  # 
+  # # plot
+  # if (s6 == 1) {
+  #   source(file.path(scripts, "daily-rides.R"))
+  # }
+  # # leaf
+  # if (s7 == 1) {
+  #   source(file.path(scripts, "leaf.R"))
+  # }
+  #           
             
 # things to do ----
             
