@@ -135,7 +135,7 @@ bks <-
 
 # load station key
 station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
-   rename(id_proj = idproj)
+   st_drop_geometry() # drop geometry, don't need, only merging by id number.
 
 
 # joins --------------------------------------------------------------
@@ -177,6 +177,7 @@ bks <-
    select(vars_bks3)
 
 # check that there is only 1 unique value per pair of old-new start and old-new end values
+
 
 # check that the number of rows didn't change.
 assertthat::assert_that(
