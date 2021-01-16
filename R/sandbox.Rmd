@@ -1,0 +1,29 @@
+---
+title: "sandbox"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+# Graphs 
+
+## Destination Parity
+
+##### departure gini histogram
+most departures are betwen 0.5 and 0.75 Gini
+```{r}
+ggplot(sum_station_end, aes(dep_ineq)) +
+  geom_histogram() 
+```
+
+#### destination gini vs top05p
+The Percent of departures that end up in the top 5% of departures stations seem to be farily predictive of the GINI measurement.
+```{r}
+ggplot(sum_station_end, aes(dep_ineq, departures_pct_top05)) +
+  geom_point()
+```
+
+

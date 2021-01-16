@@ -5,6 +5,7 @@ library(scales)
 library(mapview)
 library(leaflet)
 library(leafpop)
+library(ineq)
 
 # load 2020 + stations ----------------------------------------------------------------------------------
 bks2020 <- readRDS(file.path(processed, "data/years/bks_2020.Rda"))
@@ -79,9 +80,9 @@ sum_station_end <-
   summarise(
     departures = sum(n_trip_to_end), # if you add all the by-destination number of trips = total number of station departures
     n_dest   = n_distinct(id_end), # number of distinct end stations
-    sd       = round(sd(n_trip_to_end, na.rm = TRUE), 2) # this is our temporary measure of 'parity' in destination distribution
-    # here what we want is the exact same formula as sd() but using max instead of sample mean
-  )
+    sd       = round(sd(n_trip_to_end, na.rm = TRUE), 2), # this is our temporary measure of 'parity' in destination distribution
+    dep_ineq = Gini(n_trip_to_end, na.rm = TRUE)
+    )
 
 # create top proportion
 # tells us what percent of departures from a station go to a station that is in the 
@@ -146,11 +147,14 @@ station_map <-
 
 # graphing break! ------------------------------------------------------------------------------------
 
+# histogram of departure gini 
+
+
 sum_station_end %>%
   filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(n_dest,sd, size=departures)) +
+  ggplot(., aes(n_dest,dep_ineq, size=departures)) +
   geom_point(alpha = 0.5) + 
-  ylim(0,300) 
+  ylim(.25,1) 
  # scale_x_log10() +
   facet_grid(rows=vars(year)) 
 
@@ -167,6 +171,17 @@ facet_grid(rows=vars(year))
 
 
 # graphs =========================================================================
+
+# departure gini histogram
+#     most ginis are between 0.5 and .8
+ggplot(sum_station_end, aes(dep_ineq)) +
+  geom_histogram() 
+
+# destination gini vs top05p
+ggplot(sum_station_end, aes(dep_ineq, departures_pct_top05)) +
+  geom_point()
+
+
 # duration histogram
 ggplot(bks1820, aes(dur)) +
   geom_histogram() +
