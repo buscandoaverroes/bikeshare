@@ -26,4 +26,10 @@ ggplot(sum_station_end, aes(dep_ineq, departures_pct_top05)) +
   geom_point()
 ```
 
+#### gini vs sd
+But sd doesn't seem to be as good of a measurement
+```{r}
+ggplot(sum_station_end, aes(dep_ineq, sd)) +
+  geom_point()
+```
 

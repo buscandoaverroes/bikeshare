@@ -70,7 +70,7 @@ sum_station <-
 
 # try station summary with altered standard deviation forumla
 sum_station_end <-
-  bks2020 %>%
+  bks1820 %>%
   filter(!is.na(id_start)) %>%
   group_by(id_start, id_end, year) %>%
   summarize(
@@ -83,6 +83,15 @@ sum_station_end <-
     sd       = round(sd(n_trip_to_end, na.rm = TRUE), 2), # this is our temporary measure of 'parity' in destination distribution
     dep_ineq = Gini(n_trip_to_end, na.rm = TRUE)
     )
+
+# join two summary files 
+sum <- 
+  sum_station_end %>%
+  select(-departures, -n_dest) %>% # already in sum_station
+  left_join(sum_station,
+            .,
+            by = c("id_start", "year")) # note, we lose 4 obs, why?
+
 
 # create top proportion
 # tells us what percent of departures from a station go to a station that is in the 
@@ -147,8 +156,6 @@ station_map <-
 
 # graphing break! ------------------------------------------------------------------------------------
 
-# histogram of departure gini 
-
 
 sum_station_end %>%
   filter(departures >= 100) %>% # include only stations at least 100 departures
@@ -178,6 +185,7 @@ ggplot(sum_station_end, aes(dep_ineq)) +
   geom_histogram() 
 
 # destination gini vs top05p
+# 
 ggplot(sum_station_end, aes(dep_ineq, departures_pct_top05)) +
   geom_point()
 
