@@ -2,18 +2,19 @@
 # exploring what to do after query.R
 
 library(scales)
-
+library(mapview)
+library(leaflet)
+library(leafpop)
 
 # load 2020 + stations ----------------------------------------------------------------------------------
 bks2020 <- readRDS(file.path(processed, "data/years/bks_2020.Rda"))
 bks1820 <- readRDS(file.path(processed, "data/years/bks_2018-20.Rda"))
 
 station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
-  rename(id_proj = idproj) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
   st_drop_geometry() # remove sf object
 
-
+#
 
 # merege with stations information -----------------------------------------------------------------------
 
@@ -133,10 +134,17 @@ sum_station_end <-
     departures_n_top3    = round( (n_top3/departures), 3),
   )
 
+# add gps data 
+station_map <- 
+  sum_station_end %>%
+  left_join(., station_key,
+            by = c("id_start" = "id_proj")) %>%
+  st_as_sf(coords = c("lng", "lat"), na.fail = FALSE)
+
   
   
 
-# graphing break!
+# graphing break! ------------------------------------------------------------------------------------
 
 sum_station_end %>%
   filter(departures >= 100) %>% # include only stations at least 100 departures
@@ -148,7 +156,7 @@ sum_station_end %>%
 
 sum_station_end %>%
   filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(departures, departures_pct_top05)) +
+  ggplot(., aes(departures, departures_pct_top05, size = n_dest)) +
   geom_point(alpha = 0.5) + 
 # scale_x_log10() +
 facet_grid(rows=vars(year)) 
@@ -225,3 +233,22 @@ sum_station %>%
   geom_point(alpha = 0.5) + 
   scale_x_log10() +
   facet_grid(rows=vars(year)) 
+
+# leafletmaps  ---------------------------------------------------------------------------------------------------
+
+# make station_key into sf
+key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
+  select(name_bks, id_proj, lat, lng, metro, name_metro)  # keep only necessary variables
+
+st_crs(station_map) <- 4326
+
+mapviewOptions(fgb = FALSE, basemaps = "CartoDB.Positron") # i want true, but doesn't work...
+mapview(station_map, zcol = c("departures"),
+        popup = popupTable(
+          station_map,
+          zcol = c("name_bks", 
+                    "name_metro", 
+                    "departures",
+                    "n_dest",
+                    "sd",
+                    "departures_pct_top05")))

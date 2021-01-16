@@ -195,5 +195,6 @@
             # https://stackoverflow.com/questions/22959635/remove-duplicated-rows-using-dplyr
   # https://stackoverflow.com/questions/54734771/sf-write-lat-long-from-geometry-into-separate-column-and-keep-id-column
   # https://stackoverflow.com/questions/32766325/fastest-way-of-determining-most-frequent-factor-in-a-grouped-data-frame-in-dplyr
-            
+# https://stackoverflow.com/questions/14800161/select-the-top-n-values-by-group
+#             
 # ideas: map to a/g mobility data (use package covid19mobility?)
