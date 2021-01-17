@@ -68,7 +68,7 @@ sum_station <-
   )
 
 
-# try station summary with altered standard deviation forumla
+# try station summary with altered standard deviation formulas
 sum_station_end <-
   bks1820 %>%
   filter(!is.na(id_start)) %>%
@@ -84,20 +84,13 @@ sum_station_end <-
     dep_ineq = Gini(n_trip_to_end, na.rm = TRUE)
     )
 
-# join two summary files 
-sum <- 
-  sum_station_end %>%
-  select(-departures, -n_dest) %>% # already in sum_station
-  left_join(sum_station,
-            .,
-            by = c("id_start", "year")) # note, we lose 4 obs, why?
 
 
 # create top proportion
 # tells us what percent of departures from a station go to a station that is in the 
 # top 5% most gone-to stations
 top05p <-
-  bks2020 %>%
+  bks1820 %>%
     #create list of total departures by station 
     group_by(id_start, id_end, year) %>%
     summarize(
@@ -120,9 +113,18 @@ sum_station_end <-
             by = c("id_start", "year"),
             na_matches = "never") %>%
   mutate(
-    departures_pct_top05 = round( (n_top05/departures), 3), 
-    departures_n_top3    = round( (n_top3/departures), 3),
+    departures_pct_top05 = round( (n_top05/departures), 3) 
   )
+
+
+# join two summary files 
+sum <- 
+  sum_station_end %>%
+  select(-departures, -n_dest) %>% # already in sum_station
+  left_join(sum_station,
+            .,
+            by = c("id_start", "year"))  # note, we lose 4 obs, why?
+ 
 
 
 
