@@ -110,23 +110,6 @@ top05p <-
     )
 
 
-# create top n=3
-# tells us what percent of departures from a station go to a station that is in the 
-# top 3 most gone-to stations
-top3n <-
-  bks2020 %>%
-  #create list of total departures by station 
-  group_by(id_start, id_end, year) %>%
-  summarize(
-    n_trip_to_end = n() # by destination number of trips
-  ) %>%
-  ungroup() %>% group_by(id_start, year) %>%
-  slice_max(order_by = n_trip_to_end, n = 3, with_ties = TRUE) %>% # create list of top 5% of destinations
-  summarise( # note that using proportion rounds down, so if prop=0.1 and there are fewer than 10 destinations, the station is excluded.
-    n_top3 = sum(n_trip_to_end)
-  )
-
-
 # join sum_station_end with top, create pct top p variable 
 # This variable will tell us: what percent of rides that leave
 # a station go to one of the stations in the top 5 % of destinations
@@ -136,13 +119,12 @@ sum_station_end <-
   left_join(top05p, # join to top percent
             by = c("id_start", "year"),
             na_matches = "never") %>%
-  left_join(top3n, # join to top percent
-            by = c("id_start", "year"),
-            na_matches = "never") %>%
   mutate(
     departures_pct_top05 = round( (n_top05/departures), 3), 
     departures_n_top3    = round( (n_top3/departures), 3),
   )
+
+
 
 # add gps data 
 station_map <- 
@@ -160,6 +142,7 @@ save(
   station_map,
   bks1820, bks2020,
   station_key,
+  sum,
   sum_station_end, sum_station,
   file = file.path(processed, "data/sandbox.Rdata")
 )

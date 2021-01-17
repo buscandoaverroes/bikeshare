@@ -4,7 +4,12 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
+# knitr opts
 knitr::opts_chunk$set(echo = FALSE)
+
+# packages
+library(tidyverse)
+processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 load(file.path(processed, "data/sandbox.Rdata"))
 ```
 
