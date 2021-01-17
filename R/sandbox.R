@@ -154,6 +154,17 @@ station_map <-
   
   
 
+
+# export =============================================================================================
+save(
+  station_map,
+  bks1820, bks2020,
+  station_key,
+  sum_station_end, sum_station,
+  file = file.path(processed, "data/sandbox.Rdata")
+)
+
+
 # graphing break! ------------------------------------------------------------------------------------
 
 
