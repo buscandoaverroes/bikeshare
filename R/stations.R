@@ -31,7 +31,7 @@ names_bks <-
 
 # determine no of unique stations 
 # old numbers are all greater than 30,000; station numbers that are == 0 are disabled, etc. Filter those out.
-station_old <- bks %>% distinct(start_number) 
+station_old <- bks %>% filter(!is.na(start_number)) %>% distinct(start_number) 
 n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
 
 
@@ -51,7 +51,7 @@ namenumb <- bks %>%
   arrange(start_name) %>% # arrnage by alpha within same group number
   mutate(id = row_number()) %>%
   pivot_wider(names_from = id, # pivot wider
-              values_from = start_name) %>%
+              values_from = start_name)
   filter(start_number > 0 ) # remove stations that are disabled
   
 
