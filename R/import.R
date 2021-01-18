@@ -363,7 +363,7 @@ rm(m4,m5,m6,m7,m8,m9)
 
 
 
-# append all years+export =======================================================
+# append, id_ride, export =======================================================
 
 
 # manage duplicates, export another version -------------------------------------
@@ -376,7 +376,7 @@ rm(m4,m5,m6,m7,m8,m9)
 # will be able to distinguish the station from its two points in time: before it was moved, and after
 # it was moved locations. The actual number I will replace the id with is 99901
 
-
+# append -----------------------------------------------------------------------------------------------------
 append <-
   bind_rows(
     r2010, r2011, r2012, r2013, r2014, r2015,
@@ -398,7 +398,22 @@ append <-
          end_number   = end_number2)
 
 
-# export raw
+
+
+# generate ride id ----------------------------------------------------------------------------------------
+
+set.seed(47)
+
+append <- 
+  append %>%
+  mutate(r = runif(nrow(.)) ) %>% # make random variable
+  arrange(r) %>%
+  mutate(id_ride = row_number()) %>%
+  select(-r)
+
+
+
+# export raw -----------------------------------------------------------------------------------------------
 fwrite(append, 
        file = file.path(raw, "bks-import.csv"),
        na = "", # make missings ""

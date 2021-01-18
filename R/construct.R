@@ -51,14 +51,16 @@ vars_bks3 <- c(                     # variables after merge with project id
  
 
 # create ride id ------------------------------------------------------------------------------
-
-set.seed(47)
-
-bks <- bks %>%
-   mutate(r = runif(nrow(.)) ) %>% # make random variable
-   arrange(r) %>%
-   mutate(id_ride = row_number()) %>%
-   select(-r)
+# # this should be made in import.r?
+# set.seed(47)
+# 
+# bks <- bks %>%
+#    mutate(r = runif(nrow(.)) ) %>% # make random variable
+#    arrange(r) %>%
+#    mutate(id_ride = row_number()) %>%
+#    select(-r)
+#    
+#    %% uncomment + delete when import.r works with generating the ride id.
 
 
 # export a subset with only id_ride and bike number so we can get ride of bike number ---------- 

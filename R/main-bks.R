@@ -106,22 +106,18 @@
   if (s1 == 1) {
     source(file.path(scripts, "import.R"))
   }
-            
   # create dictionary of station numbers 
   if (s2 == 1) {
     source(file.path(scripts, "station-number.R"))
   }
-
   # construct
   if (s3 == 1) {
     source(file.path(scripts, "construct.R"))
   }
-  
   # query
   if (s4 == 1) {
     source(file.path(scripts, "query.R"))
-  }         
-
+  }       
   # sandbox.R
   if (s5 == 1) {
     source(file.path(scripts, "sandbox.R"))
