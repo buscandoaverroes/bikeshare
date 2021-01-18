@@ -418,11 +418,11 @@ append <-
     r2016, r2017, r2018, r2019, r2020
   ) %>%
   select(-ride_id) %>%  # remove unwanted columns
-  mutate( # change start stations
+  mutate(               # change start stations
     start_number2 = case_when(
       start_name == "13th & E St SE" & start_number == 31607 ~ as.integer(99901),
       TRUE                                                   ~ start_number,
-    ), # change end stations
+    ),                  # change end stations
     end_number2 = case_when(
       end_name == "13th & E St SE" & end_number == 31607 ~ as.integer(99901),
       TRUE                                                   ~ end_number,

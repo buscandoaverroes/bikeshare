@@ -59,16 +59,15 @@ namenumb$group <- group_indices(namenumb)
 # generate id within groups 
 nn <- namenumb %>%
   group_by(group) %>%
-  mutate(id = row_number() ## why will this not generate! apparently it will
+  mutate(id = row_number() 
   )
 
 # pivot to wider 
 nn.w <- spread(nn,
                key = id, 
-               value = start_number) %>%
+               value = start_number) 
   rename(new = "1" , # change names
-         old = "2",
-         misc = "3")
+         old = "2") # used to be a third column that I renamed as 'misc'
 
 # move values to correct new and old columns ---------------------------------
 
@@ -88,13 +87,13 @@ for (i in seq_along(nn.w$old)) {
                         nn.w$old[i]) # 
 }
 
-# do for column 3 
-for (i in seq_along(nn.w$old)) {
-  nn.w$old[i] <- ifelse((nn.w$misc[i[]] > 30000) & 
-                          (!is.na(nn.w$misc[i])), # old value should be < 30000
-                        nn.w$misc[i], #
-                        nn.w$old[i]) # 
-}
+# # do for column 3 
+# for (i in seq_along(nn.w$old)) {
+#   nn.w$old[i] <- ifelse((nn.w$misc[i[]] > 30000) & 
+#                           (!is.na(nn.w$misc[i])), # old value should be < 30000
+#                         nn.w$misc[i], #
+#                         nn.w$old[i]) # 
+# }
 
 # (for those with no 'new' value) replace new with missing
 for (i in seq_along(nn.w$new)) {
@@ -386,7 +385,8 @@ assertthat::assert_that(
 
 
 # export ---------------------------------------------------------------------------
-  
+if (FALSE) {
+
 # export station_key
 saveRDS(station_key,
         file = file.path(processed, "keys/station_key.Rda")) 
@@ -402,4 +402,4 @@ save(
 # remove objects not needed
 remove(cabi_coords, namenumb, names_bks, nn, nn.w, osm_bike,
        osm_metro, station_key, station_new, station_old, bks, station_key_newmiss) 
-
+}
