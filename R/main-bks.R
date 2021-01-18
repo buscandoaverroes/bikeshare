@@ -38,8 +38,6 @@
 
 
 
-
-
                               #-------------#
                               # Set User    #
                               #-------------#
@@ -50,14 +48,6 @@
 
   user <- 1
 
-
-
-
-
-
-                              #-------------#
-                              # File paths  #
-                              #-------------#
 
 
 
@@ -73,7 +63,7 @@
 
 
 
-  # same no matter the user.
+# same no matter the user.
   scripts           <- file.path(repo,"R")
 
   gadm              <- "/Volumes/Al-Hakem-II/other+files/gadm"
@@ -85,18 +75,7 @@
 
 
     
-                                    #------------------#
-                                    # store essentials #
-                                    #------------------#
-    
-                          # here we store all the important objects in a list 
-                          # that we can call to prevent delting when clearning objects
-    
-  baselist <- c("repo", "data", "scripts", "gadm", "raw", "MotherData", "kpop", "full", "tiny", "master", 
-                "csv", "s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8")
-  
-  
-  # values   
+# values   
   crs               <- 4326 # main crs for project  
   bike_metro_dist   <- 250 # distance in meters; determines if bike station is "near" a metro station.
     
@@ -105,22 +84,24 @@
                                     #-------------#
                                     # run scripts #
                                     #-------------#
-        # main scripts
-            s1 <- 0   # import          variable harmonization, append. no data wrangling.
-            s2 <- 0   # station #'s     creates old/new station number dictionary
-            s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
-            s4 <- 0   # query:          filters/queries main database and exports files.
-            
-        # rmarkdown
-            m1 <- 0   # sandbox.Rmd     exploration markdown of basic plots and regs    
-            
-            x2 <- 0   # geoprocessing   constructs all gps things
-            x3 <- 0   # geomerge           Merges geoprocessed data to main bks dataset. 
-            x4 <- 0   # station summary     
-            
-            x6 <- 0   # summary objects          
-            x7 <- 0   # leaf. 
+# main scripts
+  s1 <- 0   # import          variable harmonization, append. no data wrangling.
+  s2 <- 0   # station #'s     creates old/new station number dictionary
+  s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+  s4 <- 0   # query:          filters/queries main database and exports files.
+  s5 <- 0   # sandbox.R       takes data from query and generates a few varialbes, ready to plot
 
+  
+# utilities: can be run independently after main.R
+  u1 <- 0   # weather.R       queries weather data from NOAA to create hour/day weather dictionary.
+
+  
+# rmarkdown
+  m1 <- 0   # sandbox.Rmd     exploration markdown of basic plots and regs, using Rdata from sandbox.R    
+  
+
+            
+# main scripts --------------------------------------------------------------------------------------            
   # import
   if (s1 == 1) {
     source(file.path(scripts, "import.R"))
@@ -140,53 +121,34 @@
   if (s4 == 1) {
     source(file.path(scripts, "query.R"))
   }         
-            
-            
-  # # gps
-  # if (s3 == 1) {
-  #   source(file.path(scripts, "geoprocessing.R"))
-  # }
-  #           
-  # # plot
-  # if (s4 == 1) {
-  #   source(file.path(scripts, "geo-merge.R"))
-  # }
-  #           
-  # # summary objects 
-  # if (s5 == 1) {
-  #   source(file.path(scripts, "station-summary.R"))
-  # }          
-  # 
-  # # plot
-  # if (s6 == 1) {
-  #   source(file.path(scripts, "daily-rides.R"))
-  # }
-  # # leaf
-  # if (s7 == 1) {
-  #   source(file.path(scripts, "leaf.R"))
-  # }
-  #           
-            
-# things to do ----
-            
-# Ride-Level:            
-  # add "other" dummy var -- maybe this incldues the low-cost fare
-  # gen 30 min or less var dummy
-  # merge bks.key to bks using station names, string.
-    # indicator if ride was to metro, from metro.
 
+  # sandbox.R
+  if (s5 == 1) {
+    source(file.path(scripts, "sandbox.R"))
+  }         
             
-# Station-Level
-  # (this is really station-[time] var level): generate cumulative flow, ie net input
-  
 
-# general
-  # (long term) migrate cleaning from Stata to R....
+# utilities --------------------------------------------------------------------------------------            
+            
+# sandbox.R
+if (u1 == 1) {
+  source(file.path(scripts, "weather.R"))
+}                     
+            
+            
+            
+# markdown --------------------------------------------------------------------------------------            
+            
+# sandbox.R
+if (m1 == 1) {
+  source(file.path(scripts, "sandbox.Rmd"))
+}                     
             
             
             
             
-# credits: OpenStreetMaps, GADM, Dominic Royé, https://dominicroye.github.io/en/2018/accessing-openstreetmap-data-with-r/
+# credits: =======================================================================================
+# OpenStreetMaps, GADM, Dominic Royé, https://dominicroye.github.io/en/2018/accessing-openstreetmap-data-with-r/
       # Matthias: https://www.gis-blog.com/nearest-neighbour-search-for-spatial-points-in-r/
        # bzki: https://stackoverflow.com/questions/21977720/r-finding-closest-neighboring-point-and-number-of-neighbors-within-a-given-rad
       # https://stackoverflow.com/questions/6778908/transpose-a-data-frame      
