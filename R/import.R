@@ -247,6 +247,9 @@ import_month <- function(x) {
 
 
 # import files using functions ===================================
+# all of the years 2010 through 2019 have datasets that fit into the 
+# patterns expected in the above functions, so we can use these functions
+# to import the data
 r2010 <- import_year(2010)
 r2011 <- import_year(2011)
 
@@ -294,11 +297,14 @@ m3 <-
   rename(all_of(raw_rename1))  %>%
   select(raw_names1, everything())
 
-
+# append months 1-3
 r2020 <- bind_rows(m1, m2, m3)
+
+# remove month objeccts
 rm(m1,m2,m3)
 
-# months 4+
+
+# months 4-12
 m4 <- 
   data.table::fread(
     file.path(raw, "2020/202004-capitalbikeshare-tripdata.csv"),
@@ -353,20 +359,49 @@ m9 <-
   rename(all_of(raw_rename2))  %>%
   select(raw_names2, everything())
 
+m10 <- 
+  data.table::fread(
+    file.path(raw, "2020/202010-capitalbikeshare-tripdata.csv"),
+    na.strings = "",
+    header = TRUE
+  ) %>%
+  rename(all_of(raw_rename2))  %>%
+  select(raw_names2, everything())
+
+m11 <- 
+  data.table::fread(
+    file.path(raw, "2020/202011-capitalbikeshare-tripdata.csv"),
+    na.strings = "",
+    header = TRUE
+  ) %>%
+  rename(all_of(raw_rename2))  %>%
+  select(raw_names2, everything())
+
+m12 <- 
+  data.table::fread(
+    file.path(raw, "2020/202012-capitalbikeshare-tripdata.csv"),
+    na.strings = "",
+    header = TRUE
+  ) %>%
+  rename(all_of(raw_rename2))  %>%
+  select(raw_names2, everything())
+
+# append months 4-12 to main 2020 dataset
 r2020 <-
   r2020 %>%
-  bind_rows(m4,m5,m6,m7,m8,m9) 
+  bind_rows(m4,m5,m6,m7,m8,m9,m10,m11,m12) 
 
-rm(m4,m5,m6,m7,m8,m9)
-
-
-
+# remove month objects
+rm(m4,m5,m6,m7,m8,m9,m10,m11,m12)
 
 
-# append, id_ride, export =======================================================
 
 
-# manage duplicates, export another version -------------------------------------
+
+# append, id_ride, export ==============================================================================
+
+
+# manage duplicates, export another version --------------------------------------------------------------
 
 # Eliminate duplicates for number_old
 # starting on 01 June, 2018 (inclusive), station number 31607 appears to be moved from
@@ -382,7 +417,7 @@ append <-
     r2010, r2011, r2012, r2013, r2014, r2015,
     r2016, r2017, r2018, r2019, r2020
   ) %>%
-  select(-is_equity, -ride_id) %>%  # remove unwanted columns
+  select(-ride_id) %>%  # remove unwanted columns
   mutate( # change start stations
     start_number2 = case_when(
       start_name == "13th & E St SE" & start_number == 31607 ~ as.integer(99901),
@@ -413,7 +448,7 @@ append <-
 
 
 
-# export raw -----------------------------------------------------------------------------------------------
+# export  -----------------------------------------------------------------------------------------------
 fwrite(append, 
        file = file.path(raw, "bks-import.csv"),
        na = "", # make missings ""
@@ -421,6 +456,8 @@ fwrite(append,
 )
 
 
-rm(append)
+rm(append,
+   r2010, r2011, r2012, r2013, r2014, r2015,
+   r2016, r2017, r2018, r2019, r2020)
 
 

@@ -85,10 +85,14 @@
                                     # run scripts #
                                     #-------------#
 # main scripts
-  s1 <- 0   # import          variable harmonization, append. no data wrangling.
+  s1 <- 0   # import          variable harmonization, append. no data wrangling
+            #                   makes: bks-import.csv
   s2 <- 0   # station #'s     creates old/new station number dictionary
+            #                   makes: station_key.Rda, station-geo-objects.Rdata
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+            #                   makes: bks-full.Rda, bks-full.csv
   s4 <- 0   # query:          filters/queries main database and exports files.
+            #                   makes: bks_2020.Rda, bks1820.Rda
   s5 <- 0   # sandbox.R       takes data from query and generates a few varialbes, ready to plot
 
   
