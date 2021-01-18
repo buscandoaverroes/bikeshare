@@ -6,6 +6,7 @@ library(mapview)
 library(leaflet)
 library(leafpop)
 library(ineq)
+library(leafsync)
 
 # load 2020 + stations ----------------------------------------------------------------------------------
 bks2020 <- readRDS(file.path(processed, "data/years/bks_2020.Rda"))
@@ -130,9 +131,10 @@ sum <-
 
 # add gps data 
 station_map <- 
-  sum_station_end %>%
+  sum %>%
   left_join(., station_key,
             by = c("id_start" = "id_proj")) %>%
+  select(-metro.y) %>% rename(metro = metro.x) %>% # keep only one metro var
   st_as_sf(coords = c("lng", "lat"), na.fail = FALSE)
 
   
@@ -150,108 +152,13 @@ save(
 )
 
 
-# graphing break! ------------------------------------------------------------------------------------
-
-
-sum_station_end %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(n_dest,dep_ineq, size=departures)) +
-  geom_point(alpha = 0.5) + 
-  ylim(.25,1) 
- # scale_x_log10() +
-  facet_grid(rows=vars(year)) 
-
-sum_station_end %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(departures, departures_pct_top05, size = n_dest)) +
-  geom_point(alpha = 0.5) + 
-# scale_x_log10() +
-facet_grid(rows=vars(year)) 
-  
 
 
 
 
 
 # graphs =========================================================================
-
-# departure gini histogram
-#     most ginis are between 0.5 and .8
-ggplot(sum_station_end, aes(dep_ineq)) +
-  geom_histogram() 
-
-# destination gini vs top05p
-# 
-ggplot(sum_station_end, aes(dep_ineq, departures_pct_top05)) +
-  geom_point()
-
-
-# duration histogram
-ggplot(bks1820, aes(dur)) +
-  geom_histogram() +
-  geom_vline(xintercept=30) +
-  xlim(0,100)
-  
-
-# violin plot of duration on member vs non member
-ggplot(bks1820, aes(member, dur)) +
-  geom_violin(scale = "area") +
-  ylim(0,100)
-
-
-# station summaries ------------------------------------------------------------
-# median duration
-ggplot(sum_station, aes(dur_med)) +
-  geom_histogram(stat = 'bin', binwidth = 1, alpha = 0.7) + 
-  geom_vline(aes(xintercept = 30)) +
-  facet_grid(rows = vars(year)) +
-  xlim(0,45)
-
-# number of destinations 
-ggplot(sum_station, aes(n_dest)) +
-  geom_area(stat = 'bin', binwidth = 20, alpha = 0.7) + 
-  facet_grid(rows = vars(year))
-
-# departures 
-ggplot(sum_station, aes(departures)) +
-  geom_histogram(stat = 'bin', binwidth = 1000) + 
-  facet_grid(rows = vars(year)) + 
-  xlim(0,40000)
-
-# departures/nrides, by year 
-bks1820 %>%
-  group_by(year) %>% summarize(n = n()) %>%
-  ggplot(., aes(year, n)) +
-  geom_col() + scale_y_continuous(labels = comma)
-
-# pct of rides going to station near metro 
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(metro_end_pct)) +
-  geom_histogram() + 
-  facet_grid(rows=vars(year))
-
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(member_pct, metro_end_pct)) +
-  geom_point(alpha = 0.4) +
-  facet_grid(rows=vars(year))
-
-# member percent vs median duration
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(member_pct, dur_med, color = metro_end_pct, size = departures)) +
-  geom_point(alpha = 0.2) +
-  facet_grid(rows=vars(year)) 
-
-
-# departures vs number of distinct destinations
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(departures, n_dest, color = metro_end_pct)) +
-  geom_point(alpha = 0.5) + 
-  scale_x_log10() +
-  facet_grid(rows=vars(year)) 
+# note, the only graphs I'll put here are ones that cannot be embedded in rmarkdown
 
 # leafletmaps  ---------------------------------------------------------------------------------------------------
 
@@ -259,15 +166,68 @@ sum_station %>%
 key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro)  # keep only necessary variables
 
+
+# 4 pane map
+
 st_crs(station_map) <- 4326
 
-mapviewOptions(fgb = FALSE, basemaps = "CartoDB.Positron") # i want true, but doesn't work...
-mapview(station_map, zcol = c("departures"),
-        popup = popupTable(
-          station_map,
-          zcol = c("name_bks", 
-                    "name_metro", 
-                    "departures",
-                    "n_dest",
-                    "sd",
-                    "departures_pct_top05")))
+mapviewOptions(fgb = FALSE, basemaps = "CartoDB.Positron")
+at_scale <- c(0, 500, 2000,5000,10000,20000,50000,100000)
+
+
+# years
+mv2018 <- mapview(station_map[station_map$year==2018,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.2,
+                  layer.name = "2018",
+                  popup = popupTable(
+                    station_map,
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
+mv2019 <- mapview(station_map[station_map$year==2019,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.2,
+                  layer.name = "2019",
+                  popup = popupTable(
+                    station_map,
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
+mv2020 <- mapview(station_map[station_map$year==2020,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.2,
+                  layer.name = "2020",
+                  popup = popupTable(
+                    station_map,
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
+
+mv2020_ineq <- mapview(station_map[station_map$year==2020,], 
+                       zcol = c("dep_ineq"),
+                       at = c(0, 0.5, 0.6, 0.7, 0.8, 0.9, 1),
+                       alpha.regions = 0.2,
+                       layer.name = "2020 Dest. Disparity",
+                       popup = popupTable(
+                         station_map,
+                         zcol = c("name_bks", 
+                                  "name_metro", 
+                                  "departures",
+                                  "n_dest",
+                                  "sd",
+                                  "departures_pct_top05"))) 
+
+sync(mv2018, mv2019, mv2020, mv2020_ineq)

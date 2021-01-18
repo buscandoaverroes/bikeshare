@@ -7,8 +7,15 @@ output: html_document
 # knitr opts
 knitr::opts_chunk$set(echo = FALSE)
 knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
 # packages
 library(tidyverse)
+library(sf)
+library(mapview)
+library(leaflet)
+library(leafpop)
+library(leafsync)
+
 processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 load(file.path(processed, "data/sandbox.Rdata"))
 ```
@@ -174,7 +181,7 @@ However, even through September, 2020, the number of total rides in 2020 is nota
 bks1820 %>%
   group_by(year) %>% summarize(n = n()) %>%
   ggplot(., aes(year, n)) +
-  geom_col() + scale_y_continuous(labels = comma)
+  geom_col() + scale_y_continuous(labels=scales::comma)
 
 ```
 
@@ -185,7 +192,8 @@ In pre-pandemic years, the months of April through October see the highest month
 bks1820 %>%
   group_by(year, month) %>% summarise(n = n()) %>%
   ggplot(., aes(month, n, color = as.factor(year))) +
-  geom_point() + geom_line() + scale_y_continuous(labels = comma)
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10,11,12))
 ```
 
 #### Departures by day of week
@@ -197,7 +205,7 @@ bks1820 %>%
   group_by(year, wday) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(wday, n, shape = as.factor(year), color = member_pct)) + 
-  geom_point() + geom_line() + scale_y_continuous(labels = comma)
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
 ```
 
 When breaking out by month, we see that the biggest differences between 2020 and pre-pandemic years occur in the early months of the pandemic: April and May. 
@@ -207,7 +215,7 @@ bks1820 %>%
   group_by(year, wday, month) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(wday, n, shape = as.factor(year), color = member_pct)) + 
-  geom_point() + geom_line() + scale_y_continuous(labels = comma) + 
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma) + 
   facet_wrap(~month)
 ```
 
@@ -220,7 +228,7 @@ The busiest times of day are the morning and afternoon rush hour periods -- and 
 bks1820 %>%
   group_by(year, hour) %>% summarise(n = n()) %>%
   ggplot(., aes(hour, n, color = as.factor(year))) +
-  geom_point() + geom_line() + scale_y_continuous(labels = comma)
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
 ```
 
 The percent of users that are members is quite high during rush hour periods, but this trend appears more muddled in 2020.
@@ -230,7 +238,7 @@ bks1820 %>%
   group_by(year, hour) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(hour, n, shape = as.factor(year), color = member_pct)) +
-  geom_point() + geom_line() + scale_y_continuous(labels = comma)
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
 ```
 
 When accounting for the day of week, we do see a noticeable uptick in the member percentage during the morning rush hour on weekdays even during the pandemic.
@@ -240,6 +248,9 @@ bks1820 %>%
   group_by(year, hour, wday) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(hour, n, shape = as.factor(year), color = member_pct)) +
-  geom_point() + geom_line() + scale_y_continuous(labels = comma) +
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma) +
   facet_wrap(~wday)
 ```
+
+#### Departures across geography
+There are vast geographical differences in the number of daily rides. 
