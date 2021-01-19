@@ -85,11 +85,16 @@
                                     # run scripts #
                                     #-------------#
 # main scripts
-  s1 <- 0   # import          variable harmonization, append. no data wrangling.
-  s2 <- 0   # station #'s     creates old/new station number dictionary
+  s1 <- 0   # import          variable harmonization, append. no data wrangling
+            #                   makes: bks-import.csv
+  s2 <- 0   # stations      creates old/new station number dictionary and adds station features
+            #                   makes: station_key.Rda, station-geo-objects.Rdata
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
+            #                   makes: bks-full.Rda, bks-full.csv
   s4 <- 0   # query:          filters/queries main database and exports files.
-  s5 <- 0   # sandbox.R       takes data from query and generates a few varialbes, ready to plot
+            #                   makes: bks_2020.Rda, bks1820.Rda
+  s5 <- 1   # sandbox.R       takes data from query and generates a few varialbes, ready to plot
+            #                   makes: sandbox.Rdata
 
   
 # utilities: can be run independently after main.R
@@ -106,22 +111,18 @@
   if (s1 == 1) {
     source(file.path(scripts, "import.R"))
   }
-            
   # create dictionary of station numbers 
   if (s2 == 1) {
-    source(file.path(scripts, "station-number.R"))
+    source(file.path(scripts, "stations.R"))
   }
-
   # construct
   if (s3 == 1) {
     source(file.path(scripts, "construct.R"))
   }
-  
   # query
   if (s4 == 1) {
     source(file.path(scripts, "query.R"))
-  }         
-
+  }       
   # sandbox.R
   if (s5 == 1) {
     source(file.path(scripts, "sandbox.R"))
