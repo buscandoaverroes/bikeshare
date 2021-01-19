@@ -48,11 +48,10 @@ namenumb <- bks %>%
   summarise() %>%
   filter(start_name != "") %>%   # remove blank entries
   ungroup() %>% group_by(start_number) %>%
-  arrange(start_name) %>% # arrnage by alpha within same group number
+  arrange(start_name) %>% # arrange by alpha within same group number
   mutate(id = row_number()) %>%
   pivot_wider(names_from = id, # pivot wider
               values_from = start_name)
-  filter(start_number > 0 ) # remove stations that are disabled
   
 
 # check that there are the same number of unique station numbers as in n_station_old
