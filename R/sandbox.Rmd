@@ -15,6 +15,7 @@ library(mapview)
 library(leaflet)
 library(leafpop)
 library(leafsync)
+library(plotly)
 
 processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 load(file.path(processed, "data/stats17-20.Rdata"))
@@ -254,3 +255,9 @@ bks1720 %>%
 
 #### Departures across geography
 There are vast geographical differences in the number of daily rides. 
+
+```{r}
+
+
+```
+

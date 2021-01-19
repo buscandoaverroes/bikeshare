@@ -128,7 +128,7 @@ sum_station_sf <-
   left_join(., station_key,
             by = c("id_start" = "id_proj")) %>%
   select(-metro.y) %>% rename(metro = metro.x) %>% # keep only one metro var
-  st_as_sf(coords = c("lng", "lat"), na.fail = FALSE)
+  st_as_sf(coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE)
 
 
 
