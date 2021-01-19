@@ -13,9 +13,7 @@ df1 <- filter(bks, is.na(id_start))
 
 # how many of these are non-electric 
 df2 <- filter(df1, electric == FALSE)
-nrow(df2) # 776
-
-# ok so about 700 have no station id. not bad, but why??
+nrow(df2) # 0
 
 # store these ride_id numbers 
 na_rides_all <- df1$id_ride
