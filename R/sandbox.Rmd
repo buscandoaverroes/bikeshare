@@ -136,7 +136,7 @@ sum %>%
   facet_grid(rows=vars(year))
 ```
 
-This is corroborated by a bivariate regression, which shows that the percent of rides in 2020 going to a "near-metro" bikeshare station is about 6% lower (p<0.001), on average compared to 2018, for all departing bikeshare stations.
+This is corroborated by a bivariate regression, which shows that the percent of rides in 2020 going to a "near-metro" bikeshare station is about 7% lower (p<0.001), on average compared to 2017, for all departing bikeshare stations.
 
 ```{r}
 
@@ -159,7 +159,7 @@ sum %>%
 ```
 
 
-The regression below shows that, in addition to the year, membership ratios are also mathematically important in predicting going-to-metro ratios: holding the year-effect constant, a 10% increase in a station's membership ratio suggests, on average, a 4% increase in the number of departing rides that end up close to a metro station.
+The regression below shows that, in addition to the year, membership ratios are also mathematically important in predicting going-to-metro ratios: holding the year-effect constant, a 10% increase in a station's membership ratio suggests, on average, about a 4% increase in the number of departing rides that end up close to a metro station.
 
 ```{r}
 lm3 <- lm(data = sum,
@@ -173,12 +173,12 @@ summary(lm3)
 
 ##### Departures by Year
 
-In 2018 and 2019, there were considerably more than 3 million rides over the course of each year, or over 8,000 rides per day, on average.
+In the years prior to the pandemic, there were considerably more than 3 million rides over the course of each year, or over 8,000 rides per day, on average.
 
-However, even through September, 2020, the number of total rides in 2020 is notably lower than the counts of the previous two years. 
+However, in 2020, there were only around 2.25 million rides. 
 
 ```{r}
-bks1820 %>%
+bks1720 %>%
   group_by(year) %>% summarize(n = n()) %>%
   ggplot(., aes(year, n)) +
   geom_col() + scale_y_continuous(labels=scales::comma)
@@ -189,7 +189,7 @@ bks1820 %>%
 In pre-pandemic years, the months of April through October see the highest monthly rides. In 2020, the months of Janurary and Febrauary had monthly ride tallys in line with pre-pandemic years, but April of 2020 saw a drastic decrease in the number of rides compared to pre-pandemic years. Monthly rides stayed below pre-pandemic years, but nevertheless recovered after the spring dip in ridership.
 
 ```{r}
-bks1820 %>%
+bks1720 %>%
   group_by(year, month) %>% summarise(n = n()) %>%
   ggplot(., aes(month, n, color = as.factor(year))) +
   geom_point() + geom_line() + scale_y_continuous(labels = scales::comma) +
@@ -201,17 +201,17 @@ bks1820 %>%
 Ridership in 2020 across the days of the week is markedly different from pre-pandemic years. In 2020, the most rides occur on weekends, while in previous years, the days with the highest average daily rides were weekdays. Furthermore, the percent of rides that are taken by members is lower than that of pre-pandemic years, and the difference is most stark on the weekends. 
 
 ```{r}
-bks1820 %>%
+bks1720 %>%
   group_by(year, wday) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(wday, n, shape = as.factor(year), color = member_pct)) + 
   geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
 ```
 
-When breaking out by month, we see that the biggest differences between 2020 and pre-pandemic years occur in the early months of the pandemic: April and May. 
+When breaking out by month, we see that the early months of 2020, before the outbreak in the US, the weekly riding patterns were superficially on par with those in rencent years. However, ridership patterns after the onset of the pandemic changed drastically. The biggest differences between 2020 and pre-pandemic years occur in the early months of the pandemic: April and May. 
 
 ```{r}
-bks1820 %>%
+bks1720 %>%
   group_by(year, wday, month) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(wday, n, shape = as.factor(year), color = member_pct)) + 
@@ -225,7 +225,7 @@ bks1820 %>%
 
 The busiest times of day are the morning and afternoon rush hour periods -- and this pattern has largely held so far in 2020.
 ```{r}
-bks1820 %>%
+bks1720 %>%
   group_by(year, hour) %>% summarise(n = n()) %>%
   ggplot(., aes(hour, n, color = as.factor(year))) +
   geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
@@ -234,7 +234,7 @@ bks1820 %>%
 The percent of users that are members is quite high during rush hour periods, but this trend appears more muddled in 2020.
 
 ```{r}
-bks1820 %>%
+bks1720 %>%
   group_by(year, hour) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(hour, n, shape = as.factor(year), color = member_pct)) +
@@ -244,7 +244,7 @@ bks1820 %>%
 When accounting for the day of week, we do see a noticeable uptick in the member percentage during the morning rush hour on weekdays even during the pandemic.
 
 ```{r}
-bks1820 %>%
+bks1720 %>%
   group_by(year, hour, wday) %>%
   summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
   ggplot(., aes(hour, n, shape = as.factor(year), color = member_pct)) +
