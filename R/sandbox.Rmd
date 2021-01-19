@@ -17,7 +17,7 @@ library(leafpop)
 library(leafsync)
 
 processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
-load(file.path(processed, "data/sandbox.Rdata"))
+load(file.path(processed, "data/stats17-20.Rdata"))
 ```
 
 # Graphs
@@ -31,7 +31,7 @@ load(file.path(processed, "data/sandbox.Rdata"))
 most departures are between 0.5 and 0.75 Gini
 
 ```{r}
-ggplot(sum_station_end, aes(dep_ineq)) +
+ggplot(sum_station_b, aes(dep_ineq)) +
   geom_histogram() 
 ```
 
@@ -40,7 +40,7 @@ ggplot(sum_station_end, aes(dep_ineq)) +
 The Percent of departures that end up in the top 5% of departures stations seem to be farily predictive of the GINI measurement.
 
 ```{r}
-ggplot(sum_station_end, aes(dep_ineq, departures_pct_top05)) +
+ggplot(sum_station_b, aes(dep_ineq, departures_pct_top05)) +
   geom_point()
 ```
 
@@ -49,7 +49,7 @@ ggplot(sum_station_end, aes(dep_ineq, departures_pct_top05)) +
 But sd doesn't seem to be as good of a measurement
 
 ```{r}
-ggplot(sum_station_end, aes(dep_ineq, sd)) +
+ggplot(sum_station_b, aes(dep_ineq, sd)) +
   geom_point()
 ```
 
@@ -58,7 +58,7 @@ ggplot(sum_station_end, aes(dep_ineq, sd)) +
 We see a somewhat noticeable difference in going-to-metro patterns in 2020
 
 ```{r}
-ggplot(sum, aes(dep_ineq, metro_end_pct)) +
+ggplot(sum_station, aes(dep_ineq, metro_end_pct)) +
   geom_point() +
   facet_grid(rows = vars(year))
 ```
@@ -68,7 +68,7 @@ ggplot(sum, aes(dep_ineq, metro_end_pct)) +
 we also see a noticeable difference in median duration across all gini levels in 2020
 
 ```{r}
-ggplot(sum, aes(dep_ineq, dur_med)) +
+ggplot(sum_station, aes(dep_ineq, dur_med)) +
   geom_point() +
   facet_grid(rows = vars(year))
 ```
@@ -82,14 +82,14 @@ What does the regression look like?
 3.  this pattern holds true across all years, but the year 2020 saw significantly lower median ride durations, holding all other factors constant.
 
 ```{r}
-lm1 <- lm(dur_med ~ dep_ineq + member_pct + metro + as.factor(year), data = sum)
+lm1 <- lm(dur_med ~ dep_ineq + member_pct + metro + as.factor(year), data = sum_station)
 summary(lm1)
 ```
 
 #### member pct vs duration
 
 ```{r}
-ggplot(sum, aes(member_pct, dur_med, color = metro)) +
+ggplot(sum_station, aes(member_pct, dur_med, color = metro)) +
   geom_point(alpha = 0.3) +
   facet_grid(rows = vars(year))
 ```
@@ -99,7 +99,7 @@ ggplot(sum, aes(member_pct, dur_med, color = metro)) +
 Also, we see a stark difference in the standard deviation of duration of rides from stations in 2020
 
 ```{r}
-ggplot(sum, aes(dep_ineq, dur_sd)) +
+ggplot(sum_station, aes(dep_ineq, dur_sd)) +
   geom_point() +
   facet_grid(rows = vars(year))
 ```
@@ -107,7 +107,7 @@ ggplot(sum, aes(dep_ineq, dur_sd)) +
 Reducing the y limits:
 
 ```{r}
-ggplot(sum, aes(dep_ineq, dur_sd)) +
+ggplot(sum_station, aes(dep_ineq, dur_sd)) +
   geom_point() +
   ylim(0, 600) +
   facet_grid(rows = vars(year)) 
@@ -116,7 +116,7 @@ ggplot(sum, aes(dep_ineq, dur_sd)) +
 coloring for percent member: we see that higher standard deviations in ride length are not just driven by non-members
 
 ```{r}
-ggplot(sum, aes(dep_ineq, dur_sd, color = member_pct)) +
+ggplot(sum_station, aes(dep_ineq, dur_sd, color = member_pct)) +
   geom_point(alpha = 0.6) +
   ylim(0, 600) +
   facet_grid(rows = vars(year)) 
@@ -129,7 +129,7 @@ ggplot(sum, aes(dep_ineq, dur_sd, color = member_pct)) +
 
 In 2020, we see that the percentage of rides from each station going to another station within 250 meters of another metro station appears lower
 ```{r}
-sum %>%
+sum_station %>%
   filter(departures >= 100) %>% # include only stations at least 100 departures
   ggplot(., aes(metro_end_pct)) +
   geom_histogram() + 
@@ -140,7 +140,7 @@ This is corroborated by a bivariate regression, which shows that the percent of 
 
 ```{r}
 
-lm2 <- lm(data = sum,
+lm2 <- lm(data = sum_station,
           metro_end_pct ~ as.factor(year))
 summary(lm2)
 ```
@@ -151,7 +151,7 @@ summary(lm2)
 In 2020, we also see a more accentuated relationship between membership and metro-going percentages: the higher proportion of users that check out a bike that are members, the more likely the ride patterns from that station are headed to a another station near a metro.
 
 ```{r}
-sum %>%
+sum_station %>%
   filter(departures >= 100) %>% # include only stations at least 100 departures
   ggplot(., aes(member_pct, metro_end_pct)) +
   geom_point(alpha = 0.4) +
@@ -162,7 +162,7 @@ sum %>%
 The regression below shows that, in addition to the year, membership ratios are also mathematically important in predicting going-to-metro ratios: holding the year-effect constant, a 10% increase in a station's membership ratio suggests, on average, about a 4% increase in the number of departing rides that end up close to a metro station.
 
 ```{r}
-lm3 <- lm(data = sum,
+lm3 <- lm(data = sum_station,
           metro_end_pct ~ member_pct + as.factor(year))
 summary(lm3)
 ```
