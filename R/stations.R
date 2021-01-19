@@ -233,7 +233,7 @@ assertthat::assert_that(
 
 
 # export ---------------------------------------------------------------------------
-if (TRUE) {
+if (FALSE) {
 
 # export station_key
 saveRDS(station_key,

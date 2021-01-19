@@ -93,9 +93,9 @@
             #                   makes: bks-full.Rda, bks-full.csv
   s4 <- 0   # query:          filters/queries main database and exports files.
             #                   makes: bks_2020.Rda, bks1820.Rda
-  s5 <- 1   # sandbox.R       takes data from query and generates a few varialbes, ready to plot
-            #                   makes: sandbox.Rdata
-
+  s5 <- 0   # stats          takes years 17-20 from query, processes, adds station info, stats.
+            #                   makes: stats17-20.Rdata
+  s6 <- 0   # 
   
 # utilities: can be run independently after main.R
   u1 <- 0   # weather.R       queries weather data from NOAA to create hour/day weather dictionary.
