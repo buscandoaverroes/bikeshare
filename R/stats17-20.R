@@ -130,14 +130,30 @@ sum_station_sf <-
   select(-metro.y) %>% rename(metro = metro.x) %>% # keep only one metro var
   st_as_sf(coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE)
 
+st_crs(sum_station_sf) <- 4326
 
 
+
+
+
+
+# make simple count of start-to-end for all combinations --------------------------------------------------
+
+start_end <-   
+  bks1720 %>%
+  group_by(year, id_start, id_end) %>%
+  summarise(n_depart = n(),
+            lat_st   = first(lat_st),
+            lng_st   = first(lng_st),
+            lat_end  = first(lat_end),
+            lng_end  = first(lng_end))
 
 
 # export =============================================================================================
 save(
   sum_station_sf,
   bks1720,
+  start_end,
   station_key,
   sum_station,
   sum_station_b, sum_station_a,
