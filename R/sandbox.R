@@ -10,15 +10,14 @@ library(leafsync)
 
 # load 2020 + stations ----------------------------------------------------------------------------------
 bks2020 <- readRDS(file.path(processed, "data/years/bks_2020.Rda"))
-bks1820 <- readRDS(file.path(processed, "data/years/bks_2018-20.Rda"))
+bks1720 <- readRDS(file.path(processed, "data/years/bks_2017-20.Rda"))
 
 station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
   st_drop_geometry() # remove sf object
 
-#
 
-# merege with stations information -----------------------------------------------------------------------
+# merge with stations information -----------------------------------------------------------------------
 
 bks2020 <-
   left_join( # join to start station
@@ -35,9 +34,9 @@ bks2020 <-
 
 
 
-bks1820 <-
+bks1720 <-
   left_join( # join to start station
-    bks1820, station_key, 
+    bks1720, station_key, 
     by = c("id_start" = "id_proj"),
     na_matches = "never"
   ) %>% 
@@ -53,7 +52,7 @@ bks1820 <-
 
 # station summaries
 sum_station <- 
-  bks1820 %>%
+  bks1720 %>%
   mutate(metro_end_int = as.integer(metro_end),
          member_int    = as.integer(member)) %>%
   group_by(id_start, year) %>%
@@ -71,7 +70,7 @@ sum_station <-
 
 # try station summary with altered standard deviation formulas
 sum_station_end <-
-  bks1820 %>%
+  bks1720 %>%
   filter(!is.na(id_start)) %>%
   group_by(id_start, id_end, year) %>%
   summarize(
@@ -91,7 +90,7 @@ sum_station_end <-
 # tells us what percent of departures from a station go to a station that is in the 
 # top 5% most gone-to stations
 top05p <-
-  bks1820 %>%
+  bks1720 %>%
     #create list of total departures by station 
     group_by(id_start, id_end, year) %>%
     summarize(
@@ -144,7 +143,7 @@ station_map <-
 # export =============================================================================================
 save(
   station_map,
-  bks1820, bks2020,
+  bks1720, bks2020,
   station_key,
   sum,
   sum_station_end, sum_station,
@@ -216,18 +215,18 @@ mv2020 <- mapview(station_map[station_map$year==2020,],
                              "sd",
                              "departures_pct_top05"))) 
 
-mv2020_ineq <- mapview(station_map[station_map$year==2020,], 
-                       zcol = c("dep_ineq"),
-                       at = c(0, 0.5, 0.6, 0.7, 0.8, 0.9, 1),
-                       alpha.regions = 0.2,
-                       layer.name = "2020 Dest. Disparity",
-                       popup = popupTable(
-                         station_map,
-                         zcol = c("name_bks", 
-                                  "name_metro", 
-                                  "departures",
-                                  "n_dest",
-                                  "sd",
-                                  "departures_pct_top05"))) 
+mv2017 <- mapview(station_map[station_map$year==2017,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.2,
+                  layer.name = "2017",
+                  popup = popupTable(
+                    station_map,
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
 
-sync(mv2018, mv2019, mv2020, mv2020_ineq)
+sync(mv2017, mv2018, mv2019, mv2020)

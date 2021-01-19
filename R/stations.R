@@ -213,8 +213,8 @@ station_key <-
     values_from = c(osm_id, name_metro),
     values_fill = NA
     ) %>%
-  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) # replace geometry
-
+  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) %>% # replace geometry
+  rename(name_metro = name_metro_1) # rename first name of metro station
 
 
 # check that there are no duplicates in number_old, id_proj -----------------------
