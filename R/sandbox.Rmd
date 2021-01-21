@@ -32,7 +32,7 @@ load(file.path(processed, "data/stats17-20.Rdata"))
 most departures are between 0.5 and 0.75 Gini
 
 ```{r}
-ggplot(sum_station_b, aes(dep_ineq)) +
+ggplot(sum_station_b_dep, aes(dep_ineq)) +
   geom_histogram() 
 ```
 
@@ -41,7 +41,7 @@ ggplot(sum_station_b, aes(dep_ineq)) +
 The Percent of departures that end up in the top 5% of departures stations seem to be farily predictive of the GINI measurement.
 
 ```{r}
-ggplot(sum_station_b, aes(dep_ineq, departures_pct_top05)) +
+ggplot(sum_station_b_dep, aes(dep_ineq, departures_pct_top05)) +
   geom_point()
 ```
 
@@ -50,7 +50,7 @@ ggplot(sum_station_b, aes(dep_ineq, departures_pct_top05)) +
 But sd doesn't seem to be as good of a measurement
 
 ```{r}
-ggplot(sum_station_b, aes(dep_ineq, sd)) +
+ggplot(sum_station_b_dep, aes(dep_ineq, sd)) +
   geom_point()
 ```
 
