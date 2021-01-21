@@ -170,6 +170,59 @@ summary(lm3)
 
 
 
+### Net figures
+
+#### Net Flow
+
+For the last four years, by year
+```{r}
+ggplot(data = sum_station, aes(net_flow, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4, binwidth = 50) +
+  xlim(-1000,1000)
+```
+
+Viewing the distribution by geography
+
+```{r}
+leaflet(data = sum_station) 
+```
+
+
+#### Arrival Parities
+
+Distribution of arrival parities seems similar to departure parities
+
+```{r}
+filter(sum_station, arrivals >= 100) %>%
+ggplot(., aes(arrv_ineq, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4) +
+  xlim(0,1)
+```
+
+
+#### Comparing Arrival and Departure Parities
+
+```{r}
+filter(sum_station, arrivals >= 100, departures >= 100) %>%
+  mutate(dif = arrv_ineq - dep_ineq) %>%
+  ggplot(., aes(dif, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4) + xlim(-.2, .2)
+
+```
+
+
+##### A ver, a ver los mapas...
+
+
+#### Net median duration 
+```{r}
+filter(sum_station, arrivals >= 100, departures >= 100) %>%
+  ggplot(., aes(net_med_dur, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4)
+```
+
+
+
 ## Daily Rides 
 
 ##### Departures by Year
@@ -322,6 +375,5 @@ fig20
 ```
 
 
-#### Network Graphs for February, March, April 2020
 
 
