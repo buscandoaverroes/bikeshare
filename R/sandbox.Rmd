@@ -19,7 +19,10 @@ library(plotly)
 
 processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 load(file.path(processed, "data/stats17-20.Rdata"))
+sum_station_sf_fr <- filter(sum_station_sf, departures >= 50, arrivals >= 50)
 ```
+Thanks to RColorBrewer for providing the color scales.
+
 
 # Graphs
 
@@ -32,7 +35,7 @@ load(file.path(processed, "data/stats17-20.Rdata"))
 most departures are between 0.5 and 0.75 Gini
 
 ```{r}
-ggplot(sum_station_b, aes(dep_ineq)) +
+ggplot(sum_station_b_dep, aes(dep_ineq)) +
   geom_histogram() 
 ```
 
@@ -41,7 +44,7 @@ ggplot(sum_station_b, aes(dep_ineq)) +
 The Percent of departures that end up in the top 5% of departures stations seem to be farily predictive of the GINI measurement.
 
 ```{r}
-ggplot(sum_station_b, aes(dep_ineq, departures_pct_top05)) +
+ggplot(sum_station_b_dep, aes(dep_ineq, departures_pct_top05)) +
   geom_point()
 ```
 
@@ -50,7 +53,7 @@ ggplot(sum_station_b, aes(dep_ineq, departures_pct_top05)) +
 But sd doesn't seem to be as good of a measurement
 
 ```{r}
-ggplot(sum_station_b, aes(dep_ineq, sd)) +
+ggplot(sum_station_b_dep, aes(dep_ineq, sd)) +
   geom_point()
 ```
 
@@ -166,6 +169,130 @@ The regression below shows that, in addition to the year, membership ratios are 
 lm3 <- lm(data = sum_station,
           metro_end_pct ~ member_pct + as.factor(year))
 summary(lm3)
+```
+
+
+
+### Net figures
+
+#### Net Flow
+
+For the last four years, by year
+```{r}
+ggplot(data = sum_station, aes(net_flow, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4, binwidth = 50) +
+  xlim(-1000,1000)
+```
+
+Viewing the distribution by geography
+
+```{r}
+leaflet(data = sum_station) 
+```
+
+
+#### Arrival Parities
+
+Distribution of arrival parities seems similar to departure parities
+
+```{r}
+filter(sum_station, arrivals >= 100) %>%
+ggplot(., aes(arrv_ineq, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4) +
+  xlim(0,1)
+```
+
+
+#### Comparing Arrival and Departure Parities
+
+```{r}
+filter(sum_station, arrivals >= 100, departures >= 100) %>%
+  mutate(dif = arrv_ineq - dep_ineq) %>%
+  ggplot(., aes(dif, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4) + xlim(-.2, .2)
+
+```
+
+
+##### A ver, a ver los mapas...
+
+Net flow: 2018
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_flow, 5)
+filter(sum_station_sf, year == 2018) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_flow), fillColor = ~pal(net_flow), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_flow, popup = ~name_bks_st)
+```
+
+Net flow 2019
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_flow, 5)
+filter(sum_station_sf, year == 2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_flow), fillColor = ~pal(net_flow), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_flow, popup = ~name_bks_st)
+```
+
+
+Net flow 2020
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_flow, 5)
+filter(sum_station_sf, year == 2020) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_flow), fillColor = ~pal(net_flow), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_flow, popup = ~name_bks_st)
+```
+
+Arrival Parities: 2019
+
+Stations farther away from the transport nucleus have higher arrival inequities, meaning that their arrivals more disproportionately come from just a few stations.
+
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(arrv_ineq), fillColor = ~pal(arrv_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(arrv_ineq, 2), popup = ~name_bks_st)
+```
+Arrival Parities: 2020
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2020) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(arrv_ineq), fillColor = ~pal(arrv_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(arrv_ineq, 2), popup = ~name_bks_st)
+```
+
+
+
+Departure Parities: 2019
+
+Departure inequities may be less varied than arrival inequities, even across years
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(dep_ineq), fillColor = ~pal(dep_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(dep_ineq, 2), popup = ~name_bks_st)
+```
+
+Departure Parities: 2020
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2020) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(dep_ineq), fillColor = ~pal(dep_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(dep_ineq, 2), popup = ~name_bks_st)
+```
+
+
+#### Net median duration
+
+2019
+```{r}
+filter(sum_station, arrivals >= 100, departures >= 100) %>%
+  ggplot(., aes(net_med_dur, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4)
+```
+
+
+map 
+
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_med_dur, 5)
+filter(sum_station_sf, year ==  2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_med_dur), fillColor = ~pal(net_med_dur), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_med_dur, popup = ~name_bks_st)
 ```
 
 
@@ -322,6 +449,5 @@ fig20
 ```
 
 
-#### Network Graphs for February, March, April 2020
 
 
