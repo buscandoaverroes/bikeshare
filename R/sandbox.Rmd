@@ -20,6 +20,8 @@ library(plotly)
 processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 load(file.path(processed, "data/stats17-20.Rdata"))
 sum_station_sf_fr <- filter(sum_station_sf, departures >= 50, arrivals >= 50)
+
+
 ```
 Thanks to RColorBrewer for providing the color scales.
 
@@ -449,5 +451,48 @@ fig20
 ```
 
 
+## Weather
+
+### Weather descriptives 
+
+#### Temperature and precip over the year 
+
+Max Temperature
+```{r}
+ggplot(days1720, aes(day_of_yr, tempmax, color = as.factor(year))) +
+  geom_smooth()
+```
 
 
+Precipitation
+```{r}
+ggplot(days1720, aes(day_of_yr, precip, color = as.factor(year))) +
+  geom_smooth() +labs(y = "daily precip in mm")
+```
+
+
+#### Temp vs no. rides
+We notice a general non-linear pattern: the relationship between max temperature and the number of rides is generally positive and linear, except when the temperature reaches ~30 degrees (Celsius), after which the relationship weakens or even becomes negative. 
+
+We also notice that in 2020, there's a distinctive lower number of rides. 
+```{r}
+ggplot(days1720, aes(tempmax, nrides, color = as.factor(year))) +
+  geom_smooth()
+```
+
+
+#### Temp vs median duration
+A similar pattern emerges for median duration as with number of rides, except rides in 2020 were longer in aggregate terms.
+
+```{r}
+ggplot(days1720, aes(tempmax, dur_med, color = as.factor(year))) +
+  geom_smooth()
+```
+
+
+#### Temp vs standard dev of duration
+
+```{r}
+ggplot(days1720, aes(tempmax, dur_sd, color = as.factor(year))) +
+  geom_smooth()
+```
