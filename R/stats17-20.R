@@ -216,7 +216,7 @@ days1720 <-
   group_by(year, day_of_yr) %>% summarise(
     nrides      = n(),
     dur_med     = round(median(dur, na.rm = TRUE), 1),
-    dur_sd      = round(sd(dur, na.rm = TRUE), 2),
+    dur_ineq    = round(Gini(dur, na.rm = TRUE), 2),
     weekend     = first((wday == 1 | wday == 7))
   ) %>%
   left_join(., weather, 

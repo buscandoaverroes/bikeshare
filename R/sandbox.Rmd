@@ -490,9 +490,10 @@ ggplot(days1720, aes(tempmax, dur_med, color = as.factor(year))) +
 ```
 
 
-#### Temp vs standard dev of duration
+#### Temp vs Duration GINI
+For all non-panemdic years, there seems to be a weak relationship between max temperature and the equity of duration distributions. However, in 2020, higher temperatures indicate a very unevenly distributed ride length distribution, suggesting that the longer median ride length (ascertained above) is caused by a very uneven distribution of ride lengths.
 
 ```{r}
-ggplot(days1720, aes(tempmax, dur_sd, color = as.factor(year))) +
+ggplot(days1720, aes(tempmax, dur_ineq, color = as.factor(year))) +
   geom_smooth()
 ```
