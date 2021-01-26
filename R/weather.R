@@ -48,6 +48,7 @@ daily_weather <- function(x) {
       year     = as.integer(year(datetime)),
       month    = as.integer(month(datetime)),
       day      = as.integer(day(datetime)),
+      day_of_yr= as.integer(yday(datetime)),
       tempmax  = round((TMAX/10), 1), # daily tempmax in celcius
       precip   = round((PRCP/10), 1) # daily precip in mm
     ) 
