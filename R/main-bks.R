@@ -98,7 +98,8 @@
   s6 <- 0   # 
   
 # utilities: can be run independently after main.R
-  u1 <- 0   # weather.R       queries weather data from NOAA to create hour/day weather dictionary.
+  u1 <- 0   # weather.R       queries weather data from NOAA to create by-day weather dictionary
+            #                   makes: data/weather/weather-daily.Rda
 
   
 # rmarkdown

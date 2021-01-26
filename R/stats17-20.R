@@ -19,6 +19,8 @@ station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
   st_drop_geometry() # remove sf object
 
+weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda"))
+
 
 # join 2017-2020 file with stations information -----------------------------------------------------------------------
 
@@ -204,8 +206,33 @@ start_end <-
             lng_end  = first(lng_end))
 
 
+
+
+
+# by-day summary with weather ----------------------------------------------------------------------------
+days1720 <- 
+  bks1720 %>%
+  mutate(day_of_yr = as.integer(yday(leave))) %>%
+  group_by(year, day_of_yr) %>% summarise(
+    nrides      = n(),
+    dur_med     = round(median(dur, na.rm = TRUE), 1),
+    dur_sd      = round(sd(dur, na.rm = TRUE), 2),
+    weekend     = first((wday == 1 | wday == 7))
+  ) %>%
+  left_join(., weather, 
+       by = c('year', 'day_of_yr')) %>%
+  select(-date, -station, -fl_m, -fl_q, -fl_so, -fl_t,     
+         -PRCP, -TMAX, -datetime)
+
+
+
+
+
+
+
 # export =============================================================================================
 save(
+  days1720,
   sum_station_sf,
   bks1720,
   start_end,
