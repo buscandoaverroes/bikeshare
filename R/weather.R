@@ -47,6 +47,7 @@ daily_weather <- function(x) {
       datetime = ymd_hms(date, tz = 'America/New_York'),
       year     = as.integer(year(datetime)),
       month    = as.integer(month(datetime)),
+      wday     = as.integer(wday(datetime)),
       day      = as.integer(day(datetime)),
       day_of_yr= as.integer(yday(datetime)),
       tempmax  = round((TMAX/10), 1), # daily tempmax in celcius
@@ -80,7 +81,8 @@ weather_daily <-
   weather2010, weather2011, weather2012, weather2013, weather2014,
   weather2015, weather2016, weather2017, weather2018, weather2019,
   weather2020
-)
+) %>%
+  replace_na(.$precip, 0) # assumtion: can replace missings with 0. causes merging probs
 
 # export 
 saveRDS(

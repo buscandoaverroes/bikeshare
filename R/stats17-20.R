@@ -14,19 +14,21 @@ library(leafsync)
 
 # load years 2017-20 file + stations ----------------------------------------------------------------------------------
 bks1720 <- readRDS(file.path(processed, "data/years/bks_2017-20.Rda"))
+nrow_bks1720 <- nrow(bks1720)
 
 station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
   st_drop_geometry() # remove sf object
 
 weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda"))
+weather$precip <- replace_na(weather$precip, 0) 
 
+# join 2017-2020 file with stations info, weather -----------------------------------------------------------------------
 
-# join 2017-2020 file with stations information -----------------------------------------------------------------------
-
-bks1720 <-
+bks1720a <-
+  bks1720 %>%
   left_join(        # join to start station
-    bks1720, station_key, 
+    ., station_key, 
     by = c("id_start" = "id_proj"),
     na_matches = "never"
   ) %>% 
@@ -35,8 +37,25 @@ bks1720 <-
     by = c("id_end" = "id_proj"),
     na_matches = "never", 
     suffix = c("_st", "_end")
-  )
+  ) %>%
+  mutate(day_of_yr = as.integer(yday(leave))) %>%
+  left_join(weather,
+    by = c("year", "day_of_yr"),
+    na_matches = "never"
+  ) %>% 
+  select(-date, -station, -fl_m, -fl_q, -fl_so, -fl_t,     
+         -PRCP, -TMAX, -datetime) %>%
+  mutate(dup = duplicated(id_ride))
 
+# for joining to weather
+#   Ok, super weird, the merge creates many duplicate entries if the 
+#   precip variable has NA values, so must replace with 0?
+
+
+# ensure the number of rows hasn't been altered
+assertthat::assert_that( # 12915580
+  nrow(bks1720) == nrow_bks1720
+)
 
 # descriptive stats =============================================================
 
@@ -220,7 +239,8 @@ days1720 <-
     weekend     = first((wday == 1 | wday == 7))
   ) %>%
   left_join(., weather, 
-       by = c('year', 'day_of_yr')) %>%
+       by = c('year', 'day_of_yr'),
+       na_matches = "never") %>%
   select(-date, -station, -fl_m, -fl_q, -fl_so, -fl_t,     
          -PRCP, -TMAX, -datetime)
 
