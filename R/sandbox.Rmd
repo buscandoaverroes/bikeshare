@@ -560,7 +560,7 @@ ggplot(sum_station, aes(arrivals, departures)) +
 
 
 
-##### Using factor "exogenous" to volume
+##### Using factors "exogenous" to volume
 Note the many dangers of colinearity here.
 
 ```{r}

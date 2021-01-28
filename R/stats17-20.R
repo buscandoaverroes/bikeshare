@@ -65,8 +65,10 @@ assertthat::assert_that( # 12915580
 
 sum_station_a_dep <- 
   bks1720 %>%
-  mutate(metro_end_int = as.integer(metro_end),
-         member_int    = as.integer(member)) %>%
+  mutate(
+    metro_end_int = as.integer(metro_end),
+    member_int    = as.integer(member)
+    ) %>%
   group_by(id_start, year, day_of_yr) %>%
   summarize(
     name_bks_st= first(na.omit(name_bks_st)),
@@ -76,7 +78,8 @@ sum_station_a_dep <-
     departures = n(),
     n_dest     = n_distinct(id_end),
     metro_end_pct= round(mean(metro_end_int, na.rm = TRUE), 3),
-    member_pct = round(mean(member_int, na.rm = TRUE), 3)
+    member_pct = round(mean(member_int, na.rm = TRUE), 3),
+    weekend    = first(weekend)
   )
 
 
@@ -235,8 +238,10 @@ assertthat::assert_that(
 
 sum_station_a_dep <- 
   bks1720 %>%
-  mutate(metro_end_int = as.integer(metro_end),
-         member_int    = as.integer(member)) %>%
+  mutate(
+    metro_end_int = as.integer(metro_end),
+    member_int    = as.integer(member)
+    ) %>%
   group_by(id_start, year) %>%
   summarize(
     name_bks_st= first(na.omit(name_bks_st)),
