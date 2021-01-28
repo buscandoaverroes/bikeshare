@@ -21,7 +21,7 @@ processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 load(file.path(processed, "data/stats17-20.Rdata"))
 sum_station_sf_fr <- filter(sum_station_sf, departures >= 50, arrivals >= 50)
 
-
+theme_set(theme_minimal())
 ```
 Thanks to RColorBrewer for providing the color scales.
 
@@ -455,6 +455,20 @@ fig20
 
 ### Weather descriptives 
 
+#### Rainy Days
+```{r}
+ggplot(days1720, aes(precip)) +
+  geom_histogram(binwidth = 1) + labs(x = "precip in mm", y = "N days") + lims(x = c(-1,20))
+```
+
+#### Temperature Days
+
+```{r}
+ggplot(days1720, aes(tempmax)) +
+  geom_histogram(binwidth = 1) + labs(x = "Daily High Temp in Celcius", y = "N days") + lims(x = c(-10,45))
+```
+
+
 #### Temperature and precip over the year 
 
 Max Temperature
@@ -499,5 +513,34 @@ ggplot(days1720, aes(tempmax, dur_ineq, color = as.factor(year))) +
 ```
 
 
+#### Precip vs No. Rides
+
+An indicator relationship seems to be appropriate for precipitation (either there was rain over `n`mm or there wasn't). Linear doesn't seem to be appropriate. Lots of variation in the 0-5 mm range.
+```{r}
+ggplot(days1720, aes(precip, nrides, color = as.factor(year))) +
+  geom_smooth() + labs(x = "Precip in mm") + lims(x = c(0,25))
+```
+
+
+
 ### Regressions 
 
+#### Daily rides
+```{r}
+lm4 <- lm(nrides ~ (precip >0) + tempmax + as.factor(year) + weekend + dur_ineq + 
+            as.factor(week_of_yr),
+          data = days1720)
+summary(lm4)
+```
+
+
+#### Duration
+
+```{r}
+# lm5 <- lm(dur ~ member + electric + 
+#           + metro_st + metro_end +
+#             as.factor(hour) + as.factor(week_of_yr) + as.factor(year) +
+#             (precip >0) + (tempmax > 25),
+#           data = bks1720)
+# summary(lm5)
+```
