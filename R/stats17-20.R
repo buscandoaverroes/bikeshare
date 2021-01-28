@@ -430,15 +430,19 @@ days1720 <-
 
 
 # export =============================================================================================
+
+#individual objects
+saveRDS(days1720, file.path(processed, "data/stats17-20/days.Rda"), compress = FALSE)
+saveRDS(bks1720, file.path(processed, "data/stats17-20/bks1720-weather.Rda"), compress = FALSE)
+saveRDS(sum_station, file.path(processed, "data/stats17-20/sum-station.Rda"), compress = FALSE)
+saveRDS(sum_station_yr, file.path(processed, "data/stats17-20/sum-station-yr.Rda"), compress = FALSE)
+saveRDS(start_end, file.path(processed, "data/stats17-20/start-end.Rda"), compress = FALSE)
+
+# rest, as Rdata
 save(
-  days1720,
   sum_station_sf,
-  bks1720,
-  start_end,
-  station_key,
-  sum_station,
-  sum_station_yr, sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep,
-  file = file.path(processed, "data/stats17-20.Rdata"),
+  sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep,
+  file = file.path(processed, "data/stats17-20/misc.Rdata"),
   compress = FALSE
 )
 
