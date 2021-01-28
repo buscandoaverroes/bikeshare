@@ -53,9 +53,8 @@ assertthat::assert_that( # 12915580
 
 
 
-# descriptive stats =============================================================
 
-# station summaries -------------------------------------------------------------
+# station summaries ===========================================================================
 
 # create summary part a: DEPARTURES ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ - 
 #   group: start station, year
@@ -224,7 +223,7 @@ start_end <-
 
 
 
-# by-day summary with weather ----------------------------------------------------------------------------
+# system-day summary with weather ===========================================================================
 days1720 <- 
   bks1720 %>%
   group_by(year, day_of_yr) %>% summarise(
