@@ -21,8 +21,8 @@ station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   st_drop_geometry() # remove sf object
 
 weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda")) %>%
-  select(year, day_of_yr, tempmax, precip) 
-#weather$precip <- replace_na(weather$precip, 0) 
+  mutate(week_of_yr = as.integer(week(datetime))) %>%
+  select(year, week_of_yr, day_of_yr, tempmax, precip) # reduce variables
 
 # join 2017-2020 file with stations info, weather -----------------------------------------------------------------------
 

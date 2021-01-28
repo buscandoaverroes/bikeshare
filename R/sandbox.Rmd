@@ -497,3 +497,7 @@ For all non-panemdic years, there seems to be a weak relationship between max te
 ggplot(days1720, aes(tempmax, dur_ineq, color = as.factor(year))) +
   geom_smooth()
 ```
+
+
+### Regressions 
+
