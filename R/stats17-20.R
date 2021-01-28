@@ -54,7 +54,7 @@ assertthat::assert_that( # 12915580
 
 
 
-# station summaries ===========================================================================
+# station-year-day summaries ===========================================================================
 
 # create summary part a: DEPARTURES ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ - 
 #   group: start station, year, day_of_yr
@@ -193,9 +193,164 @@ sum_station <-
   )   # note, we lose 4 obs, why?
 
 
-# sf version of sum_station with gps coords -----------------------------------------------------
+# remove objects 
+rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep)
+
+
+
+
+
+
+
+
+# station-year summaries ======================================================================
+
+# create summary part a: DEPARTURES ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ - 
+#   group: start station, year, day_of_yr
+#   stats: from start station -- duration, departures, etc
+
+sum_station_a_dep <- 
+  bks1720 %>%
+  mutate(metro_end_int = as.integer(metro_end),
+         member_int    = as.integer(member)) %>%
+  group_by(id_start, year) %>%
+  summarize(
+    name_bks_st= first(na.omit(name_bks_st)),
+    metro      = first(na.omit(metro_st)),
+    dur_med    = median(dur, na.rm = TRUE),
+    dur_sd     = sd(dur, na.rm = TRUE),
+    departures = n(),
+    n_dest     = n_distinct(id_end),
+    metro_end_pct= round(mean(metro_end_int, na.rm = TRUE), 3),
+    member_pct = round(mean(member_int, na.rm = TRUE), 3)
+  )
+
+
+# summary part a  -- arrivals + + + + + + + + + + + + + + + + + +
+# variables to create:
+#     dur_med_arrv   median duration of rides that end up at a given station
+#     arrivals       number of all trip arrivals at a given station
+#     n_arrv         number of the unique bike stations that bikes arrive from
+#     metro_st_pct   percent of rides that arrive at a given station that begin within 250m of a metro station
+#     arrv_ineq      the arrival inequity 
+
+sum_station_a_arrv <-  
+  bks1720 %>%
+  mutate(metro_st_int = as.integer(metro_st),
+         member_int    = as.integer(member)) %>%
+  group_by(id_end, year) %>%    # group by end station, year
+  summarize(
+    dur_med_arrv = median(dur, na.rm = TRUE),
+    dur_arrv_sd  = sd(dur, na.rm = TRUE),
+    arrivals     = n(),
+    n_arrv       = n_distinct(id_start),
+    metro_st_pct = round(mean(metro_st_int, na.rm = TRUE), 3), # percent of rides that come from metro
+    member_arrv_pct= round(mean(member_int, na.rm = TRUE), 3) # percentage of arrivals that are members
+  ) 
+
+
+# create summary part b: DEPARTURES  ~ - ~ - ~ - ~ - ~ - ~ - ~ - ~ -
+#   group (2 part): start station, endstation, year //// start, year
+#   stats: number to trips from each station to each station, gini
+sum_station_b_dep <-
+  bks1720 %>%
+  filter(!is.na(id_start)) %>%
+  group_by(id_start, id_end, year) %>%
+  summarize(
+    n_trip_to_end = n() # by destination number of trips
+  ) %>%
+  ungroup() %>% group_by(id_start, year) %>% # ungroup, regroup only by start id and year
+  summarise(
+    departures = sum(n_trip_to_end), # if you add all the by-destination number of trips = total number of station departures
+    n_dest   = n_distinct(id_end), # number of distinct end stations
+    sd       = round(sd(n_trip_to_end, na.rm = TRUE), 2), # this is our temporary measure of 'parity' in destination distribution
+    dep_ineq = Gini(n_trip_to_end, na.rm = TRUE)
+  )
+
+
+
+# create summary part b: arrivals + + + + + + + + + + + + + + + + + +
+#   group (2 part): start station, endstation, year //// start, year
+#   stats: number to trips from each station to each station, gini
+
+sum_station_b_arrv <-
+  bks1720 %>%
+  filter(!is.na(id_end)) %>%
+  group_by(id_start, id_end, year) %>%
+  summarize(
+    n_trip_to_end = n() # by destination number of trips
+  ) %>%
+  ungroup() %>% group_by(id_end, year) %>% # ungroup, regroup only by start id and year
+  summarise(
+    arrv_ineq = Gini(n_trip_to_end, na.rm = TRUE)
+  )
+
+
+
+
+
+# create top proportion
+#   tells us what percent of departures from a station go to a station that is in the 
+#   top 5% most gone-to stations
+top05p <-
+  bks1720 %>%
+  #create list of total departures by station 
+  group_by(id_start, id_end, year) %>%
+  summarize(
+    n_trip_to_end = n() # by destination number of trips
+  ) %>%
+  ungroup() %>% group_by(id_start, year) %>%
+  slice_max(order_by = n_trip_to_end, prop = 0.05, with_ties = TRUE) %>% # create list of top 5% of destinations
+  summarise( # note that using proportion rounds down, so if prop=0.1 and there are fewer than 10 destinations, the station is excluded.
+    n_top05 = sum(n_trip_to_end)
+  )
+
+
+# join sum_station_b_dep with top, create pct top p variable 
+#   This variable will tell us: what percent of rides that leave
+#   a station go to one of the stations in the top 5 % of destinations
+#   for that station. This is one measure of flow 'parity'.
+sum_station_b_dep <- 
+  sum_station_b_dep %>%
+  left_join(top05p, # join to top percent
+            by = c("id_start", "year"),
+            na_matches = "never") %>%
+  mutate(
+    departures_pct_top05 = round( (n_top05/departures), 3) 
+  )
+
+
+# join four summary files, generate difference variables
+sum_station_yr <- 
+  sum_station_a_dep %>%
+  select(-departures, -n_dest) %>% # already in sum_station_b_dep
+  left_join(sum_station_b_dep,
+            .,
+            by = c("id_start", "year")) %>%  # note, we lose 4 obs, why?
+  left_join(.,
+            sum_station_a_arrv,
+            by = c( "id_start" = "id_end", "year")) %>% 
+  left_join(.,
+            sum_station_b_arrv,
+            by = c("id_start" = "id_end", "year")) %>% 
+  rename(id_station = id_start) %>% 
+  mutate(   #  compare the equivalent arrival and departure statistic: ARRIVAL - Departure
+    net_flow       = arrivals - departures, # positive means more arrivals than departures
+    net_med_dur    = dur_med_arrv - dur_med, # pos means median dur is greater coming in than leaving
+    dif_member_pct = member_arrv_pct - member_pct, # positive means greater % of incoming rides are members
+    dif_metro_pct  = metro_st_pct - metro_end_pct # positive means greater % of incoming ridess are coming from metro
+  ) 
+
+
+
+
+
+
+
+
+# sf version of sum_station_yr with gps coords -----------------------------------------------------
 sum_station_sf <- 
-  sum_station %>%
+  sum_station_yr %>%
   left_join(., station_key,
             by = c("id_station" = "id_proj")) %>%
   select(-metro.y) %>% rename(metro = metro.x) %>% # keep only one metro var
