@@ -39,7 +39,10 @@ bks1720 <-
     na_matches = "never", 
     suffix = c("_st", "_end")
   )  %>% 
-  mutate(day_of_yr = as.integer(yday(leave))) %>%
+  mutate(
+    day_of_yr   = as.integer(yday(leave)),
+    weekend     = first((wday == 1 | wday == 7)),
+  ) %>%
   left_join(weather,
     by = c("year", "day_of_yr"),
     na_matches = "never"
@@ -305,6 +308,41 @@ sum_station_b_arrv <-
   summarise(
     arrv_ineq = Gini(n_trip_to_end, na.rm = TRUE)
   )
+
+
+
+# create top proportion
+#   tells us what percent of departures from a station go to a station that is in the 
+#   top 5% most gone-to stations
+top05p <-
+  bks1720 %>%
+  #create list of total departures by station 
+  group_by(id_start, id_end, year) %>%
+  summarize(
+    n_trip_to_end = n() # by destination number of trips
+  ) %>%
+  ungroup() %>% group_by(id_start, year) %>%
+  slice_max(order_by = n_trip_to_end, prop = 0.05, with_ties = TRUE) %>% # create list of top 5% of destinations
+  summarise( # note that using proportion rounds down, so if prop=0.1 and there are fewer than 10 destinations, the station is excluded.
+    n_top05 = sum(n_trip_to_end)
+  )
+# join sum_station_b_dep with top, create pct top p variable 
+#   This variable will tell us: what percent of rides that leave
+#   a station go to one of the stations in the top 5 % of destinations
+#   for that station. This is one measure of flow 'parity'.
+sum_station_b_dep <- 
+  sum_station_b_dep %>%
+  left_join(top05p, # join to top percent
+            by = c("id_start", "year"),
+            na_matches = "never") %>%
+  mutate(
+    departures_pct_top05 = round( (n_top05/departures), 3) 
+  )
+
+
+
+
+
 
 
 
