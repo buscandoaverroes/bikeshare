@@ -20,8 +20,9 @@ station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
   st_drop_geometry() # remove sf object
 
-weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda"))
-weather$precip <- replace_na(weather$precip, 0) 
+weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda")) %>%
+  select(year, day_of_yr, tempmax, precip) 
+#weather$precip <- replace_na(weather$precip, 0) 
 
 # join 2017-2020 file with stations info, weather -----------------------------------------------------------------------
 
@@ -37,25 +38,20 @@ bks1720 <-
     by = c("id_end" = "id_proj"),
     na_matches = "never", 
     suffix = c("_st", "_end")
-  ) 
-  
-bks1720a <- 
-  weather %>%
-  select(datetime, day_of_yr, tempmax, precip) %>%
-  left_join(bks1720, .,
-    by = c("leave" = "datetime"),
+  )  %>% 
+  mutate(day_of_yr = as.integer(yday(leave))) %>%
+  left_join(weather,
+    by = c("year", "day_of_yr"),
     na_matches = "never"
-  ) %>% # there are two duplicate entries
-  mutate(dup = duplicated(id_ride))
-  
-bks1720a %>% filter(id_ride == 23977507 | id_ride == 3952748) %>% view()
+  ) 
 
 
-# dups: 3952748, 23977507
 # ensure the number of rows hasn't been altered
 assertthat::assert_that( # 12915580
   nrow(bks1720) == nrow_bks1720
 )
+
+
 
 # descriptive stats =============================================================
 
@@ -231,22 +227,14 @@ start_end <-
 # by-day summary with weather ----------------------------------------------------------------------------
 days1720 <- 
   bks1720 %>%
-  mutate(day_of_yr = as.integer(yday(leave))) %>%
   group_by(year, day_of_yr) %>% summarise(
     nrides      = n(),
     dur_med     = round(median(dur, na.rm = TRUE), 1),
     dur_ineq    = round(Gini(dur, na.rm = TRUE), 2),
-    weekend     = first((wday == 1 | wday == 7))
-  ) %>%
-  left_join(., weather, 
-       by = c('year', 'day_of_yr'),
-       na_matches = "never") %>%
-  select(-date, -station, -fl_m, -fl_q, -fl_so, -fl_t,     
-         -PRCP, -TMAX, -datetime)
-
-
-
-
+    weekend     = first((wday == 1 | wday == 7)),
+    precip      = first(precip), # we can assume that taking the first in each group is ok
+    tempmax     = first(tempmax) #  ... since the values are the same for each year-dayofyear group
+  ) 
 
 
 
