@@ -23,7 +23,12 @@ library(lubridate)
 #   .$data # note, values given in tenths, degrees C (22.1 = 2.21 Celcius), PRCP in tenths of mm (22 = 2.2 mm)
 # 
 
-
+data <- ncdc(datasetid = 'GHCND',
+             datatypeid = c('TMAX', 'PRCP'),
+             stationid = 'GHCND:USC00186350',
+             startdate = paste0(2020, '-01-01'),
+             enddate = paste0(2020, '-12-31'),
+             limit = 1000) %>% .$data
 
 # function for extracting data for a certain year =================================================================
 daily_weather <- function(x) {
@@ -42,7 +47,7 @@ daily_weather <- function(x) {
   # to wide format so temp and precip are in different columsn
   data <-
     data %>% 
-      pivot_wider(names_from = datatype, values_from = value) %>%
+      pivot_wider(names_from = datatype, values_from = value, id_cols = date) %>% 
     mutate(   
       datetime = ymd_hms(date, tz = 'America/New_York'),
       year     = as.integer(year(datetime)),
@@ -81,8 +86,13 @@ weather_daily <-
   weather2010, weather2011, weather2012, weather2013, weather2014,
   weather2015, weather2016, weather2017, weather2018, weather2019,
   weather2020
-) %>%
-  replace_na(.$precip, 0) # assumtion: can replace missings with 0. causes merging probs
+) 
+
+# check for duplicates
+assertthat::assert_that(
+  anyDuplicated(weather_daily$datetime) == 0 # no duplicate entries for date
+)
+
 
 # export 
 saveRDS(

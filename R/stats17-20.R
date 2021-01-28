@@ -25,33 +25,33 @@ weather$precip <- replace_na(weather$precip, 0)
 
 # join 2017-2020 file with stations info, weather -----------------------------------------------------------------------
 
-bks1720a <-
+bks1720 <-
   bks1720 %>%
   left_join(        # join to start station
     ., station_key, 
     by = c("id_start" = "id_proj"),
     na_matches = "never"
-  ) %>% 
+  ) %>%
   left_join(        # join to end, change suffix
     station_key, 
     by = c("id_end" = "id_proj"),
     na_matches = "never", 
     suffix = c("_st", "_end")
-  ) %>%
-  mutate(day_of_yr = as.integer(yday(leave))) %>%
-  left_join(weather,
-    by = c("year", "day_of_yr"),
+  ) 
+  
+bks1720a <- 
+  weather %>%
+  select(datetime, day_of_yr, tempmax, precip) %>%
+  left_join(bks1720, .,
+    by = c("leave" = "datetime"),
     na_matches = "never"
-  ) %>% 
-  select(-date, -station, -fl_m, -fl_q, -fl_so, -fl_t,     
-         -PRCP, -TMAX, -datetime) %>%
+  ) %>% # there are two duplicate entries
   mutate(dup = duplicated(id_ride))
-
-# for joining to weather
-#   Ok, super weird, the merge creates many duplicate entries if the 
-#   precip variable has NA values, so must replace with 0?
+  
+bks1720a %>% filter(id_ride == 23977507 | id_ride == 3952748) %>% view()
 
 
+# dups: 3952748, 23977507
 # ensure the number of rows hasn't been altered
 assertthat::assert_that( # 12915580
   nrow(bks1720) == nrow_bks1720
