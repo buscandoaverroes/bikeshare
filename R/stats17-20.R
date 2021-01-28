@@ -332,9 +332,6 @@ sum_station_yr <-
 
 
 
-# remove objects 
-rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep)
-
 
 
 
@@ -402,7 +399,8 @@ save(
   start_end,
   station_key,
   sum_station,
-  sum_station_yr,
-  file = file.path(processed, "data/stats17-20.Rdata")
+  sum_station_yr, sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep,
+  file = file.path(processed, "data/stats17-20.Rdata"),
+  compress = FALSE
 )
 
