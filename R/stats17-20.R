@@ -199,6 +199,27 @@ rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep)
 
 
 
+# join with weather ------------------------------------------------------------------------
+# store number of rows before merge
+nrow1 <- nrow(sum_station)
+
+# join with weather
+sum_station <-
+  sum_station %>%
+  left_join(weather, by = c("year", "day_of_yr"), na_matches='never')
+
+
+# check number of rows 
+assertthat::assert_that(
+  nrow(sum_station) == nrow1
+)
+
+# check for duplicates
+assertthat::assert_that(
+  nrow(distinct(sum_station, id_station, year, day_of_yr)) == nrow(sum_station)
+)
+
+
 
 
 
@@ -311,11 +332,15 @@ sum_station_yr <-
 
 
 
+# remove objects 
+rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep)
 
 
 
 
-# sf version of sum_station_yr with gps coords -----------------------------------------------------
+
+
+# sf version of sum_station_yr -----------------------------------------------------
 sum_station_sf <- 
   sum_station_yr %>%
   left_join(., station_key,
@@ -367,6 +392,8 @@ days1720 <-
 
 
 
+
+
 # export =============================================================================================
 save(
   days1720,
@@ -375,7 +402,7 @@ save(
   start_end,
   station_key,
   sum_station,
-  sum_station_b_dep, sum_station_b_dep,
+  sum_station_yr,
   file = file.path(processed, "data/stats17-20.Rdata")
 )
 
