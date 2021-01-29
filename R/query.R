@@ -8,6 +8,7 @@
 
 q1 = 1 # Years 2018-2020
 q2 = 1 # Year 2020 
+q3 = 1 # years 2017-2020
 
 
 
@@ -27,8 +28,16 @@ if (q1 == 1) {
 
 
 # query 2: most recent 1 year 
-if (q2 == 2) {
+if (q2 == 1) {
   bks_1yr <- filter(bks, year == 2020)
   saveRDS(bks_1yr, 
           file.path(processed, "data/years/bks_2020.Rda"))
+}
+
+
+# query 3: most recent 4 years 
+if (q3 == 1) {
+  bks_4yr <- filter(bks, year >= 2017)
+  saveRDS(bks_4yr, 
+          file.path(processed, "data/years/bks_2017-20.Rda"))
 }

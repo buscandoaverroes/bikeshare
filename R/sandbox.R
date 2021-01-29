@@ -2,140 +2,146 @@
 # exploring what to do after query.R
 
 library(scales)
-
-
-# load 2020 + stations
-bks2020 <- readRDS(file.path(processed, "data/years/bks_2020.Rda"))
-bks1820 <- readRDS(file.path(processed, "data/years/bks_2018-20.Rda"))
-
-station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
-  rename(id_proj = idproj) %>%
-  select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
-  st_drop_geometry() # remove sf object
-
-# merege with stations?
-
-bks2020 <-
-  left_join( # join to start station
-    bks2020, station_key, 
-    by = c("id_start" = "id_proj"),
-    na_matches = "never"
-  ) %>% 
-  left_join( # join to end, change suffix
-    station_key, 
-    by = c("id_end" = "id_proj"),
-    na_matches = "never", 
-    suffix = c("_st", "_end")
-  )
-
-
-
-bks1820 <-
-  left_join( # join to start station
-    bks1820, station_key, 
-    by = c("id_start" = "id_proj"),
-    na_matches = "never"
-  ) %>% 
-  left_join( # join to end, change suffix
-    station_key, 
-    by = c("id_end" = "id_proj"),
-    na_matches = "never", 
-    suffix = c("_st", "_end")
-  )
-
-
-# export ?
-
-
-
-
-# descriptive stats =============================================================
-
-# station summaries
-sum_station <- 
-  bks1820 %>%
-  mutate(metro_end_int = as.integer(metro_end),
-         member_int    = as.integer(member)) %>%
-  group_by(id_start, year) %>%
-  summarize(
-    name_bks_st= first(na.omit(name_bks_st)),
-    metro      = first(na.omit(metro_st)),
-    dur_med    = median(dur, na.rm = TRUE),
-    dur_sd     = sd(dur, na.rm = TRUE),
-    departures = n(),
-    n_dest     = n_distinct(id_end),
-    metro_end_pct= round(mean(metro_end_int, na.rm = TRUE), 3),
-    member_pct = round(mean(member_int, na.rm = TRUE), 3)
-  )
-  
-
+library(mapview)
+library(leaflet)
+library(leafpop)
+library(ineq)
+library(leafsync)
+library(plotly)
 
 
 
 # graphs =========================================================================
-# duration histogram
-ggplot(bks1820, aes(dur)) +
-  geom_histogram() +
-  geom_vline(xintercept=30) +
-  xlim(0,100)
-  
+# note, the only graphs I'll put here are ones that cannot be embedded in rmarkdown
 
-# violin plot of duration on member vs non member
-ggplot(bks1820, aes(member, dur)) +
-  geom_violin(scale = "area") +
-  ylim(0,100)
+# leafletmaps  ---------------------------------------------------------------------------------------------------
+
+# make station_key into sf
+key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
+  select(name_bks, id_proj, lat, lng, metro, name_metro)  # keep only necessary variables
 
 
-# station summaries ------------------------------------------------------------
-# median duration
-ggplot(sum_station, aes(dur_med)) +
-  geom_histogram(stat = 'bin', binwidth = 1, alpha = 0.7) + 
-  geom_vline(aes(xintercept = 30)) +
-  facet_grid(rows = vars(year)) +
-  xlim(0,45)
+# 4 pane map
 
-# number of destinations 
-ggplot(sum_station, aes(n_dest)) +
-  geom_area(stat = 'bin', binwidth = 20, alpha = 0.7) + 
-  facet_grid(rows = vars(year))
+st_crs(station_map) <- 4326
 
-# departures 
-ggplot(sum_station, aes(departures)) +
-  geom_histogram(stat = 'bin', binwidth = 1000) + 
-  facet_grid(rows = vars(year)) + 
-  xlim(0,40000)
-
-# departures/nrides, by year 
-bks1820 %>%
-  group_by(year) %>% summarize(n = n()) %>%
-  ggplot(., aes(year, n)) +
-  geom_col() + scale_y_continuous(labels = comma)
-
-# pct of rides going to station near metro 
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(metro_end_pct)) +
-  geom_histogram() + 
-  facet_grid(rows=vars(year))
-
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(member_pct, metro_end_pct)) +
-  geom_point(alpha = 0.4) +
-  facet_grid(rows=vars(year))
-
-# member percent vs median duration
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(member_pct, dur_med, color = metro_end_pct, size = departures)) +
-  geom_point(alpha = 0.2) +
-  facet_grid(rows=vars(year)) 
+mapviewOptions(fgb = FALSE, basemaps = "CartoDB.Positron")
+at_scale <- c(0, 500, 2000,5000,10000,20000,50000,100000)
 
 
-# departures vs number of distinct destinations
-sum_station %>%
-  filter(departures >= 100) %>% # include only stations at least 100 departures
-  ggplot(., aes(departures, n_dest, color = metro_end_pct)) +
-  geom_point(alpha = 0.5) + 
-  scale_x_log10() +
-  facet_grid(rows=vars(year)) 
+# years
+mv2018 <- mapview(station_map[station_map$year==2018,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.5,
+                  layer.name = "2018",
+                  popup = popupTable(
+                    station_map[station_map$year==2018,],
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
+mv2019 <- mapview(station_map[station_map$year==2019,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.5,
+                  layer.name = "2019",
+                  popup = popupTable(
+                    station_map[station_map$year==2019,],
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
+mv2020 <- mapview(station_map[station_map$year==2020,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.5,
+                  layer.name = "2020",
+                  popup = popupTable(
+                    station_map[station_map$year==2020,],
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
+
+mv2017 <- mapview(station_map[station_map$year==2017,], 
+                  zcol = c("departures"),
+                  at = at_scale,
+                  alpha.regions = 0.5,
+                  layer.name = "2017",
+                  popup = popupTable(
+                    station_map[station_map$year==2017,], 
+                    zcol = c("name_bks", 
+                             "name_metro", 
+                             "departures",
+                             "n_dest",
+                             "sd",
+                             "departures_pct_top05"))) 
+
+sync(mv2017, mv2018, mv2019, mv2020)
+
+
+# airplane map --------------------------------------------------------------------------
+
+# map projection 
+geo <- list(
+  scope = 'north america',
+  fitbounds = 'locations',
+  projection = list(type = 'azimuthal equal area'),
+  showland = TRUE,
+  showrivers = TRUE,
+  showsubunits = TRUE,
+  landcolor = toRGB('gray95'),
+  countrycolor = toRGB('gray80')
+)
+
+# figure
+stations19 <- filter(sum_station_sf, year == 2019)
+stations20 <- filter(sum_station_sf, year == 2020)
+start_end_2020 <- filter(start_end, (n_depart >= 300), year == 2020)
+start_end_2019 <- filter(start_end, (n_depart >= 300), year == 2019)
+
+fig20 <- plot_geo(locationmode = 'USA-states', color = I('red')) %>%
+  add_markers(
+  data = stations20,
+  x = ~lng, y = ~lat, text = ~name_bks_st,
+  size = ~departures
+) %>%
+  add_segments(
+    data = group_by(start_end_2020, id_start, id_end),
+    x = ~lng_st, xend = ~lng_end,
+    y = ~lat_st, yend = ~lat_end, text = ~n_depart,
+    alpha = 0.2
+  ) %>%
+  layout(
+    title = "title",
+    geo = geo, showlegend = TRUE, height = 800
+  )
+
+fig19 <- plot_geo(locationmode = 'USA-states', color = I('red')) %>%
+  add_markers(
+    data = stations19,
+    x = ~lng, y = ~lat, text = ~name_bks_st,
+    size = ~departures
+  ) %>%
+  add_segments(
+    data = group_by(start_end_2019, id_start, id_end),
+    x = ~lng_st, xend = ~lng_end,
+    y = ~lat_st, yend = ~lat_end, text = ~n_depart,
+    alpha = 0.2 
+  ) %>%
+  layout(
+    title = "title",
+    geo = geo, showlegend = TRUE, height = 800
+  )
+
+fig20
+fig19
+
+

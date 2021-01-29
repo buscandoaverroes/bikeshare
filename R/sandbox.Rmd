@@ -1,0 +1,597 @@
+---
+title: "sandbox"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# knitr opts
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+# packages
+library(tidyverse)
+library(sf)
+library(mapview)
+library(leaflet)
+library(leafpop)
+library(leafsync)
+library(plotly)
+library(miceadds)
+
+processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
+days1720    <- readRDS(file.path(processed, "data/stats17-20/days.Rda"))
+bks1720     <- readRDS(file.path(processed, "data/stats17-20/bks1720-weather.Rda"))
+sum_station <- readRDS(file.path(processed, "data/stats17-20/sum-station.Rda"))
+sum_station_yr <-readRDS(file.path(processed, "data/stats17-20/sum-station-yr.Rda"))
+start_end <- readRDS(file.path(processed, "data/stats17-20/start-end.Rda"))
+
+
+load(file.path(processed, "data/stats17-20/misc.Rdata")) 
+rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv)
+
+sum_station_sf_fr <- filter(sum_station_sf, departures >= 50, arrivals >= 50)
+
+theme_set(theme_minimal())
+```
+Thanks to RColorBrewer for providing the color scales.
+
+
+# Graphs
+
+## By stations
+
+### Destination Parity
+
+##### departure gini histogram
+
+most departures are between 0.5 and 0.75 Gini
+
+```{r}
+ggplot(sum_station_b_dep, aes(dep_ineq)) +
+  geom_histogram() 
+```
+
+#### destination gini vs top05p
+
+The Percent of departures that end up in the top 5% of departures stations seem to be farily predictive of the GINI measurement.
+
+```{r}
+ggplot(sum_station_b_dep, aes(dep_ineq, departures_pct_top05)) +
+  geom_point()
+```
+
+#### gini vs sd
+
+But sd doesn't seem to be as good of a measurement
+
+```{r}
+ggplot(sum_station_b_dep, aes(dep_ineq, sd)) +
+  geom_point()
+```
+
+#### gini vs pct metro
+
+We see a somewhat noticeable difference in going-to-metro patterns in 2020
+
+```{r}
+ggplot(sum_station, aes(dep_ineq, metro_end_pct)) +
+  geom_point() +
+  facet_grid(rows = vars(year))
+```
+
+#### gini vs median duration
+
+we also see a noticeable difference in median duration across all gini levels in 2020
+
+```{r}
+ggplot(sum_station, aes(dep_ineq, dur_med)) +
+  geom_point() +
+  facet_grid(rows = vars(year))
+```
+
+What does the regression look like?
+
+1.  looks like departure parity does help predict median ride duration, with higher gini coefficients suggesting shorter median durations.
+
+2.  however, the patterns of member usage at the station appear to be a much better predictor
+
+3.  this pattern holds true across all years, but the year 2020 saw significantly lower median ride durations, holding all other factors constant.
+
+```{r}
+lm1 <- lm(dur_med ~ dep_ineq + member_pct + metro + as.factor(year), data = sum_station)
+summary(lm1)
+```
+
+#### member pct vs duration
+
+```{r}
+ggplot(sum_station, aes(member_pct, dur_med, color = metro)) +
+  geom_point(alpha = 0.3) +
+  facet_grid(rows = vars(year))
+```
+
+#### gini vs duration sd
+
+Also, we see a stark difference in the standard deviation of duration of rides from stations in 2020
+
+```{r}
+ggplot(sum_station, aes(dep_ineq, dur_sd)) +
+  geom_point() +
+  facet_grid(rows = vars(year))
+```
+
+Reducing the y limits:
+
+```{r}
+ggplot(sum_station, aes(dep_ineq, dur_sd)) +
+  geom_point() +
+  ylim(0, 600) +
+  facet_grid(rows = vars(year)) 
+```
+
+coloring for percent member: we see that higher standard deviations in ride length are not just driven by non-members
+
+```{r}
+ggplot(sum_station, aes(dep_ineq, dur_sd, color = member_pct)) +
+  geom_point(alpha = 0.6) +
+  ylim(0, 600) +
+  facet_grid(rows = vars(year)) 
+```
+
+
+### Going to Metro
+
+#### Percent of rides that go to Metro
+
+In 2020, we see that the percentage of rides from each station going to another station within 250 meters of another metro station appears lower
+```{r}
+sum_station %>%
+  filter(departures >= 100) %>% # include only stations at least 100 departures
+  ggplot(., aes(metro_end_pct)) +
+  geom_histogram() + 
+  facet_grid(rows=vars(year))
+```
+
+This is corroborated by a bivariate regression, which shows that the percent of rides in 2020 going to a "near-metro" bikeshare station is about 7% lower (p<0.001), on average compared to 2017, for all departing bikeshare stations.
+
+```{r}
+
+lm2 <- lm(data = sum_station,
+          metro_end_pct ~ as.factor(year))
+summary(lm2)
+```
+
+
+#### To-Metro percent and member usage
+
+In 2020, we also see a more accentuated relationship between membership and metro-going percentages: the higher proportion of users that check out a bike that are members, the more likely the ride patterns from that station are headed to a another station near a metro.
+
+```{r}
+sum_station %>%
+  filter(departures >= 100) %>% # include only stations at least 100 departures
+  ggplot(., aes(member_pct, metro_end_pct)) +
+  geom_point(alpha = 0.4) +
+  facet_grid(rows=vars(year))
+```
+
+
+The regression below shows that, in addition to the year, membership ratios are also mathematically important in predicting going-to-metro ratios: holding the year-effect constant, a 10% increase in a station's membership ratio suggests, on average, about a 4% increase in the number of departing rides that end up close to a metro station.
+
+```{r}
+lm3 <- lm(data = sum_station,
+          metro_end_pct ~ member_pct + as.factor(year))
+summary(lm3)
+```
+
+
+
+### Net figures
+
+#### Net Flow
+
+For the last four years, by year
+```{r}
+ggplot(data = sum_station, aes(net_flow, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4, binwidth = 50) +
+  xlim(-1000,1000)
+```
+
+Viewing the distribution by geography
+
+```{r}
+leaflet(data = sum_station) 
+```
+
+
+#### Arrival Parities
+
+Distribution of arrival parities seems similar to departure parities
+
+```{r}
+filter(sum_station, arrivals >= 100) %>%
+ggplot(., aes(arrv_ineq, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4) +
+  xlim(0,1)
+```
+
+
+#### Comparing Arrival and Departure Parities
+
+```{r}
+filter(sum_station, arrivals >= 100, departures >= 100) %>%
+  mutate(dif = arrv_ineq - dep_ineq) %>%
+  ggplot(., aes(dif, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4) + xlim(-.2, .2)
+
+```
+
+
+##### A ver, a ver los mapas...
+
+Net flow: 2018
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_flow, 5)
+filter(sum_station_sf, year == 2018) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_flow), fillColor = ~pal(net_flow), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_flow, popup = ~name_bks_st)
+```
+
+Net flow 2019
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_flow, 5)
+filter(sum_station_sf, year == 2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_flow), fillColor = ~pal(net_flow), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_flow, popup = ~name_bks_st)
+```
+
+
+Net flow 2020
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_flow, 5)
+filter(sum_station_sf, year == 2020) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_flow), fillColor = ~pal(net_flow), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_flow, popup = ~name_bks_st)
+```
+
+Arrival Parities: 2019
+
+Stations farther away from the transport nucleus have higher arrival inequities, meaning that their arrivals more disproportionately come from just a few stations.
+
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(arrv_ineq), fillColor = ~pal(arrv_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(arrv_ineq, 2), popup = ~name_bks_st)
+```
+Arrival Parities: 2020
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2020) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(arrv_ineq), fillColor = ~pal(arrv_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(arrv_ineq, 2), popup = ~name_bks_st)
+```
+
+
+
+Departure Parities: 2019
+
+Departure inequities may be less varied than arrival inequities, even across years
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(dep_ineq), fillColor = ~pal(dep_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(dep_ineq, 2), popup = ~name_bks_st)
+```
+
+Departure Parities: 2020
+
+```{r}
+pal <- colorBin("BuPu", c(0.3, 0.9), 7)
+filter(sum_station_sf, year == 2020) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(dep_ineq), fillColor = ~pal(dep_ineq), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~round(dep_ineq, 2), popup = ~name_bks_st)
+```
+
+
+#### Net median duration
+
+2019
+```{r}
+filter(sum_station, arrivals >= 100, departures >= 100) %>%
+  ggplot(., aes(net_med_dur, fill = as.factor(year))) +
+  geom_histogram(alpha = 0.4)
+```
+
+
+map 
+
+```{r}
+pal <- colorBin("PRGn", sum_station_sf_fr$net_med_dur, 5)
+filter(sum_station_sf, year ==  2019) %>%
+  leaflet(.) %>% addTiles() %>% addCircleMarkers(color = ~pal(net_med_dur), fillColor = ~pal(net_med_dur), stroke = TRUE, weight = 2, opacity = 0.9, fillOpacity = 0.4, label = ~net_med_dur, popup = ~name_bks_st)
+```
+
+
+
+## Daily Rides 
+
+##### Departures by Year
+
+In the years prior to the pandemic, there were considerably more than 3 million rides over the course of each year, or over 8,000 rides per day, on average.
+
+However, in 2020, there were only around 2.25 million rides. 
+
+```{r}
+bks1720 %>%
+  group_by(year) %>% summarize(n = n()) %>%
+  ggplot(., aes(year, n)) +
+  geom_col() + scale_y_continuous(labels=scales::comma)
+
+```
+
+#### Departures by month
+In pre-pandemic years, the months of April through October see the highest monthly rides. In 2020, the months of Janurary and Febrauary had monthly ride tallys in line with pre-pandemic years, but April of 2020 saw a drastic decrease in the number of rides compared to pre-pandemic years. Monthly rides stayed below pre-pandemic years, but nevertheless recovered after the spring dip in ridership.
+
+```{r}
+bks1720 %>%
+  group_by(year, month) %>% summarise(n = n()) %>%
+  ggplot(., aes(month, n, color = as.factor(year))) +
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(1,2,3,4,5,6,7,8,9,10,11,12))
+```
+
+#### Departures by day of week
+
+Ridership in 2020 across the days of the week is markedly different from pre-pandemic years. In 2020, the most rides occur on weekends, while in previous years, the days with the highest average daily rides were weekdays. Furthermore, the percent of rides that are taken by members is lower than that of pre-pandemic years, and the difference is most stark on the weekends. 
+
+```{r}
+bks1720 %>%
+  group_by(year, wday) %>%
+  summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
+  ggplot(., aes(wday, n, shape = as.factor(year), color = member_pct)) + 
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
+```
+
+When breaking out by month, we see that the early months of 2020, before the outbreak in the US, the weekly riding patterns were superficially on par with those in rencent years. However, ridership patterns after the onset of the pandemic changed drastically. The biggest differences between 2020 and pre-pandemic years occur in the early months of the pandemic: April and May. 
+
+```{r}
+bks1720 %>%
+  group_by(year, wday, month) %>%
+  summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
+  ggplot(., aes(wday, n, shape = as.factor(year), color = member_pct)) + 
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma) + 
+  facet_wrap(~month)
+```
+
+
+
+#### Departures by time of day
+
+The busiest times of day are the morning and afternoon rush hour periods -- and this pattern has largely held so far in 2020.
+```{r}
+bks1720 %>%
+  group_by(year, hour) %>% summarise(n = n()) %>%
+  ggplot(., aes(hour, n, color = as.factor(year))) +
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
+```
+
+The percent of users that are members is quite high during rush hour periods, but this trend appears more muddled in 2020.
+
+```{r}
+bks1720 %>%
+  group_by(year, hour) %>%
+  summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
+  ggplot(., aes(hour, n, shape = as.factor(year), color = member_pct)) +
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma)
+```
+
+When accounting for the day of week, we do see a noticeable uptick in the member percentage during the morning rush hour on weekdays even during the pandemic.
+
+```{r}
+bks1720 %>%
+  group_by(year, hour, wday) %>%
+  summarise(n = n(), member_pct = round(mean(as.integer(member), na.rm = TRUE), 3)) %>%
+  ggplot(., aes(hour, n, shape = as.factor(year), color = member_pct)) +
+  geom_point() + geom_line() + scale_y_continuous(labels = scales::comma) +
+  facet_wrap(~wday)
+```
+
+### Departures across geography
+There are vast geographical differences in the number of daily rides. 
+
+#### Comparing 2019 and 2020 Network Graphs
+
+for 2019
+```{r}
+
+# map projection 
+geo <- list(
+  scope = 'north america',
+  fitbounds = 'locations',
+  projection = list(type = 'azimuthal equal area'),
+  showland = TRUE,
+  showrivers = TRUE,
+  showsubunits = TRUE,
+  landcolor = toRGB('gray95'),
+  countrycolor = toRGB('gray80')
+)
+
+# figure
+stations19 <- filter(sum_station_sf, year == 2019)
+stations20 <- filter(sum_station_sf, year == 2020)
+start_end_2020 <- filter(start_end, (n_depart >= 300), year == 2020)
+start_end_2019 <- filter(start_end, (n_depart >= 300), year == 2019)
+
+fig20 <- plot_geo(locationmode = 'USA-states', color = I('red'), height = 600) %>%
+  add_markers(
+  data = stations20,
+  x = ~lng, y = ~lat, text = ~name_bks_st,
+  size = ~departures
+) %>%
+  add_segments(
+    data = group_by(start_end_2020, id_start, id_end),
+    x = ~lng_st, xend = ~lng_end,
+    y = ~lat_st, yend = ~lat_end, text = ~n_depart,
+    alpha = 0.2
+  ) %>%
+  layout(
+    title = "2020 Network Graph<br>Links above 300 rides",
+    geo = geo, showlegend = TRUE
+  )
+
+fig19 <- plot_geo(locationmode = 'USA-states', color = I('red'), height = 600) %>%
+  add_markers(
+    data = stations19,
+    x = ~lng, y = ~lat, text = ~name_bks_st,
+    size = ~departures
+  ) %>%
+  add_segments(
+    data = group_by(start_end_2019, id_start, id_end),
+    x = ~lng_st, xend = ~lng_end,
+    y = ~lat_st, yend = ~lat_end, text = ~n_depart,
+    alpha = 0.2 
+  ) %>%
+  layout(
+    title = "2019 Network Graph<br>Links above 300 rides",
+    geo = geo, showlegend = TRUE
+  )
+
+fig19
+```
+
+
+```{r}
+fig20
+```
+
+
+## Weather
+
+### Weather descriptives 
+
+#### Rainy Days
+```{r}
+ggplot(days1720, aes(precip)) +
+  geom_histogram(binwidth = 1) + labs(x = "precip in mm", y = "N days") + lims(x = c(-1,20))
+```
+
+#### Temperature Days
+
+```{r}
+ggplot(days1720, aes(tempmax)) +
+  geom_histogram(binwidth = 1) + labs(x = "Daily High Temp in Celcius", y = "N days") + lims(x = c(-10,45))
+```
+
+
+#### Temperature and precip over the year 
+
+Max Temperature
+```{r}
+ggplot(days1720, aes(day_of_yr, tempmax, color = as.factor(year))) +
+  geom_smooth()
+```
+
+
+Precipitation
+```{r}
+ggplot(days1720, aes(day_of_yr, precip, color = as.factor(year))) +
+  geom_smooth() +labs(y = "daily precip in mm")
+```
+
+
+#### Temp vs no. rides
+We notice a general non-linear pattern: the relationship between max temperature and the number of rides is generally positive and linear, except when the temperature reaches ~30 degrees (Celsius), after which the relationship weakens or even becomes negative. 
+
+We also notice that in 2020, there's a distinctive lower number of rides. 
+```{r}
+ggplot(days1720, aes(tempmax, nrides, color = as.factor(year))) +
+  geom_smooth()
+```
+
+
+#### Temp vs median duration
+A similar pattern emerges for median duration as with number of rides, except rides in 2020 were longer in aggregate terms.
+
+```{r}
+ggplot(days1720, aes(tempmax, dur_med, color = as.factor(year))) +
+  geom_smooth()
+```
+
+
+#### Temp vs Duration GINI
+For all non-panemdic years, there seems to be a weak relationship between max temperature and the equity of duration distributions. However, in 2020, higher temperatures indicate a very unevenly distributed ride length distribution, suggesting that the longer median ride length (ascertained above) is caused by a very uneven distribution of ride lengths.
+
+```{r}
+ggplot(days1720, aes(tempmax, dur_ineq, color = as.factor(year))) +
+  geom_smooth()
+```
+
+
+#### Precip vs No. Rides
+
+An indicator relationship seems to be appropriate for precipitation (either there was rain over `n`mm or there wasn't). Linear doesn't seem to be appropriate. Lots of variation in the 0-5 mm range.
+```{r}
+ggplot(days1720, aes(precip, nrides, color = as.factor(year))) +
+  geom_smooth() + labs(x = "Precip in mm") + lims(x = c(0,25))
+```
+
+
+
+### Regressions 
+
+#### Daily rides
+```{r}
+lm4 <- lm(nrides ~ (precip >0) + tempmax + as.factor(year) + weekend + dur_ineq + 
+            as.factor(week_of_yr),
+          data = days1720)
+summary(lm4)
+```
+
+
+#### Median Duration
+
+##### Parsimonious model
+Arrivals explains nearly 95 % of variation in departures, and almost a 1 to 1 ratio.
+
+```{r}
+lm(departures ~ arrivals, 
+   data = sum_station) %>% summary()
+```
+
+```{r}
+ggplot(sum_station, aes(arrivals, departures)) +
+  geom_point(alpha=0.1) + geom_smooth(method = 'lm', se=T, level=0.999)
+```
+
+
+
+##### Using factors "exogenous" to volume
+Note the many dangers of colinearity here.
+
+```{r}
+lm5 <- lm(departures ~ member_pct + member_arrv_pct +
+            dep_ineq + arrv_ineq + net_med_dur +
+            metro + metro_st_pct + metro_end_pct +
+            (precip > 0) + tempmax + (day_of_yr == 1 | day_of_yr == 7) + # replace with 'weekend'
+            as.factor(week_of_yr)+ as.factor(year) +
+            as.factor(id_station),
+          data = sum_station)
+summary(lm5)
+```
+
+
+#### Using Lag Vars
+Lag departures seem good, but not great predictor of this year's station-level departures
+```{r}
+lm(departures ~ 
+     lag_departures,
+   data = sum_station) %>% summary()
+```
+
+
+compare to using arrivals to explain departures: 
+```{r}
+lm(departures ~ 
+     arrivals,
+   data = sum_station) %>% summary()
+```
+
+
+
+
