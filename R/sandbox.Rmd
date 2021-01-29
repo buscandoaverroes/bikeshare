@@ -567,9 +567,18 @@ Note the many dangers of colinearity here.
 lm5 <- lm(departures ~ member_pct + member_arrv_pct +
             dep_ineq + arrv_ineq + net_med_dur +
             metro + metro_st_pct + metro_end_pct +
-            (precip > 0) + tempmax +
-            as.factor(week_of_yr)+ (day_of_yr == 1 | day_of_yr == 7) + as.factor(year) +
+            (precip > 0) + tempmax + (day_of_yr == 1 | day_of_yr == 7) + # replace with 'weekend'
+            as.factor(week_of_yr)+ as.factor(year) +
             as.factor(id_station),
           data = sum_station)
 summary(lm5)
 ```
+
+
+#### Using Lag Vars
+
+```{r}
+lm(departures ~ metro + lag(year) + as.factor(year),
+   data = sum_station) %>% summary()
+```
+
