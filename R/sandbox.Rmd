@@ -16,9 +16,19 @@ library(leaflet)
 library(leafpop)
 library(leafsync)
 library(plotly)
+library(miceadds)
 
-processed <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
-load(file.path(processed, "data/stats17-20.Rdata"))
+processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
+days1720    <- readRDS(file.path(processed, "data/stats17-20/days.Rda"))
+bks1720     <- readRDS(file.path(processed, "data/stats17-20/bks1720-weather.Rda"))
+sum_station <- readRDS(file.path(processed, "data/stats17-20/sum-station.Rda"))
+sum_station_yr <-readRDS(file.path(processed, "data/stats17-20/sum-station-yr.Rda"))
+start_end <- readRDS(file.path(processed, "data/stats17-20/start-end.Rda"))
+
+
+load(file.path(processed, "data/stats17-20/misc.Rdata")) 
+rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv)
+
 sum_station_sf_fr <- filter(sum_station_sf, departures >= 50, arrivals >= 50)
 
 theme_set(theme_minimal())
@@ -534,13 +544,54 @@ summary(lm4)
 ```
 
 
-#### Duration
+#### Median Duration
+
+##### Parsimonious model
+Arrivals explains nearly 95 % of variation in departures, and almost a 1 to 1 ratio.
 
 ```{r}
-# lm5 <- lm(dur ~ member + electric + 
-#           + metro_st + metro_end +
-#             as.factor(hour) + as.factor(week_of_yr) + as.factor(year) +
-#             (precip >0) + (tempmax > 25),
-#           data = bks1720)
-# summary(lm5)
+lm(departures ~ arrivals, 
+   data = sum_station) %>% summary()
 ```
+
+```{r}
+ggplot(sum_station, aes(arrivals, departures)) +
+  geom_point(alpha=0.1) + geom_smooth(method = 'lm', se=T, level=0.999)
+```
+
+
+
+##### Using factors "exogenous" to volume
+Note the many dangers of colinearity here.
+
+```{r}
+lm5 <- lm(departures ~ member_pct + member_arrv_pct +
+            dep_ineq + arrv_ineq + net_med_dur +
+            metro + metro_st_pct + metro_end_pct +
+            (precip > 0) + tempmax + (day_of_yr == 1 | day_of_yr == 7) + # replace with 'weekend'
+            as.factor(week_of_yr)+ as.factor(year) +
+            as.factor(id_station),
+          data = sum_station)
+summary(lm5)
+```
+
+
+#### Using Lag Vars
+Lag departures seem good, but not great predictor of this year's station-level departures
+```{r}
+lm(departures ~ 
+     lag_departures,
+   data = sum_station) %>% summary()
+```
+
+
+compare to using arrivals to explain departures: 
+```{r}
+lm(departures ~ 
+     arrivals,
+   data = sum_station) %>% summary()
+```
+
+
+
+
