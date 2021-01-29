@@ -16,6 +16,7 @@ library(leaflet)
 library(leafpop)
 library(leafsync)
 library(plotly)
+library(miceadds)
 
 processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 days1720    <- readRDS(file.path(processed, "data/stats17-20/days.Rda"))
@@ -576,9 +577,21 @@ summary(lm5)
 
 
 #### Using Lag Vars
-
+Lag departures seem good, but not great predictor of this year's station-level departures
 ```{r}
-lm(departures ~ metro + lag(year) + as.factor(year),
+lm(departures ~ 
+     lag_departures,
    data = sum_station) %>% summary()
 ```
+
+
+compare to using arrivals to explain departures: 
+```{r}
+lm(departures ~ 
+     arrivals,
+   data = sum_station) %>% summary()
+```
+
+
+
 
