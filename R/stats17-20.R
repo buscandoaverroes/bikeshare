@@ -214,7 +214,6 @@ sum_station <-
   )
     
 
-filter(test, id_station == 47, day_of_yr ==45) %>% view()
 
 # station-year summaries ======================================================================
 
