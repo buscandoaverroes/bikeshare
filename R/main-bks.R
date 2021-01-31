@@ -91,9 +91,9 @@
             #                   makes: station_key.Rda, station-geo-objects.Rdata
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             #                   makes: bks-full.Rda, bks-full.csv
-  s4 <- 0   # query:          filters/queries main database and exports files.
+  s4 <- 1   # query:          filters/queries main database and exports files.
             #                   makes: bks_2020.Rda, bks1820.Rda
-  s5 <- 0   # stats          takes years 17-20 from query, processes, adds station info, stats.
+  s5 <- 1   # stats          takes years 17-20 from query, processes, adds station info, stats.
             #                   makes: stats17-20.Rdata
   s6 <- 0   # 
   
