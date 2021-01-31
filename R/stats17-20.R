@@ -203,6 +203,16 @@ sum_station <-
   select(-metro.y, -name_metro) %>% rename(metro = metro.x)
 
 
+# check number of rows 
+assertthat::assert_that(
+  nrow(sum_station) == nrow1
+)
+
+# check for duplicates
+assertthat::assert_that(
+  nrow(distinct(sum_station, id_station, year, day_of_yr)) == nrow(sum_station)
+)
+
 
 
 # create lag variables  ----------------------------------------------------------------------
