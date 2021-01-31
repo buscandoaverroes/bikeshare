@@ -165,17 +165,3 @@ fwrite(bks,
 # save as Rda
 saveRDS(bks,
         file = file.path(processed, "data/bks-full.Rda"), compress = FALSE)
-
-
-
-# fyi:
-# > object.size(bks)
-# [1] 6,707,810,384 bytes
-# > object.size(bks$start_date)
-# [1] 2,245,481,096 bytes
-# > object.size(bks$id_ride)
-#  [1] 111,056,416 bytes
-# > object.size(bks$start_lat)      # not bad, but times 4
-#  [1] 222,112,776 bytes
-# > object.size(bks$start_number)
-#  [1] 111,056,416 bytes
