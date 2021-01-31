@@ -12,6 +12,7 @@ library(leafpop)
 library(ineq)
 library(leafsync)
 
+
 # load years 2017-20 file + stations ----------------------------------------------------------------------------------
 bks1720 <- readRDS(file.path(processed, "data/years/bks_2017-20.Rda"))
 nrow_bks1720 <- nrow(bks1720)
@@ -41,7 +42,7 @@ bks1720 <-
   )  %>% 
   mutate(
     day_of_yr   = as.integer(yday(leave)),
-    weekend     = first((wday == 1 | wday == 7)),
+    weekend     = if_else((wday == 1 | wday == 7), true = TRUE, false = FALSE),
   ) %>%
   left_join(weather,
     by = c("year", "day_of_yr"),
@@ -422,7 +423,7 @@ days1720 <-
     nrides      = n(),
     dur_med     = round(median(dur, na.rm = TRUE), 1),
     dur_ineq    = round(Gini(dur, na.rm = TRUE), 2),
-    weekend     = first((wday == 1 | wday == 7)),
+    weekend     = fif_else((wday == 1 | wday == 7), true = TRUE, false = FALSE),
     week_of_yr  = first(week_of_yr),
     precip      = first(precip), # we can assume that taking the first in each group is ok
     tempmax     = first(tempmax) #  ... since the values are the same for each year-dayofyear group
