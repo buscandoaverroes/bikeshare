@@ -423,7 +423,7 @@ days1720 <-
     nrides      = n(),
     dur_med     = round(median(dur, na.rm = TRUE), 1),
     dur_ineq    = round(Gini(dur, na.rm = TRUE), 2),
-    weekend     = fif_else((wday == 1 | wday == 7), true = TRUE, false = FALSE),
+    weekend     = if_else((wday == 1 | wday == 7), true = TRUE, false = FALSE),
     week_of_yr  = first(week_of_yr),
     precip      = first(precip), # we can assume that taking the first in each group is ok
     tempmax     = first(tempmax) #  ... since the values are the same for each year-dayofyear group
