@@ -174,7 +174,6 @@ rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep)
 
 
 
-
 # join with weather ------------------------------------------------------------------------
 # store number of rows before merge
 nrow1 <- nrow(sum_station)
@@ -195,6 +194,13 @@ assertthat::assert_that(
   nrow(distinct(sum_station, id_station, year, day_of_yr)) == nrow(sum_station)
 )
 
+
+# join with key for gps coords ------------------------------------------------------------------------
+sum_station <-
+  sum_station %>%
+  left_join(., station_key,
+          by = c("id_station" = "id_proj")) %>%
+  select(-metro.y, -name_metro) %>% rename(metro = metro.x)
 
 
 
