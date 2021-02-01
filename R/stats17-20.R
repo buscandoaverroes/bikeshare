@@ -462,8 +462,9 @@ start_end <-
 
 # system-day summary with weather ===========================================================================
 days1720 <- 
-  bks1720 %>%
-  group_by(year, day_of_yr) %>% summarise(
+  bks1720 %>% ungroup() %>%
+  group_by(year, day_of_yr) %>%
+  summarise(
     nrides      = n(),
     dur_med     = round(median(dur, na.rm = TRUE), 1),
     dur_ineq    = round(Gini(dur, na.rm = TRUE), 2),
@@ -471,7 +472,7 @@ days1720 <-
     week_of_yr  = first(week_of_yr),
     precip      = first(precip), # we can assume that taking the first in each group is ok
     tempmax     = first(tempmax) #  ... since the values are the same for each year-dayofyear group
-  ) 
+  ) %>% distinct(year, day_of_yr, .keep_all = T)
 
 
 
