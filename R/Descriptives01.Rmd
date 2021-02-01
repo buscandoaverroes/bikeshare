@@ -19,6 +19,7 @@ library(leaflet)
 library(leafpop)
 library(leafsync)
 library(plotly)
+library(miceadds)
 
 processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 days1720    <- readRDS(file.path(processed, "data/stats17-20/days.Rda"))
@@ -403,6 +404,50 @@ filter(sum_station, weekend==TRUE) %>%
   addLegend(pal=pal, values= ~dur_med, title = "Median Duration")
 ```
 
+### Flow 
+
+Do key statistics change across different levels of flow in or out of the station?
+
+#### Median Duration
+
+```{r}
+ggplot(sum_station, aes(departures, dur_med)) + 
+  geom_point(alpha=0.01) + lims(y=c(0,100)) + facet_wrap(~year) +
+  labs(title="Daily Departures vs Median Ride Duration",x="N Departures",y="Med. Dur (min)")
+```
+
+#### Member Percentage
+
+```{r}
+ggplot(sum_station, aes(departures, member_pct)) + 
+  geom_point(alpha=0.01) + facet_wrap(~year) +
+  labs(title="Daily Departures vs Member Percentage",x="N Departures",y="Member Percent")
+```
+
+#### Percent Going to station near Metro
+
+```{r}
+ggplot(sum_station, aes(departures, metro_end_pct)) + 
+  geom_point(alpha=0.1) + facet_wrap(~year) +
+  labs(title="Daily Departures vs Metro End Percent",x="N Departures",y="Metro End Percent")
+```
+
+#### Departure Inequities
+
+```{r}
+ggplot(sum_station, aes(departures, dep_ineq)) + 
+  geom_point(alpha=0.1) + facet_wrap(~year) +
+  labs(title="Daily Departures vs Departure Inequity",x="N Departures",y="Departure GINI")
+```
+
+#### Daily Net Flow
+
+```{r}
+ggplot(sum_station, aes(departures, net_flow)) + 
+  geom_point(alpha=0.01) + lims(y=c(-75,75)) + facet_wrap(~year) +
+  labs(title="Daily Departures vs Daily Net Flow",x="N Departures",y="Net Flow")
+```
+
 # Daily Rides
 
 ## Daily Rides By Year
@@ -635,20 +680,34 @@ ggplot(days1720, aes(precip, nrides, color = as.factor(year))) +
   geom_smooth() + labs(x = "Precip in mm") + lims(x = c(0,25))
 ```
 
-### Regressions
+# Regressions
 
-#### Daily rides
+## Number of daily rides
+
+We see that the week of the year is an important predictor in the number of daily rides, but even so, weather and weekend factors may still play a role in day-to-day variation.
 
 ```{r}
-lm4 <- lm(nrides ~ (precip >0) + tempmax + as.factor(year) + weekend + dur_ineq + 
+lm4 <- lm(nrides ~ (precip >3) + tempmax + as.factor(year) + weekend + dur_ineq + 
             as.factor(week_of_yr),
           data = days1720)
 summary(lm4)
 ```
 
-#### Median Duration
+## Ride Duration
 
-##### Parsimonious model
+Excluding 2020 here:
+
+```{r}
+filter(bks1720, year != 2020) %>%
+lm(dur ~ (precip > 3) + tempmax + electric + member +
+     + weekend + metro_st + metro_end +
+     as.factor(hour) + as.factor(week_of_yr) + as.factor(year) + as.factor(id_start),
+     data = .) %>% summary()
+```
+
+## Median Duration
+
+### Parsimonious model
 
 Arrivals explains nearly 95 % of variation in departures, and almost a 1 to 1 ratio.
 
@@ -677,9 +736,9 @@ ggplot(sum_station_yr, aes(lag_departures, departures, color=member_pct)) +
   geom_point(alpha=0.1) + geom_smooth(method = 'lm', se=T, level=0.999)
 ```
 
-##### Using factors "exogenous" to volume
+### Using factors "exogenous" to volume
 
-Note the many dangers of colinearity here.
+Noting the many dangers of colinearity, there seem to be a handful of factors that predict daily rides from each station that are somewhat exogenous to ride volume.
 
 ```{r}
 lm5 <- lm(departures ~ member_pct + member_arrv_pct +
@@ -692,36 +751,94 @@ lm5 <- lm(departures ~ member_pct + member_arrv_pct +
 summary(lm5)
 ```
 
-#### Using Lag Vars
+### Using Lag Vars
 
 Lag departures seem good, but not great predictor of this year's station-level departures
 
 ```{r}
-lm(departures ~ 
-     lag_departures,
-   data = sum_station) %>% summary()
+lm.cluster(
+ formula = departures ~ lag_departures,
+ cluster = "year",
+ data    = sum_station
+ ) %>% summary()
 ```
 
-compare to using arrivals to explain departures:
+The current year-days arrivals are better at predicting that year-day's departures than last-year's departures:
 
 ```{r}
-lm(departures ~ 
-     arrivals,
-   data = sum_station) %>% summary()
+lm.cluster(
+ formula = departures ~ arrivals,
+ cluster = "year",
+ data    = sum_station
+ ) %>% summary()
 ```
-
-But on a yearly level, the lag departures are a very good predictor
 
 ```{r}
-lm(departures ~ 
-     lag_departures,
-   data = sum_station_yr) %>% summary()
+lm.cluster(
+ formula = departures ~ arrivals,
+ cluster = "year",
+ data    = sum_station
+ ) %>% summary()
 ```
 
-This may be because weather is a factor in the number of departures, even when accounting for calendar variations, and daily weather varies from year-to-year. We'll it's significant but doesn't account for a lot of the variation.
+But on a yearly level, the lag departures slightly more reliable than on a daily level.
+
+```{r}
+lm.cluster(
+ formula = departures ~ lag_departures,
+ cluster = "year",
+ data    = sum_station_yr
+ ) %>% summary()
+```
+
+This may be because weather is a factor in the number of departures, even when accounting for calendar variations, and daily weather varies from year-to-year. While weather factors are statistically significant, it's worth noting that this model only accounts for about 5% in the variation in daily departures from stations.
 
 ```{r}
 lm(departures ~
-     tempmax + (precip>0) + as.factor(week_of_yr) + as.factor(year),
+     tempmax + (precip>3) + as.factor(week_of_yr) + as.factor(year),
    data = sum_station) %>% summary()
+```
+
+## Member Percent
+
+Member Percent is the percentage of bikes that are checked out at each station by monthly or yearly members. One could assume that members are more frequent bikeshare users, perhaps because they are area residents or commuters.
+
+Are stations more frequently visited during the workweek by members? Let's exclude the year 2020 from this question for now.
+
+```{r}
+filter(sum_station, year != 2020) %>%
+  lm.cluster(
+    formula = member_pct ~ weekend,
+    cluster = "id_station",
+    data = .
+  ) %>% summary()
+```
+
+Yes, a parsimonious regression says that members visit stations less frequently on weekends --- about 13 percentage points less.
+
+Are members more hard-core riders during the week? Let's include weather and calendar controls to find out:
+
+```{r}
+filter(sum_station, year != 2020, weekend == FALSE) %>%
+  lm(
+    formula = member_pct ~ tempmax + (precip >0) +
+      as.factor(week_of_yr) + as.factor(year) + as.factor(id_station),
+    data = .
+  ) %>% summary()
+```
+
+Great job, Washingtonians! Looks like this models shows a very unconvincing relationship between bad weather and membership ratios. On days when it rains, the average station's membership percent actually increases by about 0.5 percentage points, and colder weather actually correlates with increased membership rates --- although it's only about 0.1 percentage points for every degree Celsius. This makes sense if you consider members more heavily invested in riding compared to guests.
+
+## Departure Inequities
+
+So far we've skirted around departure and arrival inequities because I suspect they only become useful when paired with other information like weather, etc. Does bad weather change aggregate destination patterns? Again, we'll exclude the year 2020 because my guess is that the pandemic changes everything. Let's start with the base of our previous model in Member Percent:
+
+```{r}
+filter(sum_station, year != 2020) %>%
+  lm(
+    formula = dep_ineq ~ tempmax + (precip >0) + 
+      metro + metro_end_pct + 
+      weekend + as.factor(week_of_yr) + as.factor(year) + as.factor(id_station),
+    data = .
+  ) %>% summary()
 ```
