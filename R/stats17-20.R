@@ -25,6 +25,34 @@ weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda")) %>%
   mutate(week_of_yr = as.integer(week(datetime))) %>%
   select(year, week_of_yr, day_of_yr, tempmax, precip) # reduce variables
 
+# replace negative duration with station-week median duration -----------------------------------------------------------
+# I'm doing this because there are about 2,000 rides that have start times that appear in the raw data AFTER the end times,
+# which result in negative durations. I don't want to simply drop these rides, because that may disproportionately reduce the
+# number of departures, etc. so I will replace negative values with the station-wweek median.
+
+# create a duration0 variable where the lowest possible duraiton is 0, or NA
+bks1720$dur0 <- bks1720$dur
+bks1720$dur0[bks1720$dur0 < 0] <- NA 
+
+bks1720 <-
+  bks1720 %>%
+  mutate(week = week(leave)) %>%
+  group_by(id_start, week) %>%
+  mutate(   # create a median duration for each station-year
+    sta_dur_med = as.integer(round(median(dur0, na.rm = TRUE)))
+  ) 
+
+bks1720 <-
+  bks1720 %>%
+  mutate(
+    dur = if_else(
+      dur < 0,  # if the ride duration is negative...
+      true = sta_dur_med, # ...replace the value with the station-week's median duration
+      false= dur # otherwise keep the original value
+    )
+  ) %>%
+  select(-dur0, -sta_dur_med) # remove variables
+
 # join 2017-2020 file with stations info, weather -----------------------------------------------------------------------
 
 bks1720 <-
