@@ -83,11 +83,13 @@ bks <-
       arrive = ymd_hms(end_date, tz = "US/Eastern")
    ) %>%
    select(-start_date, -end_date) %>% # remove start and end cols
-   mutate( # create duration in rounded minutes
-      dur   = as.integer(round((leave %--% arrive) / minutes(1))),
+   mutate( # create duration in rounded minutes\
+      dur   = if_else(is.na(duration),
+                      true = as.integer(round((leave %--% arrive) / minutes(1))),
+                      false = as.integer(round(duration / 60 ))), 
       year  = as.integer(year(leave)),
       month = month(leave, label = FALSE), # leave as numeric
-      wday  = as.integer(wday(leave, label = FALSE)), # leave as numeric
+      wday  = as.integer(wday(leave, label = FALSE, week_start=getOption('lubridate.week.start',7))), # numeric, start sunday
       hour  = as.integer(hour(leave))
    ) %>%   
    select(-duration, -start_lat, -start_lng, -end_lat, -end_lng) # remove unneeded vars
@@ -165,17 +167,3 @@ fwrite(bks,
 # save as Rda
 saveRDS(bks,
         file = file.path(processed, "data/bks-full.Rda"), compress = FALSE)
-
-
-
-# fyi:
-# > object.size(bks)
-# [1] 6,707,810,384 bytes
-# > object.size(bks$start_date)
-# [1] 2,245,481,096 bytes
-# > object.size(bks$id_ride)
-#  [1] 111,056,416 bytes
-# > object.size(bks$start_lat)      # not bad, but times 4
-#  [1] 222,112,776 bytes
-# > object.size(bks$start_number)
-#  [1] 111,056,416 bytes

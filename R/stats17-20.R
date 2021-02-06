@@ -12,6 +12,7 @@ library(leafpop)
 library(ineq)
 library(leafsync)
 
+
 # load years 2017-20 file + stations ----------------------------------------------------------------------------------
 bks1720 <- readRDS(file.path(processed, "data/years/bks_2017-20.Rda"))
 nrow_bks1720 <- nrow(bks1720)
@@ -23,6 +24,34 @@ station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
 weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda")) %>%
   mutate(week_of_yr = as.integer(week(datetime))) %>%
   select(year, week_of_yr, day_of_yr, tempmax, precip) # reduce variables
+
+# replace negative duration with station-week median duration -----------------------------------------------------------
+# I'm doing this because there are about 2,000 rides that have start times that appear in the raw data AFTER the end times,
+# which result in negative durations. I don't want to simply drop these rides, because that may disproportionately reduce the
+# number of departures, etc. so I will replace negative values with the station-wweek median.
+
+# create a duration0 variable where the lowest possible duraiton is 0, or NA
+bks1720$dur0 <- bks1720$dur
+bks1720$dur0[bks1720$dur0 < 0] <- NA 
+
+bks1720 <-
+  bks1720 %>%
+  mutate(week = week(leave)) %>%
+  group_by(id_start, week) %>%
+  mutate(   # create a median duration for each station-year
+    sta_dur_med = as.integer(round(median(dur0, na.rm = TRUE)))
+  ) 
+
+bks1720 <-
+  bks1720 %>%
+  mutate(
+    dur = if_else(
+      dur < 0,  # if the ride duration is negative...
+      true = sta_dur_med, # ...replace the value with the station-week's median duration
+      false= dur # otherwise keep the original value
+    )
+  ) %>%
+  select(-dur0, -sta_dur_med) # remove variables
 
 # join 2017-2020 file with stations info, weather -----------------------------------------------------------------------
 
@@ -41,7 +70,7 @@ bks1720 <-
   )  %>% 
   mutate(
     day_of_yr   = as.integer(yday(leave)),
-    weekend     = first((wday == 1 | wday == 7)),
+    weekend     = if_else((wday == 1 | wday == 7), true = TRUE, false = FALSE),
   ) %>%
   left_join(weather,
     by = c("year", "day_of_yr"),
@@ -173,7 +202,6 @@ rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep)
 
 
 
-
 # join with weather ------------------------------------------------------------------------
 # store number of rows before merge
 nrow1 <- nrow(sum_station)
@@ -195,6 +223,23 @@ assertthat::assert_that(
 )
 
 
+# join with key for gps coords ------------------------------------------------------------------------
+sum_station <-
+  sum_station %>%
+  left_join(., station_key,
+          by = c("id_station" = "id_proj")) %>%
+  select(-metro.y, -name_metro) %>% rename(metro = metro.x)
+
+
+# check number of rows 
+assertthat::assert_that(
+  nrow(sum_station) == nrow1
+)
+
+# check for duplicates
+assertthat::assert_that(
+  nrow(distinct(sum_station, id_station, year, day_of_yr)) == nrow(sum_station)
+)
 
 
 
@@ -417,16 +462,17 @@ start_end <-
 
 # system-day summary with weather ===========================================================================
 days1720 <- 
-  bks1720 %>%
-  group_by(year, day_of_yr) %>% summarise(
+  bks1720 %>% ungroup() %>%
+  group_by(year, day_of_yr) %>%
+  summarise(
     nrides      = n(),
     dur_med     = round(median(dur, na.rm = TRUE), 1),
     dur_ineq    = round(Gini(dur, na.rm = TRUE), 2),
-    weekend     = first((wday == 1 | wday == 7)),
+    weekend     = if_else((wday == 1 | wday == 7), true = TRUE, false = FALSE),
     week_of_yr  = first(week_of_yr),
     precip      = first(precip), # we can assume that taking the first in each group is ok
     tempmax     = first(tempmax) #  ... since the values are the same for each year-dayofyear group
-  ) 
+  ) %>% distinct(year, day_of_yr, .keep_all = T)
 
 
 
