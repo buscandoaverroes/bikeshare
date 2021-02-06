@@ -4,7 +4,7 @@ output:
   html_document:
     toc: true
     toc_depth: 3
-    theme: united 
+    theme: flatly 
 ---
 
 ```{r setup, include=FALSE}
@@ -27,8 +27,6 @@ start_end <- readRDS(file.path(processed, "data/stats17-20/start-end.Rda"))
 load(file.path(processed, "data/stats17-20/misc.Rdata")) 
 rm(sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv)
 
-sum_station_sf_fr <- filter(sum_station_sf, departures >= 50, arrivals >= 50)
-
 theme_set(theme_minimal())
 alpha = 0.2
 ```
@@ -48,15 +46,15 @@ summary(lm4)
 
 ## Ride Duration
 
-Excluding 2020 here:
+<!-- Excluding 2020 here: -->
 
-```{r}
-filter(bks1720, year != 2020) %>%
-lm(dur ~ (precip > 3) + tempmax + electric + member +
-     + weekend + metro_st + metro_end +
-     as.factor(hour) + as.factor(week_of_yr) + as.factor(year) + as.factor(id_start),
-     data = .) %>% summary()
-```
+<!-- ```{r} -->
+<!-- filter(bks1720, year != 2020) %>% -->
+<!-- lm(dur ~ (precip > 3) + tempmax + electric + member + -->
+<!--      + weekend + metro_st + metro_end + -->
+<!--      as.factor(hour) + as.factor(week_of_yr) + as.factor(year) + as.factor(id_start), -->
+<!--      data = .) %>% summary() -->
+<!-- ``` -->
 
 ## Median Duration
 
