@@ -8,147 +8,162 @@ library(lubridate)
 
 
                             #---------------------#
-                            #    load data        ----
+                            #    load data        =============================
                             #---------------------#
-  load(file = file.path(full, "rawdata.Rdata"))
 
-                            
-                            
-                            #---------------------#
-                            #   Data harmonization ----
-                            #---------------------#
- # rename variables                            
-  bks2020.2 <- r2020.2 %>%
-    rename(., `Start date` = started_at,
-           `End date` = ended_at, 
-          `Start station` = start_station_name, 
-          `Start station number` = start_station_id, 
-          `End station number` = end_station_id,
-          `End station` = end_station_name,
-          `Member type` = member_casual,
-          `Bike type`  = rideable_type) %>%
-        select(-is_equity) # remove is_equity var
-  
-  
-  # check factor levels of membership type, bike type
- bks2020.2 <- 
-    mutate(bks2020.2,
-      `Member type` = fct_recode(`Member type`,
-                                 "Member" = "member",
-                                 "Guest" = "casual"),
-        `Bike type` = fct_recode(`Bike type`,
-                                 "Electric" = "electric_bike",
-                                 "Classic"  = "docked_bike")
-      
-    )
- 
+# load csv 
+bks <- data.table::fread(
+   file.path(raw, "bks-import.csv"),
+   header = TRUE,
+   na.strings = "" 
+)
 
-  
- 
- 
-                             #---------------------#
-                             #   New Variables   ----
-                             #---------------------#
+# store number of rows 
+n_rides <- nrow(bks)
 
- # create list of data frames 
- df.list1 <- list(r2010, r2011, r2012, r2013, r2014, r2015, r2016, r2017, r2018,
-                  r2019, r2020.1, bks2020.2)
- 
- # create duration for bks2020.2
- bks2020.2$Duration <-bks2020.2$`End date` - bks2020.2$`Start date`
+# make names object 
+names_bks <- 
+   as_tibble(names(bks)) %>%
+   gather()
 
- 
- # Change factor levels to member/guest binarym----
- bks2010 <- r2010 %>%
-   rename("member" = `Member type`) %>%
+# make string of variable names 
+vars_bks1 <- names(bks)             # raw varnames 
+
+
+vars_bks2 <- c(                     # variables variable generation
+   
+   "id_ride", 
+   "start_number", "end_number",  
+   "leave", "dur", 
+   "year", "month", "wday", "hour",
+   "electric", "member"   
+)
+
+vars_bks3 <- c(                     # variables after merge with project id
+   "id_ride", 
+   "leave", "dur", 
+   "year", "month", "wday", "hour",
+   "electric", "member", 
+   "id_start", "id_end"
+)
+
+
+
+
+# export a subset with only id_ride and bike number so we can get ride of bike number ---------- 
+bks %>%
+   select(id_ride, bike) %>%
+   fwrite(
+       file = file.path(processed, "data/bks-bikenos.csv"),
+       na = "", # make missings ""
+       compress = "none" # do not compress
+      )
+
+
+# drop bike number col 
+bks <- bks %>%
+   select(-bike)
+
+                       
+
+
+
+
+    
+                           #---------------------#
+                           #   New Variables      ====================================
+                           #---------------------#
+
+
+# create duration, year, month, day, etc
+bks <-
+   bks %>%
+   mutate( # generate components of duration
+      leave  = ymd_hms(start_date, tz = "US/Eastern"),
+      arrive = ymd_hms(end_date, tz = "US/Eastern")
+   ) %>%
+   select(-start_date, -end_date) %>% # remove start and end cols
+   mutate( # create duration in rounded minutes\
+      dur   = if_else(is.na(duration),
+                      true = as.integer(round((leave %--% arrive) / minutes(1))),
+                      false = as.integer(round(duration / 60 ))), 
+      year  = as.integer(year(leave)),
+      month = month(leave, label = FALSE), # leave as numeric
+      wday  = as.integer(wday(leave, label = FALSE, week_start=getOption('lubridate.week.start',7))), # numeric, start sunday
+      hour  = as.integer(hour(leave))
+   ) %>%   
+   select(-duration, -start_lat, -start_lng, -end_lat, -end_lng) # remove unneeded vars
+
+
+# Change factor levels to member/guest binary
+bks <-
+   bks %>%
+   rename(member_str = member) %>%
    mutate(
-         member = fct_recode(member,
-              "Guest" = "Casual",
-              "Guest" = "Unknown",
-              "Member"= "Member"))
-  
- bks2011 <- r2011 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Guest" = "Unknown",
-                         "Member"= "Member"))
- 
- bks2012 <- r2012 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Guest" = "Unknown",
-                         "Member"= "Member"))
- 
- bks2013 <- r2013 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Guest" = "Unknown",
-                         "Member"= "Member"))
- 
- bks2014 <- r2014 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Guest" = "Unknown",
-                         "Member"= "Member"))
- 
- bks2015 <- r2015 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Member"= "Member"))
- 
- bks2016 <- r2016 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Member"= "Member"))
- 
- bks2017 <- r2017 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Member"= "Member"))
- 
- bks2018 <- r2018 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Member"= "Member"))
- 
- bks2019 <- r2019 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Member"= "Member"))
- 
- bks2020.1 <- r2020.1 %>%
-   rename("member" = `Member type`) %>%
-   mutate(
-     member = fct_recode(member,
-                         "Guest" = "Casual",
-                         "Member"= "Member"))
- 
- 
- # remove original dataframes 
- remove(r2010, r2011, r2012, r2013, r2014, r2015, r2016, r2017, r2018,
-        r2019, r2020.1, r2020.2)
- 
- 
- # save 
- save(bks2010, bks2011, bks2012, bks2013, bks2014, bks2015, bks2016, bks2017, 
-      bks2018, bks2019, bks2020.1,bks2020.2,
-      file = file.path(full, "years.Rdata"))
- 
+      electric = case_when(
+         type == "electric_bike" ~ TRUE,
+         type == "docked_bike"   ~ FALSE,
+         is.na(type) == TRUE     ~ FALSE
+      ),
+      member = case_when(
+         member_str == "member"  ~ TRUE,
+         member_str == "Member"  ~ TRUE,
+         member_str == "guest"   ~ FALSE,
+         member_str == "Guest"   ~ FALSE,
+         member_str == "Casual"  ~ FALSE,
+         member_str == "casual"  ~ FALSE
+      )
+   ) %>%
+   select(vars_bks2) # remove string member variable
+
+
+                              
+                              #---------------------#
+                              # Join with Station_Key   ====================================
+                              #---------------------#
+# the goal is to a) identify each ride's origin and destination station by the project id for stations
+# (idproj) and also b) to reduce the size of the dataset by eliminating the name columns of the origin
+# and destination stations (as these can be remapped with the project id and key). We have to merge 
+# four times since there are two different station numbering schemas and both start and end stations
+
+
+
+# load station key
+station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
+   st_drop_geometry() # drop geometry, don't need, only merging by id number.
+
+
+# joins --------------------------------------------------------------
+
+bks <-
+   bks %>%
+   # join 1: OLD.start: start_number <<< number_old
+   left_join(., station_key,
+             by = c("start_number" = "number_old"),
+             na_matches = "never") %>%
+   select(vars_bks2, id_proj) %>%  
+   rename(id_start = id_proj) %>%
+   # join 2: OLD.end: end_number <<< number_old
+   left_join(., station_key,
+          by = c("end_number" = "number_old"),
+          na_matches = "never") %>%
+   select(vars_bks2, id_start, id_proj) %>%
+   rename(id_end = id_proj) %>%
+   select(vars_bks3)
+
+
+# check that the number of rows didn't change.
+assertthat::assert_that(
+   n_rides == nrow(bks) # where n_rides is the original number of rows
+)
+
+# export as csv 
+fwrite(bks, 
+       file = file.path(processed, "data/bks-full.csv"),
+       na = "", # make missings ""
+       compress = "none" # do not compress
+)
+
+# save as Rda
+saveRDS(bks,
+        file = file.path(processed, "data/bks-full.Rda"), compress = FALSE)
