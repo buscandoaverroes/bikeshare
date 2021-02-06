@@ -85,7 +85,7 @@ bks <-
    select(-start_date, -end_date) %>% # remove start and end cols
    mutate( # create duration in rounded minutes\
       dur   = if_else(is.na(duration),
-                      true = as.integer(round((leave %--% arrive) / minutes(1))),
+                      true = as.integer(round((leave %--% arrive) / seconds(1))),
                       false = as.integer(round(duration / 60 ))), 
       year  = as.integer(year(leave)),
       month = month(leave, label = FALSE), # leave as numeric
