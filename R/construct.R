@@ -64,9 +64,6 @@ bks %>%
 bks <- bks %>%
    select(-bike)
 
-                       
-
-
 
 
     
@@ -85,8 +82,8 @@ bks <-
    select(-start_date, -end_date) %>% # remove start and end cols
    mutate( # create duration in rounded minutes\
       dur   = if_else(is.na(duration),
-                      true = as.integer(round((leave %--% arrive) / seconds(1))),
-                      false = as.integer(round(duration / 60 ))), 
+                      true = as.integer(round(leave %--% arrive)),
+                      false = as.integer(round(duration))), 
       year  = as.integer(year(leave)),
       month = month(leave, label = FALSE), # leave as numeric
       wday  = as.integer(wday(leave, label = FALSE, week_start=getOption('lubridate.week.start',7))), # numeric, start sunday

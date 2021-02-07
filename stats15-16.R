@@ -1,5 +1,5 @@
-# stats10-14.R
-# takes the file containting rides from years 2010-1420, processes, adds station info, creates summary
+# stats15-16.R
+# takes the file containting rides from years 2015-16, processes, adds station info, creates summary
 # station info
 
 library(scales)
@@ -10,9 +10,9 @@ library(ineq)
 library(leafsync)
 
 
-# load years 2010-14 file + stations ----------------------------------------------------------------------------------
-bks1014 <- readRDS(file.path(processed, "data/years/bks_2010-14.Rda"))
-nrow_bks1014 <- nrow(bks1014)
+# load years 2015-16 file + stations ----------------------------------------------------------------------------------
+bks1516 <- readRDS(file.path(processed, "data/years/bks_2015-16.Rda"))
+nrow_bks1516 <- nrow(bks1516)
 
 station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
   select(name_bks, id_proj, lat, lng, metro, name_metro) %>% # keep only necessary variables
@@ -28,19 +28,19 @@ weather <- readRDS(file.path(processed, "data/weather/weather-daily.Rda")) %>%
 # number of departures, etc. so I will replace negative values with the station-wweek median.
 
 # create a duration0 variable where the lowest possible duraiton is 0, or NA
-bks1014$dur0 <- bks1014$dur
-bks1014$dur0[bks1014$dur0 < 0] <- NA 
+bks1516$dur0 <- bks1516$dur
+bks1516$dur0[bks1516$dur0 < 0] <- NA 
 
-bks1014 <-
-  bks1014 %>%
+bks1516 <-
+  bks1516 %>%
   mutate(week = week(leave)) %>%
   group_by(id_start, week) %>%
   mutate(   # create a median duration for each station-year
     sta_dur_med = as.integer(round(median(dur0, na.rm = TRUE)))
   ) 
 
-bks1014 <-
-  bks1014 %>%
+bks1516 <-
+  bks1516 %>%
   mutate(
     dur = if_else(
       dur < 0,  # if the ride duration is negative...
@@ -50,10 +50,10 @@ bks1014 <-
   ) %>%
   select(-dur0, -sta_dur_med) # remove variables
 
-# join 2010-1420 file with stations info, weather -----------------------------------------------------------------------
+# join 2015-16 file with stations info, weather -----------------------------------------------------------------------
 
-bks1014 <-
-  bks1014 %>%
+bks1516 <-
+  bks1516 %>%
   left_join(        # join to start station
     ., station_key, 
     by = c("id_start" = "id_proj"),
@@ -77,7 +77,7 @@ bks1014 <-
 
 # ensure the number of rows hasn't been altered
 assertthat::assert_that( # 12915580
-  nrow(bks1014) == nrow_bks1014
+  nrow(bks1516) == nrow_bks1516
 )
 
 
@@ -90,7 +90,7 @@ assertthat::assert_that( # 12915580
 #   stats: from start station -- duration, departures, etc
 
 sum_station_a_dep <- 
-  bks1014 %>%
+  bks1516 %>%
   mutate(
     metro_end_int = as.integer(metro_end),
     member_int    = as.integer(member)
@@ -118,7 +118,7 @@ sum_station_a_dep <-
 #     arrv_ineq      the arrival inequity 
 
 sum_station_a_arrv <-  
-  bks1014 %>%
+  bks1516 %>%
   mutate(metro_st_int = as.integer(metro_st),
          member_int    = as.integer(member)) %>%
   group_by(id_end, year, day_of_yr) %>%    # group by end station, year
@@ -136,7 +136,7 @@ sum_station_a_arrv <-
 #   group (2 part): start station, endstation, year //// start, year
 #   stats: number to trips from each station to each station, gini
 sum_station_b_dep <-
-  bks1014 %>%
+  bks1516 %>%
   filter(!is.na(id_start)) %>%
   group_by(id_start, id_end, year, day_of_yr) %>%
   summarize(
@@ -157,7 +157,7 @@ sum_station_b_dep <-
 #   stats: number to trips from each station to each station, gini
 
 sum_station_b_arrv <-
-  bks1014 %>%
+  bks1516 %>%
   filter(!is.na(id_end)) %>%
   group_by(id_start, id_end, year, day_of_yr) %>%
   summarize(
@@ -264,7 +264,7 @@ sum_station <-
 #   stats: from start station -- duration, departures, etc
 
 sum_station_a_dep <- 
-  bks1014 %>%
+  bks1516 %>%
   mutate(
     metro_end_int = as.integer(metro_end),
     member_int    = as.integer(member)
@@ -291,7 +291,7 @@ sum_station_a_dep <-
 #     arrv_ineq      the arrival inequity 
 
 sum_station_a_arrv <-  
-  bks1014 %>%
+  bks1516 %>%
   mutate(metro_st_int = as.integer(metro_st),
          member_int    = as.integer(member)) %>%
   group_by(id_end, year) %>%    # group by end station, year
@@ -309,7 +309,7 @@ sum_station_a_arrv <-
 #   group (2 part): start station, endstation, year //// start, year
 #   stats: number to trips from each station to each station, gini
 sum_station_b_dep <-
-  bks1014 %>%
+  bks1516 %>%
   filter(!is.na(id_start)) %>%
   group_by(id_start, id_end, year) %>%
   summarize(
@@ -330,7 +330,7 @@ sum_station_b_dep <-
 #   stats: number to trips from each station to each station, gini
 
 sum_station_b_arrv <-
-  bks1014 %>%
+  bks1516 %>%
   filter(!is.na(id_end)) %>%
   group_by(id_start, id_end, year) %>%
   summarize(
@@ -347,7 +347,7 @@ sum_station_b_arrv <-
 #   tells us what percent of departures from a station go to a station that is in the 
 #   top 5% most gone-to stations
 top05p <-
-  bks1014 %>%
+  bks1516 %>%
   #create list of total departures by station 
   group_by(id_start, id_end, year) %>%
   summarize(
@@ -438,7 +438,7 @@ st_crs(sum_station_sf) <- 4326
 # count of start-to-end for all combinations --------------------------------------------------
 
 start_end <-   
-  bks1014 %>%
+  bks1516 %>%
   group_by(year, id_start, id_end) %>%
   summarise(n_depart = n(),
             lat_st   = first(lat_st),
@@ -458,8 +458,8 @@ start_end <-
 
 
 # system-day summary with weather ===========================================================================
-days1014 <- 
-  bks1014 %>% ungroup() %>%
+days1516 <- 
+  bks1516 %>% ungroup() %>%
   group_by(year, day_of_yr) %>%
   summarise(
     nrides      = n(),
@@ -478,17 +478,17 @@ days1014 <-
 # export =============================================================================================
 
 #individual objects
-saveRDS(days1014, file.path(processed, "data/stats10-14/days.Rda"), compress = FALSE)
-saveRDS(bks1014, file.path(processed, "data/stats10-14/bks1014-weather.Rda"), compress = FALSE)
-saveRDS(sum_station, file.path(processed, "data/stats10-14/sum-station.Rda"), compress = FALSE)
-saveRDS(sum_station_yr, file.path(processed, "data/stats10-14/sum-station-yr.Rda"), compress = FALSE)
-saveRDS(start_end, file.path(processed, "data/stats10-14/start-end.Rda"), compress = FALSE)
+saveRDS(days1516, file.path(processed, "data/stats15-16/days.Rda"), compress = FALSE)
+saveRDS(bks1516, file.path(processed, "data/stats15-16/bks1516-weather.Rda"), compress = FALSE)
+saveRDS(sum_station, file.path(processed, "data/stats15-16/sum-station.Rda"), compress = FALSE)
+saveRDS(sum_station_yr, file.path(processed, "data/stats15-16/sum-station-yr.Rda"), compress = FALSE)
+saveRDS(start_end, file.path(processed, "data/stats15-16/start-end.Rda"), compress = FALSE)
 
 # rest, as Rdata
 save(
   sum_station_sf,
   sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep,
-  file = file.path(processed, "data/stats10-14/misc.Rdata"),
+  file = file.path(processed, "data/stats15-16/misc.Rdata"),
   compress = FALSE
 )
 
