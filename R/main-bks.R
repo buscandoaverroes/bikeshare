@@ -90,21 +90,33 @@
             #                   makes: bks-import.csv
   s2 <- 0   # stations      creates old/new station number dictionary and adds station features
             #                   makes: station_key.Rda, station-geo-objects.Rdata
+                            
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             #                   makes: bks-full.Rda, bks-full.csv
   s4 <- 0   # query:          filters/queries main database and exports files.
             #                   makes: bks_2020.Rda, bks1720.Rda
-  s5 <- 0   # stats          takes years 17-20 from query, processes, adds station info, stats.
-            #                   makes: stats17-20.Rdata ~20 min
-  s6 <- 0   # 
+            
+# Stats Processing                  
+  s5 <- 0   # stats10-14        takes years 10-14 from query, processes, adds station info, stats.
+            #                   makes: stats10-14.Rdata ~20 min
+  s6 <- 0   # stats15-16       takes years 15-16 from query, processes, adds station info, stats.
+            #                   makes: stats15-16.Rdata ~20 min
+  s7 <- 0   #stats17-20        takes years 17-20 from query, processes, adds station info, stats.
+            #                    makes: stats17-20.Rdata ~20 min
   
-# utilities: can be run independently after main.R
+# recollection 
+  r1 <- 1   # recollect       takes the 'parallel processed' stats files and reassembles them into:
+            #                   days, station-sum, rides .Rda files under the /plato directory
+  
+  
+# utilities
   u1 <- 0   # weather.R       queries weather data from NOAA to create by-day weather dictionary
             #                   makes: data/weather/weather-daily.Rda
 
   
 # rmarkdown
-  m1 <- 0   # sandbox.Rmd     exploration markdown of basic plots and regs, using Rdata from sandbox.R    
+  m1 <- 0   # descriptives01.Rmd     exploration markdown of basic plots     
+  m2 <- 0   # regressions01.Rmd       basic regressions
   
 
             
@@ -125,10 +137,21 @@
   if (s4 == 1) {
     source(file.path(scripts, "query.R"))
   }       
-  # sandbox.R
+  # stats
+  
   if (s5 == 1) {
+    source(file.path(scripts, "stats10-14.R"))
+  }  
+  if (s6 == 1) {
+    source(file.path(scripts, "stats15-16.R"))
+  }  
+  if (s7 == 1) {
     source(file.path(scripts, "stats17-20.R"))
-  }         
+  }  
+  
+  if (r1 == 1) {
+    source(file.path(scripts, "recollect.R"))
+  }  
             
 
 # utilities --------------------------------------------------------------------------------------            
@@ -142,11 +165,13 @@ if (u1 == 1) {
             
 # markdown --------------------------------------------------------------------------------------            
             
-# sandbox.R
+
 if (m1 == 1) {
-  source(file.path(scripts, "sandbox.Rmd"))
+  source(file.path(scripts, "Descriptives01.rmd"))
 }                     
-            
+if (m2 == 1) {
+  source(file.path(scripts, "regeressions01.rmd"))
+}                  
             
             
             
