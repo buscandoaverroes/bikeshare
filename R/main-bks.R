@@ -103,6 +103,10 @@
   s7 <- 0   #stats17-20        takes years 17-20 from query, processes, adds station info, stats.
             #                    makes: stats17-20.Rdata ~20 min
   
+# recollection 
+  r1 <- 0   # recollect       takes the 'parallel processed' stats files and reassembles them into:
+            #                   days, station-sum, rides .Rda files under the /plato directory
+  
   
 # utilities
   u1 <- 0   # weather.R       queries weather data from NOAA to create by-day weather dictionary
@@ -142,7 +146,11 @@
   }  
   if (s7 == 1) {
     source(file.path(scripts, "stats17-20.R"))
-  }         
+  }  
+  
+  if (r1 == 1) {
+    source(file.path(scripts, "recollect.R"))
+  }  
             
 
 # utilities --------------------------------------------------------------------------------------            
