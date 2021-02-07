@@ -91,11 +91,16 @@
             #                   makes: station_key.Rda, station-geo-objects.Rdata
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             #                   makes: bks-full.Rda, bks-full.csv
-  s4 <- 1   # query:          filters/queries main database and exports files.
+  s4 <- 0   # query:          filters/queries main database and exports files.
             #                   makes: bks_2020.Rda, bks1720.Rda
-  s5 <- 0   # stats          takes years 17-20 from query, processes, adds station info, stats.
-            #                   makes: stats17-20.Rdata ~20 min
-  s6 <- 0   # 
+            
+#                   
+  s5 <- 0   # stats10-14        takes years 10-14 from query, processes, adds station info, stats.
+            #                   makes: stats10-14.Rdata ~20 min
+  s6 <- 0   # stats15-16       takes years 15-16 from query, processes, adds station info, stats.
+            #                   makes: stats15-16.Rdata ~20 min
+  s7 <- 1   #stats17-20        takes years 17-20 from query, processes, adds station info, stats.
+            #                    makes: stats17-20.Rdata ~20 min
   
 # utilities: can be run independently after main.R
   u1 <- 0   # weather.R       queries weather data from NOAA to create by-day weather dictionary
@@ -124,8 +129,15 @@
   if (s4 == 1) {
     source(file.path(scripts, "query.R"))
   }       
-  # sandbox.R
+  # stats
+  
   if (s5 == 1) {
+    source(file.path(scripts, "stats10-14.R"))
+  }  
+  if (s6 == 1) {
+    source(file.path(scripts, "stats15-16.R"))
+  }  
+  if (s7 == 1) {
     source(file.path(scripts, "stats17-20.R"))
   }         
             
