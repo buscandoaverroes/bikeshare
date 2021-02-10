@@ -1,0 +1,98 @@
+---
+title: "descriptives02"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+# knitr opts
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+# packages
+library(tidyverse)
+library(sf)
+library(mapview)
+library(leaflet)
+library(leafem)
+library(leafpop)
+library(leafsync)
+library(plotly)
+library(miceadds)
+library(shiny)
+
+processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
+days    <- readRDS(file.path(processed, "data/plato/days.Rda"))
+#bks     <- readRDS(file.path(processed, "data/plato/daily-rides.Rda"))
+sum_station <- readRDS(file.path(processed, "data/plato/sum-station.Rda")) %>%
+  select(-starts_with("lag")) %>% # remove lag vars, not needed here.
+  st_as_sf(coords = c('lng', 'lat'), na.fail = FALSE) # set as sf object
+  st_crs(sum_station) <- 4326
+sum_station_yr <- readRDS(file.path(processed, "data/plato/sum-station-yr.Rda")) %>% 
+select(-starts_with("lag")) %>% # remove lag vars, not needed here.
+  st_as_sf(coords = c('lng', 'lat'), na.fail = FALSE) # set as sf object
+  st_crs(sum_station) <- 4326
+
+# document/package settings
+theme_set(theme_minimal()) # set ggplot theme
+mapviewOptions(fgb = T) # set to false for greater performance?
+alpha = 0.2
+```
+
+Thanks to RColorBrewer for providing the color scales.
+
+# Days
+
+## Departures
+
+```{r, echo=FALSE}
+inputPanel(
+  sliderInput('year1', "Year", 2010, 2020, 2010)
+)
+inputPanel(
+  sliderInput('year2', "Year", 2010, 2020, 2011)
+)
+
+data1 <- reactive({ filter(sum_station_yr, year == input$year1) })
+m1 <- reactive({mapview(data1(), zcol = "departures",
+                        popup = popupTable(data1(),
+                                           zcol = c("name_bks_st",
+                                                    "departures")))})
+
+
+# leaflet(data = data(),
+#         addTiles() %>%
+#           addCircleMarkers(fillColor = ~)
+#         )
+
+
+renderLeaflet({
+    m1()@map
+})
+
+
+```
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change. This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+```{r eruptions, echo=FALSE}
+inputPanel(
+  selectInput("n_breaks", label = "Number of bins:",
+              choices = c(10, 20, 35, 50), selected = 20),
+  
+  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
+              min = 0.2, max = 2, value = 1, step = 0.2)
+)
+
+renderPlot({
+  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
+       xlab = "Duration (minutes)", main = "Geyser eruption duration")
+  
+  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
+  lines(dens, col = "blue")
+})
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.

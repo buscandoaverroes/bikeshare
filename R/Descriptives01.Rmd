@@ -15,7 +15,6 @@ knitr::opts_chunk$set(message = FALSE)
 # packages
 library(tidyverse)
 library(sf)
-library(mapview)
 library(leaflet)
 library(leafpop)
 library(leafsync)
