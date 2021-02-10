@@ -28,10 +28,10 @@ sum_station <- readRDS(file.path(processed, "data/plato/sum-station.Rda")) %>%
   select(-starts_with("lag")) %>% # remove lag vars, not needed here.
   st_as_sf(coords = c('lng', 'lat'), na.fail = FALSE) # set as sf object
   st_crs(sum_station) <- 4326
-sum_station_yr <- readRDS(file.path(processed, "data/plato/sum-station-yr.Rda")) %>% 
+sum_station_yr <- readRDS(file.path(processed, "data/plato/sum-station-yr.Rda")) %>%
 select(-starts_with("lag")) %>% # remove lag vars, not needed here.
   st_as_sf(coords = c('lng', 'lat'), na.fail = FALSE) # set as sf object
-  st_crs(sum_station) <- 4326
+  st_crs(sum_station_yr) <- 4326
 
 # document/package settings
 theme_set(theme_minimal()) # set ggplot theme
@@ -43,28 +43,23 @@ Thanks to RColorBrewer for providing the color scales.
 
 # Days
 
-## Departures
+*empty*
+
+# Stations
+
+## Yearly Departures 
 
 ```{r, echo=FALSE}
 inputPanel(
-  sliderInput('year1', "Year", 2010, 2020, 2010)
-)
-inputPanel(
-  sliderInput('year2', "Year", 2010, 2020, 2011)
+  sliderInput('year1', "Year", 2010, 2020, 2010, sep = '')
 )
 
 data1 <- reactive({ filter(sum_station_yr, year == input$year1) })
-m1 <- reactive({mapview(data1(), zcol = "departures",
-                        popup = popupTable(data1(),
-                                           zcol = c("name_bks_st",
-                                                    "departures")))})
-
-
-# leaflet(data = data(),
-#         addTiles() %>%
-#           addCircleMarkers(fillColor = ~)
-#         )
-
+m1 <- reactive({
+  mapview(data1(), zcol = "departures",
+          at = c(0,1000,2000,5000,10000,20000,100000)
+          )
+  })
 
 renderLeaflet({
     m1()@map

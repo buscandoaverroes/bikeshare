@@ -68,7 +68,7 @@ sum_station_yr_plato <- bind_rows(
 nrow.ssyr <- nrow(sum_station_yr_plato)
 
 # merge with station key
-key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>% select(id_proj, lat, lng) %>% st_drop_geometry()
+key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>% select(id_proj, lat, lng) 
 sum_station_yr_plato <-
   sum_station_yr_plato %>%
   left_join(key, by = c("id_station" = "id_proj"), na.matches = "never") 
