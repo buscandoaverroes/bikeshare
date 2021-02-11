@@ -20,6 +20,7 @@ library(leafsync)
 library(plotly)
 library(miceadds)
 library(shiny)
+library(shinyWidgets)
 
 processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 days    <- readRDS(file.path(processed, "data/plato/days.Rda"))
@@ -43,7 +44,34 @@ Thanks to RColorBrewer for providing the color scales.
 
 # Days
 
-*empty*
+```{r}
+inputPanel(
+  dateRangeInput('date1', "Date",
+                 startview = 'year', start = '2010-01-01', end = '2020-12-31'),
+  selectInput('y1', "Y Axis", 
+              choices = c("nrides",
+                          "dur_med",
+                          "dur_ineq"),
+              selected = "nrides",  multiple = FALSE, selectize = TRUE)
+) # note this must be "extracted" to be translated into bks data since not in date format
+
+
+
+in.yr    <- reactive({lubridate::year(input$date1)})
+#in.yrday <- reactive({lubridate::yday(input$date1)})
+
+data <- reactive({
+  filter(days, year >= in.yr()[1], year <= in.yr()[2])
+})
+renderPlot({
+  ggplot(data(), aes(day_of_yr, input$y1, color=as.factor(year))) + 
+   geom_point(alpha=0.6) + geom_smooth()
+}) 
+
+
+
+
+```
 
 # Stations
 
