@@ -49,9 +49,9 @@ inputPanel(
   dateRangeInput('date1', "Date",
                  startview = 'year', start = '2010-01-01', end = '2020-12-31'),
   selectInput('y1', "Y Axis", 
-              choices = c("nrides",
-                          "dur_med",
-                          "dur_ineq"),
+              choices = c("Number of Rides"      =  "nrides",
+                          "Median Ride Duration" =  "dur_med",
+                          "Duration Inequity"    =  "dur_ineq"),
               selected = "nrides",  multiple = FALSE, selectize = TRUE)
 ) # note this must be "extracted" to be translated into bks data since not in date format
 
@@ -64,8 +64,10 @@ data <- reactive({
   filter(days, year >= in.yr()[1], year <= in.yr()[2])
 })
 renderPlot({
-  ggplot(data(), aes(day_of_yr, input$y1, color=as.factor(year))) + 
-   geom_point(alpha=0.6) + geom_smooth()
+  ggplot(data(), aes(day_of_yr, eval(as.symbol(input$y1)), color=as.factor(year))) + 
+   geom_point(alpha=0.4) + geom_smooth() + 
+    scale_x_date() +
+    labs(x = "Day of Year", y=as.character(input$y1))
 }) 
 
 
@@ -75,7 +77,7 @@ renderPlot({
 
 # Stations
 
-## Yearly Departures 
+## Yearly Departures
 
 ```{r, echo=FALSE}
 inputPanel(
