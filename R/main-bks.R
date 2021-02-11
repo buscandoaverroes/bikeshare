@@ -99,13 +99,13 @@
 # Stats Processing                  
   s5 <- 0   # stats10-14        takes years 10-14 from query, processes, adds station info, stats.
             #                   makes: stats10-14.Rdata ~20 min
-  s6 <- 1   # stats15-16       takes years 15-16 from query, processes, adds station info, stats.
+  s6 <- 0   # stats15-16       takes years 15-16 from query, processes, adds station info, stats.
             #                   makes: stats15-16.Rdata ~20 min
   s7 <- 0   #stats17-20        takes years 17-20 from query, processes, adds station info, stats.
             #                    makes: stats17-20.Rdata ~20 min
   
 # recollection 
-  r1 <- 0   # recollect       takes the 'parallel processed' stats files and reassembles them into:
+  r1 <- 1   # recollect       takes the 'parallel processed' stats files and reassembles them into:
             #                   days, station-sum, rides .Rda files under the /plato directory
   
   
