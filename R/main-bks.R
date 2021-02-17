@@ -105,7 +105,7 @@
             #                    makes: stats17-20.Rdata ~20 min
   
 # recollection 
-  r1 <- 1   # recollect       takes the 'parallel processed' stats files and reassembles them into:
+  r1 <- 0   # recollect       takes the 'parallel processed' stats files and reassembles them into:
             #                   days, station-sum, rides .Rda files under the /plato directory
   
   
