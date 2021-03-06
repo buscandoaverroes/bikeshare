@@ -28,6 +28,8 @@ library(lubridate)
 library(timetk)
 library(RColorBrewer)
 
+reactlog::reactlog_enable()
+
 processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 days    <- readRDS(file.path(processed, "data/plato/days.Rda")) %>%
   mutate(dur_med = round((dur_med/60),1)) %>% # change to rounded minutes
@@ -74,7 +76,8 @@ inputPanel(
     tags$br(),tags$br(),
     prettySwitch('y1.tempfill', "Use Temperature as fill color",
                  value = FALSE, slim = T, fill = T, inline = T),
-    awesomeCheckbox('y1.fahr', "Use ℉", value = FALSE, status = "primary")
+    awesomeCheckbox('y1.fahr', "Use ℉", value = FALSE, status = "primary"),
+    actionButton('go', "Update")
   )
 ) # end vert layout and input panel
 
@@ -173,9 +176,9 @@ by <- reactive({
     text='Observed Precipitation (mm)', standoff=35), visible=input$y1.precip)
 })
   
+# make the graph, depending on the go, button
 
-
-renderPlotly({
+  p1 <- eventReactive(input$go, {
     plot_ly() %>%
     # temp data
     add_trace(data = data1w(), type='scatter', mode = 'markers', name = "Daily Temp.",
@@ -231,9 +234,15 @@ renderPlotly({
                     ticksuffix=paste(if (input$y1.fahr){'℉'} else{'℃'})
                   )),
             legendgroup = "bks",
-            hovertemplate = paste0("<b>%{y:,2f}</b><br>",
-                                   "%{x}",
-                                   "<extra></extra>")) %>%
+            hovertemplate = if_else( input$y1.tempfill,
+              false = paste0("<b>%{y:,2f}</b><br>",
+                            "%{x}",
+                            "<extra></extra>"),
+              true = paste0("<b>%{y:,2f}</b><br>",
+                            "%{marker.color:1f}",if (input$y1.fahr){'℉'} else{'℃'},
+                            "<br>%{x}",
+                            "<extra></extra>"))
+            ) %>%
     # rolling av: main data
     add_trace(data = data1main(),
               type = 'scatter', mode = 'lines', name = paste0("30-day Av"),
@@ -265,7 +274,14 @@ renderPlotly({
     margin = list(l=80, r=100)
   ) %>% # end layout
     config(displayModeBar = FALSE)
-})
+
+}, ignoreNULL=FALSE, ignoreInit = FALSE)
+
+
+# render the graph
+renderPlotly({withProgress(p1())})
+
+ 
 
 ```
 
