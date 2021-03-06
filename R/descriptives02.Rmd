@@ -3,7 +3,6 @@ title: "descriptives02"
 output: 
   html_document:
     toc: true
-    theme: "flatly"
     runtime: shiny
 ---
 
@@ -179,6 +178,8 @@ by <- reactive({
 # make the graph, depending on the go, button
 
   p1 <- eventReactive(input$go, {
+    withProgress(message = "Loading", # start here.
+                 
     plot_ly() %>%
     # temp data
     add_trace(data = data1w(), type='scatter', mode = 'markers', name = "Daily Temp.",
@@ -274,12 +275,16 @@ by <- reactive({
     margin = list(l=80, r=100)
   ) %>% # end layout
     config(displayModeBar = FALSE)
+    
+  ) # end withprogress
 
 }, ignoreNULL=FALSE, ignoreInit = FALSE)
+  
+
 
 
 # render the graph
-renderPlotly({withProgress(p1())})
+renderPlotly({p1()})
 
  
 
