@@ -27,7 +27,7 @@ library(lubridate)
 library(timetk)
 library(RColorBrewer)
 
-reactlog::reactlog_enable()
+options(shiny.reactlog = TRUE) # permits to launch reactlog
 
 processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
 days    <- readRDS(file.path(processed, "data/plato/days.Rda")) %>%
@@ -76,7 +76,7 @@ inputPanel(
     prettySwitch('y1.tempfill', "Use Temperature as fill color",
                  value = FALSE, slim = T, fill = T, inline = T),
     awesomeCheckbox('y1.fahr', "Use ℉", value = FALSE, status = "primary"),
-    actionButton('go', "Update")
+    actionButton('go.y1', "Update")
   )
 ) # end vert layout and input panel
 
@@ -137,20 +137,20 @@ d <- reactive({
   }
 })
 
-data1main <- reactive({
+data1main <- reactive({ withProgress(message = 'loading1', 
   d() %>% 
   select(date, input$y1, maxtemp) %>%
   mutate(
     rolling_av_30 = case_when( # round only duration_ineq to the hundreths
       input$y1 == "dur_ineq" ~  round(roll_av_30(.data[[input$y1]]), 2),
-      input$y1 != "dur_ineq" ~  round(roll_av_30(.data[[input$y1]]), 1)))
+      input$y1 != "dur_ineq" ~  round(roll_av_30(.data[[input$y1]]), 1))))
 })
 
 
-data1w <- reactive({
+data1w <- reactive({ withProgress(message = 'loading2', 
   d() %>% 
   select(date, maxtemp) %>%
-  mutate(rolling_av_30_temp =  round(roll_av_30(.data[["maxtemp"]])))
+  mutate(rolling_av_30_temp =  round(roll_av_30(.data[["maxtemp"]]))))
 })
   
 data1p <- reactive({
@@ -177,8 +177,8 @@ by <- reactive({
   
 # make the graph, depending on the go, button
 
-  p1 <- eventReactive(input$go, {
-    withProgress(message = "Loading", # start here.
+  p1 <- eventReactive(input$go.y1, {
+    withProgress(message = "Loading3", # start here.
                  
     plot_ly() %>%
     # temp data
@@ -284,7 +284,7 @@ by <- reactive({
 
 
 # render the graph
-renderPlotly({p1()})
+renderPlotly({withProgress(p1(), message = 'loading4')})
 
  
 
@@ -448,7 +448,7 @@ n  <- reactive({input$n3})
 nm <- reactive({input$name3})
 
 
-mv1 <- reactive({
+mv1 <- reactive({ # fyi these takes like 10 seconds to calculate lol %%
   data3a() %>%  st_as_sf(coords=c("lng","lat"), na.fail=F) %>%
   mapview(., zcol = as.character(input$y3))
 })
