@@ -26,6 +26,7 @@ library(shinyWidgets)
 library(lubridate)
 library(timetk)
 library(RColorBrewer)
+library(shinycssloaders)
 
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 
@@ -120,15 +121,15 @@ ticks <- reactive({
 })
 
 #name
-name <- reactive({
+name <- eventReactive(input$go.y1, {
   case_when(
         input$y1 == "nrides"     ~ "Daily Rides",
         input$y1 == "dur_med"    ~ "Median Duration (min)",
         input$y1 == "dur_ineq"   ~ "Duration Inequity Index",
       )
-})
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = "name")
 
-d <- reactive({
+d1 <- reactive({
   if (input$y1.fahr) {
     days %>% dplyr::ungroup() %>%
       mutate(maxtemp = round(((9/5)*maxtemp)+32),2)
@@ -137,24 +138,27 @@ d <- reactive({
   }
 })
 
-data1main <- reactive({ withProgress(message = 'loading1', 
-  d() %>% 
+data1main <- eventReactive( input$go.y1, { 
+  
+  withProgress(message = 'Assembling bikeshare data',
+  d1() %>% 
   select(date, input$y1, maxtemp) %>%
   mutate(
     rolling_av_30 = case_when( # round only duration_ineq to the hundreths
       input$y1 == "dur_ineq" ~  round(roll_av_30(.data[[input$y1]]), 2),
       input$y1 != "dur_ineq" ~  round(roll_av_30(.data[[input$y1]]), 1))))
-})
+  
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = "data1main")
 
 
-data1w <- reactive({ withProgress(message = 'loading2', 
-  d() %>% 
+data1w <- reactive({ withProgress(message = "Assembling weather data",
+  d1() %>% 
   select(date, maxtemp) %>%
   mutate(rolling_av_30_temp =  round(roll_av_30(.data[["maxtemp"]]))))
 })
   
 data1p <- reactive({
-  d() %>% 
+  d1() %>% 
   select(date, precip)
 })
 
@@ -176,9 +180,8 @@ by <- reactive({
 })
   
 # make the graph, depending on the go, button
-
   p1 <- eventReactive(input$go.y1, {
-    withProgress(message = "Loading3", # start here.
+    withProgress(message = "Building the graph", # start here.
                  
     plot_ly() %>%
     # temp data
@@ -218,7 +221,7 @@ by <- reactive({
     # main data 
     add_trace(data = data1main(),
               type = 'scatter', mode = 'markers', name = name(),
-              x = ~date, y = ~eval(as.symbol(input$y1)),
+              x = ~date, y = input$y1,
               marker = list(
                 color = if (input$y1.tempfill) {~maxtemp} else {brewer.pal(5,'Blues')[3]}, 
                 opacity = 0.9,
@@ -278,13 +281,13 @@ by <- reactive({
     
   ) # end withprogress
 
-}, ignoreNULL=FALSE, ignoreInit = FALSE)
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'p1-plotly')
   
 
 
 
 # render the graph
-renderPlotly({withProgress(p1(), message = 'loading4')})
+renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
 
  
 
