@@ -221,7 +221,7 @@ by <- reactive({
     # main data 
     add_trace(data = data1main(),
               type = 'scatter', mode = 'markers', name = name(),
-              x = ~date, y = input$y1,
+              x = ~date, y = ~isolate(.data[[input$y1]]),
               marker = list(
                 color = if (input$y1.tempfill) {~maxtemp} else {brewer.pal(5,'Blues')[3]}, 
                 opacity = 0.9,
