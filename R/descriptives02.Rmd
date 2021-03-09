@@ -55,7 +55,7 @@ Thanks to RColorBrewer for providing the color scales.
 
 The daily data is plotted in blue, along with optional weather data from NOAA. Date ranges can be subset by dragging either on the *Range Selector* below or on the plot region itself. Double-clicking resets.
 
-```{r}
+```{r, days}
 
 inputPanel(
   verticalLayout(
@@ -120,6 +120,10 @@ ticks <- reactive({
   } else {
     c(0,10,20,30,40) # celsius
   }
+})
+
+y1.alpha <- reactive({
+  if (input$y1.precip) {0.9} else {0.4}
 })
 
 #name
@@ -206,7 +210,8 @@ by <- reactive({
               opacity = 0.9,
               visible = input$y1.weather,
               legendgroup = "temp",
-              hovertemplate = paste0("<b>%{y:,1f}°</b><br>",
+              hovertemplate = paste0("<b>30-Day Average</b><br>",
+                                  "<b>%{y:,1f}°</b><br>",
                                    "%{x}",
                                    "<extra></extra>"),
               yaxis = "y2", alpha = 1 ) %>%
@@ -226,7 +231,7 @@ by <- reactive({
               x = ~date, y = ~isolate(.data[[input$y1]]),
               marker = list(
                 color = if (input$y1.tempfill) {~maxtemp} else {brewer.pal(5,'Blues')[3]}, 
-                opacity = 0.9,
+                opacity = y1.alpha(),
                 size = 5,
                 showscale = input$y1.tempfill,
                 cmin = min(),
@@ -255,7 +260,8 @@ by <- reactive({
               x = ~date, y = ~rolling_av_30, 
               line = list(color = brewer.pal(5,'Blues')[4]), 
             legendgroup = "bks",
-            hovertemplate = paste0("<b>%{y:,1f}</b><br>",
+            hovertemplate = paste0("<b>30-Day Average</b><br>",
+                                  "<b>%{y:,1f}</b><br>",
                                    "%{x}",
                                    "<extra></extra>")) %>%
   layout( 
@@ -277,9 +283,11 @@ by <- reactive({
         list(step = 'all')))),
     font = list(family="arial"),
     legend = list(orientation='h', y=1.30, x=0.95, xanchor = "auto"),
-    margin = list(l=80, r=100)
+    margin = list(l=80, r=100),
+    dragmode = 'pan'
   ) %>% # end layout
-    config(displayModeBar = FALSE)
+    config(modeBarButtonsToRemove = c('lasso2d', 'select2d', 'hoverClosestCartesian', 'toggleSpikelines',
+                                      'autoScale2d', 'zoomIn2d', 'zoomOut2d'))
     
   ) # end withprogress
 
