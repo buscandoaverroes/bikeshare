@@ -30,40 +30,42 @@ mapviewOptions(fgb = T) # set to false for greater performance?
 # Define UI for application that draws a histogram
 ui <- navbarPage("Bikeshare", # UI ===================================================
   tabPanel("Days", # page 1 -----------------------------------------------------
-    fluidPage(
-        fluidRow(
-           titlePanel("Title", windowTitle = 'browser title'),
+    fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
+           titlePanel("Title", windowTitle = 'browser title'), 
            tags$h3("Subtitle"),
            tags$body("a paragraph of explanation (but not too long!) goes here."),
            
            
-           tags$h3("Graph Title"),
-           inputPanel(
-           verticalLayout(
+           tags$h3("Graph Title"), 
+           wellPanel(
+            fluidRow(   
+           column(3, 
+                  verticalLayout(
                    tags$h4("Bikeshare Data"),
                    pickerInput('y1', 
                                choices = c("Total Daily Rides"      =  "nrides",
                                            "Median Ride Duration" =  "dur_med",
                                            "Duration Inequity"    =  "dur_ineq"),
-                               selected = "nrides",  multiple = FALSE,
-                               options = pickerOptions(mobile = T))),
-               verticalLayout(
+                               selected = "nrides",  multiple = FALSE, width = '200px',
+                               options = pickerOptions(mobile = T)))),
+            column(3,  
+                   verticalLayout(
                    tags$h5("Options"), # spacing
                    prettySwitch('y1.weather', "Show Temperature",
                                 value = FALSE, slim = T, fill = T, inline = T),
                    prettySwitch('y1.precip', "Show Precipitation",
-                                value = FALSE, slim = T, fill = T, inline = T )),
-               verticalLayout(
+                                value = FALSE, slim = T, fill = T, inline = T ))),
+              column(3,
+                verticalLayout(
                    tags$br(),tags$br(),
-                   prettySwitch('y1.tempfill', "Use Temperature as fill color",
+                   prettySwitch('y1.tempfill', "Use Temperature as color",
                                 value = FALSE, slim = T, fill = T, inline = T),
                    prettySwitch('y1.fahr', "Use ℉",
-                                value = FALSE, slim = T, fill = T, inline = T)),
-               verticalLayout(
-                   tags$br(),
-                   actionButton('go.y1', "Update", width = "120px"))
-             ), # end  input panels       
-           
+                                value = FALSE, slim = T, fill = T, inline = T))),
+           column(3, tags$br(), tags$br(), 
+                           actionButton('go.y1', "Update", width = "100px")))),
+                  
+
     withSpinner(plotlyOutput('days'), type = 8, hide.ui = FALSE), tags$br(),
     tags$h5("Terms and Notes"),
     tags$source("source"),
@@ -71,7 +73,7 @@ ui <- navbarPage("Bikeshare", # UI =============================================
     tags$h6("header 6")
     
         
-    )))) # end page, panel, page, row
+    ))) # end page, panel, page, row
 
 # Define server logic required to draw a histogram
 server <- function(input, output) { # SERVER ===================================================
@@ -234,12 +236,12 @@ p1 <- eventReactive(input$go.y1, {
                                           "%{x}",
                                           "<extra></extra>")) %>%
          layout( 
-             title = list(text=""),
+             title = list(text=paste("<b>",name(),"</b>"), font=list(size=20)),
              yaxis2= ay(),
              yaxis3= by(),
              yaxis = list(
                  showgrid = F,
-                 title = list(text=paste("<b>",name(),"</b>"), font=list(size=18))), 
+                 title = list(text=paste(name()), font=list(size=16))), 
              xaxis = list(
                  title = list(text="<b>Date Range Selector</b>", font=list(size=16)),
                  rangeslider = list(autorange=TRUE, thickness = 0.15),
