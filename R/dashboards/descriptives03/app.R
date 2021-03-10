@@ -21,6 +21,7 @@ library(lubridate)
 library(timetk)
 library(RColorBrewer)
 library(shinycssloaders)
+library(bslib)
 
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 mapviewOptions(fgb = T) # set to false for greater performance?
@@ -29,8 +30,16 @@ mapviewOptions(fgb = T) # set to false for greater performance?
 # Define UI for application that draws a histogram
 ui <- navbarPage("Bikeshare", # UI ===================================================
   tabPanel("Days", # page 1 -----------------------------------------------------
+    fluidPage(
+        fluidRow(
+           titlePanel("Title", windowTitle = 'browser title'),
+           tags$h3("Subtitle"),
+           tags$body("a paragraph of explanation (but not too long!) goes here."),
+           
+           
+           tags$h3("Graph Title"),
            inputPanel(
-               verticalLayout(
+           verticalLayout(
                    tags$h4("Bikeshare Data"),
                    pickerInput('y1', 
                                choices = c("Total Daily Rides"      =  "nrides",
@@ -53,11 +62,16 @@ ui <- navbarPage("Bikeshare", # UI =============================================
                verticalLayout(
                    tags$br(),
                    actionButton('go.y1', "Update", width = "120px"))
-           ), # end  input panel       
+             ), # end  input panels       
            
-    withSpinner(plotlyOutput('days'), type = 8, hide.ui = FALSE)       
-  ) # end page 1: days
-) # end Navbarpage
+    withSpinner(plotlyOutput('days'), type = 8, hide.ui = FALSE), tags$br(),
+    tags$h5("Terms and Notes"),
+    tags$source("source"),
+    tags$footer("footer"),
+    tags$h6("header 6")
+    
+        
+    )))) # end page, panel, page, row
 
 # Define server logic required to draw a histogram
 server <- function(input, output) { # SERVER ===================================================
@@ -241,7 +255,7 @@ p1 <- eventReactive(input$go.y1, {
              margin = list(l=80, r=100),
              dragmode = 'pan'
          ) %>% # end layout
-         config(modeBarButtonsToRemove = c('lasso2d', 'select2d', 'hoverClosestCartesian', 'toggleSpikelines',
+         config(modeBarButtonsToRemove = c('lasso2d', 'select2d', 'toggleSpikelines',
                                            'autoScale2d', 'zoomIn2d', 'zoomOut2d'))
      
     ) # end withprogress
@@ -250,7 +264,7 @@ p1 <- eventReactive(input$go.y1, {
     
 
 # render the graph
-output$days <- renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
+output$days <- renderPlotly({p1()})
     
     
 }
