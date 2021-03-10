@@ -46,19 +46,19 @@ lwd <- filter(desire_lines, nrides >= 50) # filtered dataset
 m <- mapview(lwd, zcol='nrides', at=c(0, 200, 300, 500, 1000), alpha = 0.2, lwd=0.3) 
 # go with mapview, play with colorscale, etc, could work well in shiny if done by-hour, year
 m
-
-tm <- tm_shape(lwd) + tm_lines(
-  col = "nrides",
-  palette = "plasma", breaks = c(100, 200, 300, 500, 1000),
-  lwd = 0.1,
-  scale = 9,
-  title.lwd = "Number of Rides in 2017",
-  alpha = 0.5,
-  title = "Number of Rides in 2017"
-) + 
-  tm_scale_bar() +
-  tm_layout(
-    legend.bg.alpha = 0.5,
-    legend.bg.color = 'white'
-  )
-tm
+# 
+# tm <- tm_shape(lwd) + tm_lines(
+#   col = "nrides",
+#   palette = "plasma", breaks = c(100, 200, 300, 500, 1000),
+#   lwd = 0.1,
+#   scale = 9,
+#   title.lwd = "Number of Rides in 2017",
+#   alpha = 0.5,
+#   title = "Number of Rides in 2017"
+# ) + 
+#   tm_scale_bar() +
+#   tm_layout(
+#     legend.bg.alpha = 0.5,
+#     legend.bg.color = 'white'
+#   )
+# tm
