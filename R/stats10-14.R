@@ -33,7 +33,8 @@ bks1014$dur0[bks1014$dur0 < 0] <- NA
 
 bks1014 <-
   bks1014 %>%
-  mutate(week = week(leave)) %>%
+  mutate(week = week(leave),
+         date = date(leave)) %>% # add date object for date only, not date-time
   group_by(id_start, week) %>%
   mutate(   # create a median duration for each station-year
     sta_dur_med = as.integer(round(median(dur0, na.rm = TRUE)))
@@ -95,7 +96,7 @@ sum_station_a_dep <-
     metro_end_int = as.integer(metro_end),
     member_int    = as.integer(member)
   ) %>%
-  group_by(id_start, year, day_of_yr) %>%
+  group_by(id_start, date, year, month, wday, day_of_yr) %>% # only first grouping, need these vars only once
   summarize(
     name_bks_st= first(na.omit(name_bks_st)),
     metro      = first(na.omit(metro_st)),
@@ -460,7 +461,7 @@ start_end <-
 # system-day summary with weather ===========================================================================
 days1014 <- 
   bks1014 %>% ungroup() %>%
-  group_by(year, day_of_yr) %>%
+  group_by(year, date, month, wday, day_of_yr) %>%
   summarise(
     nrides      = n(),
     dur_med     = round(median(dur, na.rm = TRUE), 1),
@@ -469,7 +470,7 @@ days1014 <-
     week_of_yr  = first(week_of_yr),
     precip      = first(precip), # we can assume that taking the first in each group is ok
     tempmax     = first(tempmax) #  ... since the values are the same for each year-dayofyear group
-  ) %>% distinct(year, day_of_yr, .keep_all = T)
+  ) %>% distinct(year, date, month, wday, day_of_yr, .keep_all = T)
 
 
 

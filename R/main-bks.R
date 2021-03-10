@@ -66,13 +66,11 @@
 
 # same no matter the user.
   scripts           <- file.path(repo,"R")
-
-  gadm              <- "/Volumes/Al-Hakem-II/other+files/gadm"
   raw               <- file.path(data, "raw")
   processed         <- file.path(data, "bks")
-  MotherData        <- file.path(data, "MotherData")
-    kpop            <- file.path(MotherData, "kpop")
-    full            <- file.path(MotherData, "years")
+    keys            <- file.path(processed, "keys")
+    plato           <- file.path(processed, 'data/plato')
+
 
 
     
@@ -112,7 +110,8 @@
 # utilities
   u1 <- 0   # weather.R       queries weather data from NOAA to create by-day weather dictionary
             #                   makes: data/weather/weather-daily.Rda
-
+  u2 <- 0   # names.R         creates a tibble of all key variable names and text/labels for graphs,
+  
   
 # rmarkdown
   m1 <- 0   # descriptives01.Rmd     exploration markdown of basic plots     
@@ -156,11 +155,14 @@
 
 # utilities --------------------------------------------------------------------------------------            
             
-# sandbox.R
+# weather.R
 if (u1 == 1) {
   source(file.path(scripts, "weather.R"))
 }                     
-            
+# names.R
+if (u2 == 1) {
+  source(file.path(scripts, "names.R"))
+}              
             
             
 # markdown --------------------------------------------------------------------------------------            
