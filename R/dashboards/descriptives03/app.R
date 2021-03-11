@@ -73,12 +73,53 @@ ui <- navbarPage("Bikeshare", # UI =============================================
     tags$h6("header 6")
     
         
-    ))) # end page, panel, page, row
+    )), # end first page, panel, page
+  tabPanel("Network", # page 2 -----------------------------------------------------
+     fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
+          titlePanel("Title", windowTitle = 'browser title'), 
+          tags$h3("Subtitle"),
+          tags$body("a paragraph of explanation (but not too long!) goes here."),
+          
+          tags$h3("Graph Title"), 
+          wellPanel(
+            fluidRow(   
+              column(3, 
+                     verticalLayout(
+                       tags$h4("Bikeshare Data"),
+                       pickerInput('y1', 
+                                   choices = c("Total Daily Rides"      =  "nrides",
+                                               "Median Ride Duration" =  "dur_med",
+                                               "Duration Inequity"    =  "dur_ineq"),
+                                   selected = "nrides",  multiple = FALSE, width = '200px',
+                                   options = pickerOptions(mobile = T)))),
+              column(3,  
+                     verticalLayout(
+                       tags$h5("Options"), # spacing
+                       prettySwitch('y1.weather', "Show Temperature",
+                                    value = FALSE, slim = T, fill = T, inline = T),
+                       prettySwitch('y1.precip', "Show Precipitation",
+                                    value = FALSE, slim = T, fill = T, inline = T ))),
+              column(3,
+                     verticalLayout(
+                       tags$br(),tags$br(),
+                       prettySwitch('y1.tempfill', "Use Temperature as color",
+                                    value = FALSE, slim = T, fill = T, inline = T),
+                       prettySwitch('y1.fahr', "Use ℉",
+                                    value = FALSE, slim = T, fill = T, inline = T))),
+              column(3, tags$br(), tags$br(), 
+                     actionButton('go.y2', "Update", width = "100px")))),
+             withSpinner(mapviewOutput('netework'))
+           ))
+  ) 
 
 # Define server logic required to draw a histogram
 server <- function(input, output) { # SERVER ===================================================
 
-    
+# load data, figure out why wont load outside of app directory later
+# days  <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/data/plato/days.Rda")
+# rides <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/data/plato/daily-rides.Rda") 
+# key   <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/keys/station_key.Rda") 
+  
 # days::data wrangling--------------------------------------------------------------------------
 # rolling average, 30 days
 roll_av_30 <- timetk::slidify(.f = ~ mean(., na.rm=T), .period = 30, .align = 'center', .partial = TRUE)
@@ -107,9 +148,11 @@ name <- eventReactive(input$go.y1, {
 d1 <- reactive({
     if (input$y1.fahr) {
         days %>% dplyr::ungroup() %>%
+            rename(maxtemp = tempmax) %>%
             mutate(maxtemp = round(((9/5)*maxtemp)+32),2)
     } else {
-        days %>% dplyr::ungroup()
+        days %>% dplyr::ungroup() %>%
+        rename(maxtemp = tempmax)
     }
 })
 
@@ -270,6 +313,12 @@ output$days <- renderPlotly({p1()})
     
     
 }
+
+
+
+# network:: data wrangling --------------------------------------------------------------------
+
+# load main days dataset
 
 
 # Run the application 
