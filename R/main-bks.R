@@ -23,11 +23,7 @@
          readstata13,
          data.table,
          leaflet,
-         sp,
          sf,
-         tmap,
-         osmdata,
-         ggmap,
          gdata,
          lubridate,
          data.table,
@@ -120,6 +116,7 @@
 
             
 # main scripts --------------------------------------------------------------------------------------            
+ 
   if (s1 == 1) {source(file.path(scripts, "import.R"))}  
   if (s2 == 1) {source(file.path(scripts, "stations.R"))}
   if (s3 == 1) {source(file.path(scripts, "construct.R"))} 
@@ -139,7 +136,6 @@ if (u2 == 1) {source(file.path(scripts, "names.R"))}
             
 # markdown --------------------------------------------------------------------------------------            
             
-
 if (m1 == 1) {source(file.path(scripts, "Descriptives01.rmd"))}                     
 if (m2 == 1) {source(file.path(scripts, "regeressions01.rmd"))}                  
             
