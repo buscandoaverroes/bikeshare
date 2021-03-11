@@ -4,6 +4,8 @@
 # Note: this is run within the station-number script so no packages/data should be needed.
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
+library(osmdata)
+
 # key variables: first applied after merge with OSM data 
 key_df_vars <- c(
     "number_old",
@@ -120,9 +122,12 @@ station_key <-
 
 # extract features ------------------------------------------------------------------
 
+## make boundary box
+bb <- c(-77.5,38.7,-76.75,39.2)
+
 # extract bikeshare info as sf object
-osm_bike <- getbb("Washington, DC") %>% # query...and add features
-  opq() %>%
+osm_bike <- 
+  opq(bbox = bb) %>% # larger box around Washington, DC metro area
   add_osm_feature("amenity", "bicycle_rental") %>%
   osmdata_sf()
 
@@ -131,9 +136,11 @@ st_crs(osm_bike$osm_points) <- crs
 
 
 # extract metro stations info, save as sf object 
-osm_metro <- getbb("Washington, DC") %>% # query and add metro features
-  opq() %>%
-  add_osm_feature("railway", "station") %>%
+osm_metro <- 
+  opq(bbox = bb) %>%
+  add_osm_feature("public_transport", "station") %>%
+  filter(operator == "Washington Metropolitan Area Transit Authority" |
+           operator == "Washington Metro Area Transit Authority") %>%
   osmdata_sf() 
 
 # set crs
