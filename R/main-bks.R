@@ -27,7 +27,8 @@
          gdata,
          lubridate,
          data.table,
-         janitor
+         janitor,
+         assertthat
         )
  
 
