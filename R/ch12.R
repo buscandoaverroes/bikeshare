@@ -32,18 +32,16 @@ od <- filter(rides, year == 2017) %>%
 
 od_inter <- filter(od, geocode1 != geocode2) 
 
-od_inter <- filter(od_inter, geocode1 %in% z$geocode) %>%
-  filter(geocode2 %in% z$geocode) 
-  
 # create origin-destination stations (od)
 desire_lines <- od2line(flow = od_inter, zones = z)
 
 # graph 
 # What's the distribution of ods?
 ggplot(desire_lines, aes(nrides)) + geom_histogram(binwidth = 5) + lims(x=c(0,100))
-lwd <- filter(desire_lines, nrides >= 50) # filtered dataset
+lwd <- filter(desire_lines, nrides >= 100) # filtered dataset
 
-m <- mapview(lwd, zcol='nrides', at=c(0, 200, 300, 500, 1000), alpha = 0.2, lwd=0.3) 
+
+m <- mapview(lwd, zcol='nrides', alpha = 0.4, at = c(200, 300, 500, 7000), lwd = 0.5)
 # go with mapview, play with colorscale, etc, could work well in shiny if done by-hour, year
 m
 # 

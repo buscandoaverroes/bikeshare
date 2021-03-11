@@ -4,6 +4,8 @@
 # Note: this is run within the station-number script so no packages/data should be needed.
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
+library(osmdata)
+
 # key variables: first applied after merge with OSM data 
 key_df_vars <- c(
     "number_old",
@@ -120,9 +122,12 @@ station_key <-
 
 # extract features ------------------------------------------------------------------
 
+## make boundary box
+bb <- c(-77.5,38.7,-76.75,39.2)
+
 # extract bikeshare info as sf object
-osm_bike <- getbb("Washington, DC") %>% # query...and add features
-  opq() %>%
+osm_bike <- 
+  opq(bbox = bb) %>% # larger box around Washington, DC metro area
   add_osm_feature("amenity", "bicycle_rental") %>%
   osmdata_sf()
 
@@ -130,14 +135,19 @@ osm_bike <- getbb("Washington, DC") %>% # query...and add features
 st_crs(osm_bike$osm_points) <- crs
 
 
-# extract metro stations info, save as sf object
-osm_metro <- getbb("Washington, DC") %>% # query and add metro features
-  opq() %>%
-  add_osm_feature("railway", "station") %>%
-  osmdata_sf() 
+# extract metro stations info, save as sf object 
+osm_metro_query <- # note this query generates another layer of info
+  opq(bbox = bb) %>%
+  add_osm_feature(key = "public_transport",
+                  value = "station") %>%
+  osmdata_sf() # keep only metro stations
+  
+osm_metro <- st_as_sf(osm_metro_query$osm_points) %>%
+  filter(operator == "Washington Metropolitan Area Transit Authority" |
+           operator == "Washington Metro Area Transit Authority") 
 
 # set crs
-st_crs(osm_metro$osm_points) <- crs
+st_crs(osm_metro) <- crs
 
 
 
@@ -155,7 +165,7 @@ st_crs(station_key) <- crs
 station_key <- 
   station_key %>%
   st_join(.,  # imported gps coordinates of bikeshare stations from cabi
-          osm_metro$osm_points, # bikeshare station info from osm
+          osm_metro, # bikeshare station info from osm
           join = st_is_within_distance,
           left = TRUE,  # keep all obs from station key
           dist = bike_metro_dist,
@@ -216,6 +226,44 @@ station_key <-
   rename(name_metro = name_metro_1) # rename first name of metro station
 
 
+
+# replace missings GPS info ------------------------------------------------------
+# note: some stations did not come with valid lat/lon column data, but can either 
+# be inferred (reasonably guessed) based on same-named stations with valid GPS data
+# or from a simple query on OpenStreetMaps. Thanks to OpenStreetMap and Contributors!
+
+# replace lat/long based on id
+station_key$lat[station_key$id_proj==18] <- 38.86294
+station_key$lng[station_key$id_proj==18] <- -77.05276
+
+station_key$lat[station_key$id_proj==33] <- station_key$lat[station_key$id_proj==34] # same name, assume lat/long same
+station_key$lng[station_key$id_proj==33] <- station_key$lng[station_key$id_proj==34]
+
+station_key$lat[station_key$id_proj==117] <- station_key$lat[station_key$id_proj==118] # same name, assume lat/long same
+station_key$lng[station_key$id_proj==117] <- station_key$lng[station_key$id_proj==118]
+
+station_key$lat[station_key$id_proj==140] <- 38.88362
+station_key$lng[station_key$id_proj==140] <- -76.95782
+
+station_key$lat[station_key$id_proj==433] <- station_key$lat[station_key$id_proj==432] # office, big assumption but assume same for now
+station_key$lng[station_key$id_proj==433] <- station_key$lng[station_key$id_proj==432]
+
+station_key$lat[station_key$id_proj==547] <- 38.92357
+station_key$lng[station_key$id_proj==547] <- -77.23132
+
+station_key$lat[station_key$id_proj==561] <- 39.09425
+station_key$lng[station_key$id_proj==561] <- -77.13278
+
+
+# update geometry data
+station_key <- st_drop_geometry(station_key)
+station_key <- st_as_sf(station_key, coords = c("lng", "lat"), na.fail = TRUE, remove = FALSE) 
+
+# set crs
+st_crs(station_key) <- crs
+
+
+
 # check that there are no duplicates in number_old, id_proj -----------------------
 
 # check that id_project is unique project id
@@ -228,7 +276,10 @@ assertthat::assert_that(
   nrow(station_key) == n_station_old
 )
 
-
+# check that all rows have non-missing geometry 
+assertthat::assert_that(
+  sum(st_is_empty(station_key$geometry)) == 0
+)
 
 
 
@@ -242,9 +293,9 @@ saveRDS(station_key,
 
 # export objects we may need later as Rdata
 save(
-  osm_bike, osm_metro, station_old, cabi_coords,
+  osm_bike, osm_metro, osm_metro_query, station_old, cabi_coords,
   n_station_old,
-  file = file.path(processed, "data/station-geo-objects.Rdata")
+  file = file.path(processed, "keys/station-geo-objects.Rdata")
 )
 
 # remove objects not needed

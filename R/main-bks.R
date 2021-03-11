@@ -23,15 +23,12 @@
          readstata13,
          data.table,
          leaflet,
-         sp,
          sf,
-         tmap,
-         osmdata,
-         ggmap,
          gdata,
          lubridate,
          data.table,
-         janitor
+         janitor,
+         assertthat
         )
  
 
@@ -120,60 +117,28 @@
 
             
 # main scripts --------------------------------------------------------------------------------------            
-  # import
-  if (s1 == 1) {
-    source(file.path(scripts, "import.R"))
-  }
-  # create dictionary of station numbers 
-  if (s2 == 1) {
-    source(file.path(scripts, "stations.R"))
-  }
-  # construct
-  if (s3 == 1) {
-    source(file.path(scripts, "construct.R"))
-  }
-  # query
-  if (s4 == 1) {
-    source(file.path(scripts, "query.R"))
-  }       
-  # stats
+ 
+  if (s1 == 1) {source(file.path(scripts, "import.R"))}  
+  if (s2 == 1) {source(file.path(scripts, "stations.R"))}
+  if (s3 == 1) {source(file.path(scripts, "construct.R"))} 
+  if (s4 == 1) {source(file.path(scripts, "query.R"))} 
+  if (s5 == 1) {source(file.path(scripts, "stats10-14.R"))}  
+  if (s6 == 1) {source(file.path(scripts, "stats15-16.R"))}  
+  if (s7 == 1) {source(file.path(scripts, "stats17-20.R"))}  
   
-  if (s5 == 1) {
-    source(file.path(scripts, "stats10-14.R"))
-  }  
-  if (s6 == 1) {
-    source(file.path(scripts, "stats15-16.R"))
-  }  
-  if (s7 == 1) {
-    source(file.path(scripts, "stats17-20.R"))
-  }  
-  
-  if (r1 == 1) {
-    source(file.path(scripts, "recollect.R"))
-  }  
+  if (r1 == 1) {source(file.path(scripts, "recollect.R"))}  
             
 
 # utilities --------------------------------------------------------------------------------------            
             
-# weather.R
-if (u1 == 1) {
-  source(file.path(scripts, "weather.R"))
-}                     
-# names.R
-if (u2 == 1) {
-  source(file.path(scripts, "names.R"))
-}              
+if (u1 == 1) {source(file.path(scripts, "weather.R"))}                     
+if (u2 == 1) {source(file.path(scripts, "names.R"))}              
             
             
 # markdown --------------------------------------------------------------------------------------            
             
-
-if (m1 == 1) {
-  source(file.path(scripts, "Descriptives01.rmd"))
-}                     
-if (m2 == 1) {
-  source(file.path(scripts, "regeressions01.rmd"))
-}                  
+if (m1 == 1) {source(file.path(scripts, "Descriptives01.rmd"))}                     
+if (m2 == 1) {source(file.path(scripts, "regeressions01.rmd"))}                  
             
             
             

@@ -17,8 +17,15 @@ bks <- fread(file.path(raw, "bks-import.csv"), na.strings = "")
 
 
 # if the number of rows hasn't changed from the original, drop original and components
-if (assertthat::assert_that(nrow(bks) == nrow(bks_plato))) {
+if (assert_that(nrow(bks) == nrow(bks_plato))) {
   rm(bks, bks1014, bks1516, bks1720)
+  
+  # filter out motivate office
+  bks_plato <- bks_plato %>%
+    ungroup() %>% 
+    filter(if_all(c("id_start", "id_end"), 
+                  ~ . != 433 & 
+                    . != 432))
 }
 
 
@@ -44,6 +51,12 @@ sum_station_plato <- bind_rows(
   sum_station1014, sum_station1516, sum_station1720
 )
 
+# filter out motivate office
+sum_station_plato <- sum_station_plato %>%
+  ungroup() %>% 
+  filter(if_all(c("id_station"), 
+                ~ . != 433 & 
+                  . != 432))
 
 # export
 saveRDS(sum_station_plato,
@@ -77,6 +90,13 @@ sum_station_yr_plato <-
 assertthat::assert_that(nrow(sum_station_yr_plato) == nrow.ssyr)
 
 
+# filter out motivate office
+sum_station_yr_plato <- sum_station_yr_plato %>%
+  ungroup() %>% 
+  filter(if_all(c("id_station"), 
+                ~ . != 433 & 
+                  . != 432))
+
 # export
 saveRDS(sum_station_yr_plato,
         file = file.path(processed, "data/plato/sum-station-yr.Rda"), compress = FALSE)
@@ -89,7 +109,7 @@ rm(sum_station_yr_plato, sum_station_yr1014, sum_station_yr1516, sum_station_yr1
 
 
 # append + export day summaries ===============================================
-
+# note that to/from motivate rides will be kept here for the time being...
 days1014 <- readRDS(file.path(processed, "data/stats10-14/days.Rda"))
 days1516 <- readRDS(file.path(processed, "data/stats15-16/days.Rda"))
 days1720 <- readRDS(file.path(processed, "data/stats17-20/days.Rda"))
