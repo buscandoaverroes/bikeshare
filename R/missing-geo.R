@@ -39,5 +39,5 @@ missings$lng[missings$id_proj==547] <- -77.23132
 missings$lat[missings$id_proj==561] <- 39.09425
 missings$lng[missings$id_proj==561] <- -77.13278
 
-missings2 <- st_as_sf(missings, coords = c('lng', 'lat'), na.fail = TRUE, remove = FALSE)
-View(missings2)
+missings <- st_as_sf(missings, coords = c('lng', 'lat'), na.fail = TRUE, remove = FALSE)
+View(missings)
