@@ -136,15 +136,18 @@ st_crs(osm_bike$osm_points) <- crs
 
 
 # extract metro stations info, save as sf object 
-osm_metro <- 
+osm_metro_query <- # note this query generates another layer of info
   opq(bbox = bb) %>%
-  add_osm_feature("public_transport", "station") %>%
+  add_osm_feature(key = "public_transport",
+                  value = "station") %>%
+  osmdata_sf() # keep only metro stations
+  
+osm_metro <- st_as_sf(osm_metro_query$osm_points) %>%
   filter(operator == "Washington Metropolitan Area Transit Authority" |
-           operator == "Washington Metro Area Transit Authority") %>%
-  osmdata_sf() 
+           operator == "Washington Metro Area Transit Authority") 
 
 # set crs
-st_crs(osm_metro$osm_points) <- crs
+st_crs(osm_metro) <- crs
 
 
 
@@ -162,7 +165,7 @@ st_crs(station_key) <- crs
 station_key <- 
   station_key %>%
   st_join(.,  # imported gps coordinates of bikeshare stations from cabi
-          osm_metro$osm_points, # bikeshare station info from osm
+          osm_metro, # bikeshare station info from osm
           join = st_is_within_distance,
           left = TRUE,  # keep all obs from station key
           dist = bike_metro_dist,
@@ -253,6 +256,7 @@ station_key$lng[station_key$id_proj==561] <- -77.13278
 
 
 # update geometry data
+station_key <- st_drop_geometry(station_key)
 station_key <- st_as_sf(station_key, coords = c("lng", "lat"), na.fail = TRUE, remove = FALSE) 
 
 # set crs
@@ -272,7 +276,10 @@ assertthat::assert_that(
   nrow(station_key) == n_station_old
 )
 
-
+# check that all rows have non-missing geometry 
+assertthat::assert_that(
+  sum(st_is_empty(station_key$geometry)) == 0
+)
 
 
 
@@ -286,9 +293,9 @@ saveRDS(station_key,
 
 # export objects we may need later as Rdata
 save(
-  osm_bike, osm_metro, station_old, cabi_coords,
+  osm_bike, osm_metro, osm_metro_query, station_old, cabi_coords,
   n_station_old,
-  file = file.path(processed, "data/station-geo-objects.Rdata")
+  file = file.path(processed, "keys/station-geo-objects.Rdata")
 )
 
 # remove objects not needed
