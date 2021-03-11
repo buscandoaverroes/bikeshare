@@ -85,33 +85,24 @@ ui <- navbarPage("Bikeshare", # UI =============================================
             fluidRow(   
               column(3, 
                      verticalLayout(
-                       tags$h4("Bikeshare Data"),
-                       pickerInput('y1', 
-                                   choices = c("Total Daily Rides"      =  "nrides",
-                                               "Median Ride Duration" =  "dur_med",
-                                               "Duration Inequity"    =  "dur_ineq"),
-                                   selected = "nrides",  multiple = FALSE, width = '200px',
-                                   options = pickerOptions(mobile = T)))),
+                       tags$h4("Year"),
+                       sliderInput('y2.year', "Network Year",
+                                   min = 2010, max = max(rides$year), value = 2018,
+                                   animate = FALSE, ticks = F, sep = ""),
               column(3,  
                      verticalLayout(
                        tags$h5("Options"), # spacing
-                       prettySwitch('y1.weather', "Show Temperature",
+                       prettySwitch('y2.hourTF', "Show By-Hour",
                                     value = FALSE, slim = T, fill = T, inline = T),
-                       prettySwitch('y1.precip', "Show Precipitation",
-                                    value = FALSE, slim = T, fill = T, inline = T ))),
-              column(3,
-                     verticalLayout(
-                       tags$br(),tags$br(),
-                       prettySwitch('y1.tempfill', "Use Temperature as color",
-                                    value = FALSE, slim = T, fill = T, inline = T),
-                       prettySwitch('y1.fahr', "Use ℉",
-                                    value = FALSE, slim = T, fill = T, inline = T))),
+                       sliderInput('y2.hour', "Hour Selector",
+                                   min = 0, max = 24, value = 8,
+                                   animate = FALSE, ticks = F, sep = ""),
               column(3, tags$br(), tags$br(), 
                      actionButton('go.y2', "Update", width = "100px")))),
-             withSpinner(mapviewOutput('netework'))
-           ))
-  ) 
-
+             mapviewOutput('network')
+           ))))
+      )) # end tab panel, page
+    ) # end UI
 # Define server logic required to draw a histogram
 server <- function(input, output) { # SERVER ===================================================
 
@@ -141,7 +132,7 @@ name <- eventReactive(input$go.y1, {
     case_when(
         input$y1 == "nrides"     ~ "Daily Rides",
         input$y1 == "dur_med"    ~ "Median Duration (min)",
-        input$y1 == "dur_ineq"   ~ "Duration Inequity Index",
+        input$y1 == "dur_ineq"   ~ "Duration Inequity Index"
     )
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = "name")
 
@@ -319,7 +310,38 @@ output$days <- renderPlotly({p1()})
 # network:: data wrangling --------------------------------------------------------------------
 
 # load main days dataset
+# (pretend it's loaded, it's actually in the local env already...)
 
+# create origin-destination datatset
+od <- eventReactive(input$go.y2, {
+  rides %>% 
+  ungroup() %>% 
+  filter(year == 2018) %>% 
+  group_by(id_start, id_end) %>%
+  summarize(nrides = n()) %>%
+  rename(id_proj1 = id_start,
+         id_proj2 = id_end) %>%
+    filter(id_proj1 != id_proj2)
+  
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'od-network')
+
+# create "geometry" dataset
+z <- select(key, id_proj, geometry) %>%
+  ungroup()
+
+# create desire lines
+desire_lines <- eventReactive(input$go.y2,{
+  od2line(flow = od(), zones = z) %>% filter(nrides >= 100)
+  }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'desire-lines')
+
+# create the mapview graph 
+m.y2 <- eventReactive(input$go.y2, {
+  mapview(desire_lines(), zcol = "nrides", alpha = 0.4, at = c(200, 300, 500, 7000), lwd = 0.5)
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'm-network-mapview')
+# error: no slot of name "map" for this object of class "reactive.event"
+
+
+output$network <- renderMapview({m.y2})
 
 # Run the application 
 shinyApp(ui = ui, server = server)
