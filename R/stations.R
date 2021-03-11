@@ -130,7 +130,7 @@ osm_bike <- getbb("Washington, DC") %>% # query...and add features
 st_crs(osm_bike$osm_points) <- crs
 
 
-# extract metro stations info, save as sf object
+# extract metro stations info, save as sf object 
 osm_metro <- getbb("Washington, DC") %>% # query and add metro features
   opq() %>%
   add_osm_feature("railway", "station") %>%
@@ -214,6 +214,43 @@ station_key <-
     ) %>%
   st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) %>% # replace geometry
   rename(name_metro = name_metro_1) # rename first name of metro station
+
+
+
+# replace missings GPS info ------------------------------------------------------
+# note: some stations did not come with valid lat/lon column data, but can either 
+# be inferred (reasonably guessed) based on same-named stations with valid GPS data
+# or from a simple query on OpenStreetMaps. Thanks to OpenStreetMap and Contributors!
+
+# replace lat/long based on id
+station_key$lat[station_key$id_proj==18] <- 38.86294
+station_key$lng[station_key$id_proj==18] <- -77.05276
+
+station_key$lat[station_key$id_proj==33] <- station_key$lat[station_key$id_proj==34] # same name, assume lat/long same
+station_key$lng[station_key$id_proj==33] <- station_key$lng[station_key$id_proj==34]
+
+station_key$lat[station_key$id_proj==117] <- station_key$lat[station_key$id_proj==118] # same name, assume lat/long same
+station_key$lng[station_key$id_proj==117] <- station_key$lng[station_key$id_proj==118]
+
+station_key$lat[station_key$id_proj==140] <- 38.88362
+station_key$lng[station_key$id_proj==140] <- -76.95782
+
+station_key$lat[station_key$id_proj==433] <- station_key$lat[station_key$id_proj==432] # office, big assumption but assume same for now
+station_key$lng[station_key$id_proj==433] <- station_key$lng[station_key$id_proj==432]
+
+station_key$lat[station_key$id_proj==547] <- 38.92357
+station_key$lng[station_key$id_proj==547] <- -77.23132
+
+station_key$lat[station_key$id_proj==561] <- 39.09425
+station_key$lng[station_key$id_proj==561] <- -77.13278
+
+
+# update geometry data
+station_key <- st_as_sf(station_key, coords = c("lng", "lat"), na.fail = TRUE, remove = FALSE) 
+
+# set crs
+st_crs(station_key) <- crs
+
 
 
 # check that there are no duplicates in number_old, id_proj -----------------------
