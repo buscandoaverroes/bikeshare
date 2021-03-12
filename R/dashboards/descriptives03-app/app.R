@@ -29,51 +29,51 @@ mapviewOptions(fgb = F) # set to false for greater performance?
 
 
 ui <- navbarPage("Bikeshare", # UI ===================================================
-  tabPanel("Days", # page 1 -----------------------------------------------------
-    fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
-           titlePanel("Title", windowTitle = 'browser title'), 
-           tags$h3("Subtitle"),
-           tags$body("a paragraph of explanation (but not too long!) goes here."),
-           
-           
-           tags$h3("Graph Title"), 
-           wellPanel(
-            fluidRow(   
-           column(3, 
-                  verticalLayout(
-                   tags$h4("Bikeshare Data"),
-                   pickerInput('y1', 
-                               choices = c("Total Daily Rides"      =  "nrides",
-                                           "Median Ride Duration" =  "dur_med",
-                                           "Duration Inequity"    =  "dur_ineq"),
-                               selected = "nrides",  multiple = FALSE, width = '200px',
-                               options = pickerOptions(mobile = T)))),
-            column(3,  
-                   verticalLayout(
-                   tags$h5("Options"), # spacing
-                   prettySwitch('y1.weather', "Show Temperature",
-                                value = FALSE, slim = T, fill = T, inline = T),
-                   prettySwitch('y1.precip', "Show Precipitation",
-                                value = FALSE, slim = T, fill = T, inline = T ))),
-              column(3,
-                verticalLayout(
-                   tags$br(),tags$br(),
-                   prettySwitch('y1.tempfill', "Use Temperature as color",
-                                value = FALSE, slim = T, fill = T, inline = T),
-                   prettySwitch('y1.fahr', "Use ℉",
-                                value = FALSE, slim = T, fill = T, inline = T))),
-           column(3, tags$br(), tags$br(), 
-                           actionButton('go.y1', "Update", width = "100px")))),
-                  
-
-    withSpinner(plotlyOutput('days'), type = 8, hide.ui = FALSE), tags$br(),
-    tags$h5("Terms and Notes"),
-    tags$source("source"),
-    tags$footer("footer"),
-    tags$h6("header 6")
-    
-        
-    )), # end first page, panel, page
+  # tabPanel("Days", # page 1 -----------------------------------------------------
+  #   fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
+  #          titlePanel("Title", windowTitle = 'browser title'),
+  #          tags$h3("Subtitle"),
+  #          tags$body("a paragraph of explanation (but not too long!) goes here."),
+  # 
+  # 
+  #          tags$h3("Graph Title"),
+  #          wellPanel(
+  #           fluidRow(
+  #          column(3,
+  #                 verticalLayout(
+  #                  tags$h4("Bikeshare Data"),
+  #                  pickerInput('y1',
+  #                              choices = c("Total Daily Rides"      =  "nrides",
+  #                                          "Median Ride Duration" =  "dur_med",
+  #                                          "Duration Inequity"    =  "dur_ineq"),
+  #                              selected = "nrides",  multiple = FALSE, width = '200px',
+  #                              options = pickerOptions(mobile = T)))),
+  #           column(3,
+  #                  verticalLayout(
+  #                  tags$h5("Options"), # spacing
+  #                  prettySwitch('y1.weather', "Show Temperature",
+  #                               value = FALSE, slim = T, fill = T, inline = T),
+  #                  prettySwitch('y1.precip', "Show Precipitation",
+  #                               value = FALSE, slim = T, fill = T, inline = T ))),
+  #             column(3,
+  #               verticalLayout(
+  #                  tags$br(),tags$br(),
+  #                  prettySwitch('y1.tempfill', "Use Temperature as color",
+  #                               value = FALSE, slim = T, fill = T, inline = T),
+  #                  prettySwitch('y1.fahr', "Use ℉",
+  #                               value = FALSE, slim = T, fill = T, inline = T))),
+  #          column(3, tags$br(), tags$br(),
+  #                          actionButton('go.y1', "Update", width = "100px")))),
+  # 
+  # 
+  #   withSpinner(plotlyOutput('days'), type = 8, hide.ui = FALSE), tags$br(),
+  #   tags$h5("Terms and Notes"),
+  #   tags$source("source"),
+  #   tags$footer("footer"),
+  #   tags$h6("header 6")
+  # 
+  # 
+  #   )), # end first page, panel, page
   tabPanel("Network", # page 2 -----------------------------------------------------
      fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
           titlePanel("Title", windowTitle = 'browser title'), 
@@ -86,7 +86,7 @@ ui <- navbarPage("Bikeshare", # UI =============================================
               column(3, 
                        tags$h4("Year"),
                        sliderInput('y2.year', "Network Year",
-                                   min = 2010, max = 2020, value = 2018, # max(rides$year)
+                                   min = 2010, max = max(days$year), value = 2018, # max(rides$year)
                                    step = 1, animate = FALSE, ticks = F, sep = "")),
               column(3,  
                        tags$h5("Options"), # spacing
@@ -99,7 +99,7 @@ ui <- navbarPage("Bikeshare", # UI =============================================
                      actionButton('go.y2', "Update", width = "100px"))
               )), # end fluid row, wellpanel
             #verbatimTextOutput('print'),
-            withSpinner(leafletOutput('network'), type = 8, hide.ui = FALSE)
+            withSpinner(leafletOutput('network', height = 700), type = 8, hide.ui = FALSE)
 
       )) # end tab panel, page
     ) # end UI
@@ -315,6 +315,7 @@ output$days <- renderPlotly({p1()})
 
 ## create origin-destination datatset ------------------------------------------------
 od <- eventReactive(input$go.y2, {
+  withProgress( message = "Gathering the Origin-Destination Data",
   rides %>% # could save a lot of time if there were another file that already had only 3 necessary vars
   ungroup() %>% 
   filter(year == input$y2.year) %>%  # for performance could we preproduce these 10 maps at least?
@@ -323,6 +324,7 @@ od <- eventReactive(input$go.y2, {
   rename(id_proj1 = id_start,
          id_proj2 = id_end) %>%
     filter(id_proj1 != id_proj2)
+  ) #end withprogress
   
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'od-network') 
  
@@ -332,16 +334,34 @@ z <- select(key, id_proj, geometry) %>%
 
 # create desire lines
 desire_lines <- eventReactive(input$go.y2, {
-  od2line(flow = od(), zones = z) %>% filter(nrides >= 200)
+  withProgress(message = "Creating Desire Lines",
+  od2line(flow = od(), zones = z) %>% filter(nrides >= 100)) #end withProgress
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'desire-lines') 
+
+
+## filter the station-year data -------------------------------------------------
+
+station_yr <- eventReactive(input$go.y2, {
+  withProgress(message = "Gathering Station Departure Data",
+  stations %>%
+    filter(year == input$y2.year) %>%
+    st_as_sf()) # end with Progress
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'station_year')
+
 
 ## create the mapview graph -----------------------------------------------------
 map.network <- reactive({
-  mapview(desire_lines(), zcol = 'nrides', alpha = 0.4, col.regions = network.pal, lwd = 0.5, popup = FALSE) +
-    mapview(key, zcol="metro", cex = 1.5, alpha = 0.8, label = "name_bks")
-  #mapview(breweries91)
+  withProgress(message = "Building the Graph",
+  mapview(desire_lines(), zcol = 'nrides', alpha = 0.3, col.regions = network.pal,
+          at = c(100,200,300,500,1000,10000), lwd = 0.7, popup = FALSE, layer.name = "Origin-Dest. Trips") +
+    mapview(station_yr(), zcol = "departures", cex = 3, alpha = 0.3, label = "name_bks_st", lwd = 0.5,
+            color = "black", col.regions= mapviewColors(station_yr(), station_yr()$departures,
+                                                        colors = hcl.colors(7, palette = "Sunset", alpha = NULL, rev = T)),  # dot fill color
+            popup=FALSE, layer.name = "Station<br>Departures") # the popuptable argument throws error
+ # mapview(breweries, zcol="founded", col.regions = hcl.colors(2, palette = "Cividis"), popup=F) 
+  ) # end withProgress
 })
-# error: no slot of name "map" for this object of class "reactive.event"
+# error: Error in value[[3L]]: Couldn't normalize path in `addResourcePath`, with arguments: `prefix` = 'PopupTable-0.0.1'; `directoryPath` = ''
 
 ## render mapview --------------------------------------------------------------------
 output$network <- renderLeaflet({map.network()@map})
