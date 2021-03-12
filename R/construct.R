@@ -164,3 +164,9 @@ fwrite(bks,
 # save as Rda
 saveRDS(bks,
         file = file.path(processed, "data/bks-full.Rda"), compress = FALSE)
+
+# save Rdata files 
+save(
+   n_rides, # number of original rides
+   file = file.path(processed, "data/bks-full-misc-data.Rda")
+)
