@@ -86,7 +86,7 @@
   s2 <- 0   # stations      creates old/new station number dictionary and adds station features
             #                   makes: station_key.Rda, station-geo-objects.Rdata
                             
-  s3 <- 1   # construct:      takes bks.Rda and makes other files, runs station-number.R
+  s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             #                   makes: bks-full.Rda, bks-full.csv
   s4 <- 0   # query:          filters/queries main database and exports files.
             #                   makes: bks_2020.Rda, bks1720.Rda
@@ -100,7 +100,7 @@
             #                    makes: stats17-20.Rdata ~20 min
   
 # recollection 
-  r1 <- 0   # recollect       takes the 'parallel processed' stats files and reassembles them into:
+  r1 <- 1   # recollect       takes the 'parallel processed' stats files and reassembles them into:
             #                   days, station-sum, rides .Rda files under the /plato directory
   
   

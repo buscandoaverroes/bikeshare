@@ -17,7 +17,7 @@ load(file.path(processed, "data/bks-full-misc-data.Rda")) # opens `n_rides`
 
 # if the number of rows hasn't changed from the original, drop original and components
 if (assert_that(n_rides == nrow(bks_plato))) {
-  rm(bks, bks1014, bks1516, bks1720)
+  rm(bks1014, bks1516, bks1720)
   
   # filter out motivate office
   bks_plato <- bks_plato %>%
