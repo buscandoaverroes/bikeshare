@@ -86,7 +86,7 @@ ui <- navbarPage("Bikeshare", # UI =============================================
               column(3, 
                        tags$h4("Year"),
                        sliderInput('y2.year', "Network Year",
-                                   min = 2010, max = max(rides$year), value = 2018,
+                                   min = 2010, max = 2020, value = 2018, # max(rides$year)
                                    step = 1, animate = FALSE, ticks = F, sep = "")),
               column(3,  
                        tags$h5("Options"), # spacing
@@ -107,6 +107,13 @@ ui <- navbarPage("Bikeshare", # UI =============================================
 # SERVER =============================================================================
 server <- function(input, output) { 
 
+  
+  days  <- readRDS("~/data/days.Rda")
+  rides <- readRDS("~/data/daily-rides.Rda")
+  key   <- readRDS("~/data/station_key.Rda")
+  
+  
+  
 
 # days::data wrangling--------------------------------------------------------------------------
 ## values + prepwork ----
