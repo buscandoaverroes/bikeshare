@@ -27,6 +27,7 @@ library(stplanr)
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 mapviewOptions(fgb = F) # set to false for greater performance?
 
+source("global.R") # loads files, settings
 
 ui <- navbarPage("Bikeshare", # UI ===================================================
   tabPanel("Days", # page 1 -----------------------------------------------------
@@ -106,13 +107,6 @@ ui <- navbarPage("Bikeshare", # UI =============================================
 
 # SERVER =============================================================================
 server <- function(input, output) { 
-
-  
-  days  <- readRDS("~/data/days.Rda")
-  rides <- readRDS("~/data/daily-rides.Rda")
-  key   <- readRDS("~/data/station_key.Rda")
-  
-  
   
 
 # days::data wrangling--------------------------------------------------------------------------
@@ -320,7 +314,7 @@ output$days <- renderPlotly({p1()})
 
 ## create origin-destination datatset ------------------------------------------------
 od <- eventReactive(input$go.y2, {
-  rides %>% 
+  rides %>% # could save a lot of time if there were another file that already had only 3 necessary vars
   ungroup() %>% 
   filter(year == input$y2.year) %>%  # for performance could we preproduce these 10 maps at least?
   group_by(id_start, id_end) %>%
@@ -342,7 +336,7 @@ desire_lines <- eventReactive(input$go.y2, {
 
 ## create the mapview graph -----------------------------------------------------
 map.network <- reactive({
-  mapview(desire_lines(), zcol = 'nrides', alpha = 0.4, at = c(200, 300, 500, 7000), lwd = 0.5) +
+  mapview(desire_lines(), zcol = 'nrides', alpha = 0.4, col.regions = network.pal, lwd = 0.5) +
     mapview(key, zcol="metro", cex = 1.5, alpha = 0.8, label = "name_bks")
 })
 # error: no slot of name "map" for this object of class "reactive.event"
