@@ -11,9 +11,9 @@ network.pal = hcl.colors(5, palette = "Cividis") # continuous desire lines/netwo
 
 
 # why won't relative file paths work, even after changing working directory?
-days  <- readRDS("/Volumes/Al-Hakem-II/Scripts/bikeshare/R/dashboards/descriptives03-app/data/days.Rda")
-rides <- readRDS("/Volumes/Al-Hakem-II/Scripts/bikeshare/R/dashboards/descriptives03-app/data/daily-rides.Rda") 
-key   <- readRDS("/Volumes/Al-Hakem-II/Scripts/bikeshare/R/dashboards/descriptives03-app/data/station_key.Rda")
+days  <- readRDS("data/days.Rda")
+rides <- readRDS("data/daily-rides-light.Rda") 
+key   <- readRDS("data/station_key.Rda")
 
 
 

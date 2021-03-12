@@ -30,10 +30,14 @@ if (assert_that(n_rides == nrow(bks_plato))) {
 
 # export
 saveRDS(bks_plato, file = file.path(processed, "data/plato/daily-rides.Rda"), compress = FALSE)
+
+
+# create light version 
+bks_plato %>%
+  select(year, hour, id_start, id_end) %>%
+  saveRDS(., file = file.path(processed, "data/plato/daily-rides-light.Rda"), compress = FALSE)
+
 rm(bks_plato)
-
-
-
 
 
 

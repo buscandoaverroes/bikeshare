@@ -27,7 +27,6 @@ library(stplanr)
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 mapviewOptions(fgb = F) # set to false for greater performance?
 
-source("global.R") # loads files, settings
 
 ui <- navbarPage("Bikeshare", # UI ===================================================
   tabPanel("Days", # page 1 -----------------------------------------------------
@@ -108,7 +107,9 @@ ui <- navbarPage("Bikeshare", # UI =============================================
 # SERVER =============================================================================
 server <- function(input, output) { 
   
-
+  
+source("global.R") # loads files, settings
+  
 # days::data wrangling--------------------------------------------------------------------------
 ## values + prepwork ----
 # rolling average, 30 days
@@ -336,8 +337,9 @@ desire_lines <- eventReactive(input$go.y2, {
 
 ## create the mapview graph -----------------------------------------------------
 map.network <- reactive({
-  mapview(desire_lines(), zcol = 'nrides', alpha = 0.4, col.regions = network.pal, lwd = 0.5) +
+  mapview(desire_lines(), zcol = 'nrides', alpha = 0.4, col.regions = network.pal, lwd = 0.5, popup = FALSE) +
     mapview(key, zcol="metro", cex = 1.5, alpha = 0.8, label = "name_bks")
+  #mapview(breweries91)
 })
 # error: no slot of name "map" for this object of class "reactive.event"
 
