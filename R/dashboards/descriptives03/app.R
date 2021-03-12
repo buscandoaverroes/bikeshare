@@ -25,7 +25,7 @@ library(mapview)
 library(stplanr)
 
 options(shiny.reactlog = TRUE) # permits to launch reactlog
-mapviewOptions(fgb = T) # set to false for greater performance?
+mapviewOptions(fgb = F) # set to false for greater performance?
 
 
 ui <- navbarPage("Bikeshare", # UI ===================================================
@@ -107,10 +107,6 @@ ui <- navbarPage("Bikeshare", # UI =============================================
 # SERVER =============================================================================
 server <- function(input, output) { 
 
-# load data, figure out why wont load outside of app directory later
-days  <- readRDS("~/Datasets/bks/bks/data/plato/days.Rda")
-rides <- readRDS("~/Datasets/bks/bks/data/plato/daily-rides.Rda")
-key   <- readRDS("~/Datasets/bks/bks/keys/station_key.Rda")
 
 # days::data wrangling--------------------------------------------------------------------------
 ## values + prepwork ----
