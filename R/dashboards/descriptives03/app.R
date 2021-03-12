@@ -9,7 +9,6 @@
 
 library(tidyverse)
 library(sf)
-library(mapview)
 library(leaflet)
 library(leafem)
 library(leafpop)
@@ -22,12 +21,13 @@ library(timetk)
 library(RColorBrewer)
 library(shinycssloaders)
 library(bslib)
+library(mapview)
+library(stplanr)
 
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 mapviewOptions(fgb = T) # set to false for greater performance?
 
 
-# Define UI for application that draws a histogram
 ui <- navbarPage("Bikeshare", # UI ===================================================
   tabPanel("Days", # page 1 -----------------------------------------------------
     fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
@@ -84,34 +84,36 @@ ui <- navbarPage("Bikeshare", # UI =============================================
           wellPanel(
             fluidRow(   
               column(3, 
-                     verticalLayout(
                        tags$h4("Year"),
                        sliderInput('y2.year', "Network Year",
                                    min = 2010, max = max(rides$year), value = 2018,
-                                   animate = FALSE, ticks = F, sep = ""),
+                                   step = 1, animate = FALSE, ticks = F, sep = "")),
               column(3,  
-                     verticalLayout(
                        tags$h5("Options"), # spacing
                        prettySwitch('y2.hourTF', "Show By-Hour",
                                     value = FALSE, slim = T, fill = T, inline = T),
                        sliderInput('y2.hour', "Hour Selector",
                                    min = 0, max = 24, value = 8,
-                                   animate = FALSE, ticks = F, sep = ""),
+                                   animate = FALSE, ticks = F, sep = "")),
               column(3, tags$br(), tags$br(), 
-                     actionButton('go.y2', "Update", width = "100px")))),
-             mapviewOutput('network')
-           ))))
+                     actionButton('go.y2', "Update", width = "100px"))
+              )), # end fluid row, wellpanel
+            #verbatimTextOutput('print'),
+            withSpinner(leafletOutput('network'), type = 8, hide.ui = FALSE)
+
       )) # end tab panel, page
     ) # end UI
-# Define server logic required to draw a histogram
-server <- function(input, output) { # SERVER ===================================================
+
+# SERVER =============================================================================
+server <- function(input, output) { 
 
 # load data, figure out why wont load outside of app directory later
 # days  <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/data/plato/days.Rda")
-# rides <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/data/plato/daily-rides.Rda") 
-# key   <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/keys/station_key.Rda") 
-  
+# rides <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/data/plato/daily-rides.Rda")
+# key   <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/keys/station_key.Rda")
+
 # days::data wrangling--------------------------------------------------------------------------
+## values + prepwork ----
 # rolling average, 30 days
 roll_av_30 <- timetk::slidify(.f = ~ mean(., na.rm=T), .period = 30, .align = 'center', .partial = TRUE)
 roll_av_3 <- timetk::slidify(.f = ~ mean(., na.rm=T), .period = 3, .align = 'center', .partial = TRUE)
@@ -136,6 +138,7 @@ name <- eventReactive(input$go.y1, {
     )
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = "name")
 
+## data -----------------------------------------------------------
 d1 <- reactive({
     if (input$y1.fahr) {
         days %>% dplyr::ungroup() %>%
@@ -190,7 +193,7 @@ by <- reactive({
              text='Observed Precipitation (mm)', standoff=35), visible=input$y1.precip)
 })
 
-# the actual graph object
+## the actual graph object----------------------------------------------------------------
 p1 <- eventReactive(input$go.y1, {
     withProgress(message = "Building the graph", # start here.
                  
@@ -299,49 +302,57 @@ p1 <- eventReactive(input$go.y1, {
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'p1-plotly')
     
 
-# render the graph
+## render the graph ---------------------------------------------------------------------------
 output$days <- renderPlotly({p1()})
     
     
-}
 
 
 
-# network:: data wrangling --------------------------------------------------------------------
+
+# network::data wrangling --------------------------------------------------------------------
 
 # load main days dataset
 # (pretend it's loaded, it's actually in the local env already...)
 
-# create origin-destination datatset
+## create origin-destination datatset ------------------------------------------------
 od <- eventReactive(input$go.y2, {
   rides %>% 
   ungroup() %>% 
-  filter(year == 2018) %>% 
+  filter(year == input$y2.year) %>%  # for performance could we preproduce these 10 maps at least?
   group_by(id_start, id_end) %>%
   summarize(nrides = n()) %>%
   rename(id_proj1 = id_start,
          id_proj2 = id_end) %>%
     filter(id_proj1 != id_proj2)
   
-}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'od-network')
-
-# create "geometry" dataset
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'od-network') 
+ 
+## create "geometry" dataset -------------------------------------------------------
 z <- select(key, id_proj, geometry) %>%
   ungroup()
 
 # create desire lines
-desire_lines <- eventReactive(input$go.y2,{
-  od2line(flow = od(), zones = z) %>% filter(nrides >= 100)
-  }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'desire-lines')
+desire_lines <- eventReactive(input$go.y2, {
+  od2line(flow = od(), zones = z) %>% filter(nrides >= 200)
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'desire-lines') 
 
-# create the mapview graph 
-m.y2 <- eventReactive(input$go.y2, {
-  mapview(desire_lines(), zcol = "nrides", alpha = 0.4, at = c(200, 300, 500, 7000), lwd = 0.5)
-}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'm-network-mapview')
+## create the mapview graph -----------------------------------------------------
+map.network <- reactive({
+  mapview(desire_lines(), zcol = 'nrides', alpha = 0.4, at = c(200, 300, 500, 7000), lwd = 0.5) +
+    mapview(key, zcol="metro", cex = 1.5, alpha = 0.8, label = "name_bks")
+})
 # error: no slot of name "map" for this object of class "reactive.event"
 
+## render mapview --------------------------------------------------------------------
+output$network <- renderLeaflet({map.network()@map})
 
-output$network <- renderMapview({m.y2})
+
+
+
+
+
+} # end server - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
 # Run the application 
 shinyApp(ui = ui, server = server)
