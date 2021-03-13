@@ -19,7 +19,7 @@ network.pal = hcl.colors(5, palette = "Cividis") # continuous desire lines/netwo
 days  <- readRDS("data/days.Rda")
 rides <- readRDS("data/daily-rides-light.Rda")
 key   <- readRDS("data/station_key.Rda")
-stations   <- readRDS("data/sum-station-yr.Rda")
+stations   <- readRDS("data/station-hour.Rda")
 
 
 

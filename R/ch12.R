@@ -11,17 +11,17 @@ library(mapview)
 library(ggplot2)
 
 # import
-rides <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/data/plato/daily-rides.Rda") 
+rides <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/data/plato/daily-rides-light.Rda") 
 key   <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/keys/station_key.Rda") 
 View(head(rides))
 
 # separate od and spatial data
 # stations, remove empty geometry for now.
-z <- select(key, id_proj, geometry) %>%
+z <- select(key, id_proj, name_bks, geometry) %>%
   ungroup() %>%
-  rename(geocode = id_proj) %>%
-  filter(st_is_empty(geometry)==FALSE)
+  rename(geocode = id_proj)
 
+z_nullgeo <- st_drop_geometry(z)
 #od data in long form
 od <- filter(rides, year == 2017) %>%
   ungroup() %>%
@@ -33,7 +33,13 @@ od <- filter(rides, year == 2017) %>%
 od_inter <- filter(od, geocode1 != geocode2) 
 
 # create origin-destination stations (od)
-desire_lines <- od2line(flow = od_inter, zones = z)
+desire_lines <- od2line(flow = od_inter, zones = z) %>%
+  left_join(z_nullgeo, by=c('geocode1' = 'geocode')) %>% # geocode1 = origin
+  rename(Origin = name_bks) %>%
+  left_join(z_nullgeo, by=c('geocode2' = 'geocode')) %>% # geocode2 = destination
+  rename(Destination = name_bks)
+
+desire_lines %>% st_drop_geometry() %>% get_dupes(geocode1, geocode2)
 
 # graph 
 # What's the distribution of ods?
@@ -41,7 +47,7 @@ ggplot(desire_lines, aes(nrides)) + geom_histogram(binwidth = 5) + lims(x=c(0,10
 lwd <- filter(desire_lines, nrides >= 100) # filtered dataset
 
 
-m <- mapview(lwd, zcol='nrides', alpha = 0.4, at = c(200, 300, 500, 7000), lwd = 0.5)
+m <- mapview(lwd, zcol='nrides', label = "Origin", alpha = 0.4, at = c(200, 300, 500, 7000), lwd = 2)
 # go with mapview, play with colorscale, etc, could work well in shiny if done by-hour, year
 m
 # 

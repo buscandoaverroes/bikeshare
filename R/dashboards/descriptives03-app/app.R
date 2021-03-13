@@ -26,7 +26,7 @@ library(stplanr)
 
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 mapviewOptions(fgb = F) # set to false for greater performance?
-
+#setwd("/Volumes/Al-Hakem-II/Scripts/bikeshare/R/dashboards/descriptives03-app")
 
 ui <- navbarPage("Bikeshare", # UI ===================================================
   # tabPanel("Days", # page 1 -----------------------------------------------------
@@ -83,18 +83,31 @@ ui <- navbarPage("Bikeshare", # UI =============================================
           tags$h3("Graph Title"), 
           wellPanel(
             fluidRow(   
-              column(3, 
-                       tags$h4("Year"),
-                       sliderInput('y2.year', "Network Year",
-                                   min = 2010, max = max(days$year), value = 2018, # max(rides$year)
-                                   step = 1, animate = FALSE, ticks = F, sep = "")),
+              column(3,
+                     pickerInput('y2.linefill', "Gradient Color", 
+                                 choices = c("Rides" = "nrides", "Member Percent"="member_pct"),
+                                 selected = "member_pct", multiple = FALSE, width = '150px', 
+                                 options = pickerOptions(mobile=T)
+                                 ),
+                      sliderInput('y2.year', "Network Year",
+                                   min = 2010, max = 2020, value = 2018, # max(rides$year)
+                                   step = 1, animate = FALSE, ticks = F, sep = ""),
+                     sliderInput('y2.hour', "Hour Selector",
+                                 min = 0, max = 23, value = 8,
+                                 animate = FALSE, ticks = F, sep = "")),
+              column(3,
+              sliderInput('y2.mindesire', "Minimum Line/Trip Value",
+                          min = 50, max = 1000, value = 100, step = 10,
+                          animate = FALSE, ticks = F, sep = ""),
+              sliderInput('y2.pointsize', "Station Marker Size",
+                          min = 1, max = 12, value = 3, step = 1,
+                          animate = FALSE, ticks = F, sep = "")),
               column(3,  
                        tags$h5("Options"), # spacing
                        prettySwitch('y2.hourTF', "Show By-Hour",
                                     value = FALSE, slim = T, fill = T, inline = T),
-                       sliderInput('y2.hour', "Hour Selector",
-                                   min = 0, max = 24, value = 8,
-                                   animate = FALSE, ticks = F, sep = "")),
+                     prettySwitch('y2.freescale', "Autoscale",
+                                  value = TRUE, slim = T, fill = T, inline = T)),
               column(3, tags$br(), tags$br(), 
                      actionButton('go.y2', "Update", width = "100px"))
               )), # end fluid row, wellpanel
@@ -316,26 +329,50 @@ output$days <- renderPlotly({p1()})
 ## create origin-destination datatset ------------------------------------------------
 od <- eventReactive(input$go.y2, {
   withProgress( message = "Gathering the Origin-Destination Data",
-  rides %>% # could save a lot of time if there were another file that already had only 3 necessary vars
-  ungroup() %>% 
-  filter(year == input$y2.year) %>%  # for performance could we preproduce these 10 maps at least?
-  group_by(id_start, id_end) %>%
-  summarize(nrides = n()) %>%
-  rename(id_proj1 = id_start,
-         id_proj2 = id_end) %>%
-    filter(id_proj1 != id_proj2)
-  ) #end withprogress
+  
+    if (input$y2.hourTF) { # if going by year-hour
+      rides %>% 
+        ungroup() %>%
+      filter(year == input$y2.year, hour == input$y2.hour) %>%  # for performance could we preproduce these 10 maps at least?
+        group_by(id_start, id_end) %>%
+        summarize(nrides = n(), 
+                  member_pct = 100*round(mean(member),3)) %>%
+        rename(id_proj1 = id_start,
+               id_proj2 = id_end) %>%
+        filter(id_proj1 != id_proj2)
+      
+    } else { # if only going by year,
+      rides %>% # could save a lot of time if there were another file that already had only 3 necessary vars
+        ungroup() %>%
+      filter(year == input$y2.year) %>%  # for performance could we preproduce these 10 maps at least?
+        group_by(id_start, id_end) %>%
+        summarize(nrides = n(),
+                  member_pct = 100*round(mean(member),3)) %>%
+        rename(id_proj1 = id_start,
+               id_proj2 = id_end) %>%
+        filter(id_proj1 != id_proj2)
+    }) #end withprogress
   
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'od-network') 
  
-## create "geometry" dataset -------------------------------------------------------
-z <- select(key, id_proj, geometry) %>%
+## create "geometry" datasets -------------------------------------------------------
+z <- select(key, id_proj, name_bks, geometry) %>%
   ungroup()
+
+z_nullgeo <- st_drop_geometry(z)
+
+desire_min <- reactive({input$y2.mindesire}) # if by hour, min is 50, if by year, 100 if (input$y2.hourTF) {50} else {100}
 
 # create desire lines
 desire_lines <- eventReactive(input$go.y2, {
   withProgress(message = "Creating Desire Lines",
-  od2line(flow = od(), zones = z) %>% filter(nrides >= 100)) #end withProgress
+  od2line(flow = od(), zones = z) %>% filter(nrides >= desire_min()) %>%
+    left_join(z_nullgeo, by=c('id_proj1' = 'id_proj')) %>% # geocode1 = origin
+    rename(Origin = name_bks) %>%
+    left_join(z_nullgeo, by=c('id_proj2' = 'id_proj')) %>% # geocode2 = destination
+    rename(Destination = name_bks)
+  
+  ) #end withProgress
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'desire-lines') 
 
 
@@ -343,18 +380,40 @@ desire_lines <- eventReactive(input$go.y2, {
 
 station_yr <- eventReactive(input$go.y2, {
   withProgress(message = "Gathering Station Departure Data",
-  stations %>%
-    filter(year == input$y2.year) %>%
-    st_as_sf()) # end with Progress
+    if (input$y2.hourTF) { 
+      stations %>%
+        filter(year == input$y2.year, hour == input$y2.hour) %>%
+        rename(departures = hourly_dep) %>%
+        st_as_sf()
+    } else {
+      stations %>%
+        filter(year == input$y2.year) %>%
+        rename(departures = hourly_dep) %>%
+        st_as_sf()
+    }) # end with Progress
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'station_year')
 
 
 ## create the mapview graph -----------------------------------------------------
+
+# settings dependent on by hour or year
+net.al <- reactive({ if (input$y2.hourTF) {0.7} else {0.3} }) 
+net.at <- eventReactive(input$go.y2, { if (input$y2.freescale) {NULL} else { 
+  if (input$y2.hourTF) {c(50,100,200,300,500,10000)} else {c(100,200,300,500,1000,10000)}}
+    }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'custom-at')
+net.lwd<- reactive({ if (input$y2.hourTF) {3} else {1} })
+markersize <- eventReactive(input$go.y2, {input$y2.pointsize}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'markersize')
+net.fill <- eventReactive(input$go.y2, {input$y2.linefill}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'linefill')
+
+
+# graph
 map.network <- reactive({
   withProgress(message = "Building the Graph",
-  mapview(desire_lines(), zcol = 'nrides', alpha = 0.3, col.regions = network.pal,
-          at = c(100,200,300,500,1000,10000), lwd = 0.7, popup = FALSE, layer.name = "Origin-Dest. Trips") +
-    mapview(station_yr(), zcol = "departures", cex = 3, alpha = 0.3, label = "name_bks_st", lwd = 0.5,
+  mapview(desire_lines(), zcol = net.fill(), alpha = net.al(), col.regions = network.pal,
+          at = net.at(), lwd = net.lwd(), popup = F, # popupTable(desire_lines(),zcol = c("Origin", "Destination", "nrides"))
+          layer.name = "Origin->Dest. Trips", label = "Origin") +
+    mapview(station_yr(), zcol = "departures", cex = markersize(), alpha = 0.3, label = "name_bks", 
+            lwd = 0.5,
             color = "black", col.regions= mapviewColors(station_yr(), station_yr()$departures,
                                                         colors = hcl.colors(7, palette = "Sunset", alpha = NULL, rev = T)),  # dot fill color
             popup=FALSE, layer.name = "Station<br>Departures") # the popuptable argument throws error

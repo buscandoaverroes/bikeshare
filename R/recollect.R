@@ -1,6 +1,9 @@
 # recollect.R
 # generates a new/original dataset by recollecting old data, as Plato might.
 
+
+key <- readRDS(file.path(processed, "keys/station_key.Rda"))
+
 # append + export daily rides ===============================================
 
 bks1014 <- readRDS(file.path(processed, "data/stats10-14/bks1014-weather.Rda"))
@@ -34,10 +37,23 @@ saveRDS(bks_plato, file = file.path(processed, "data/plato/daily-rides.Rda"), co
 
 # create light version 
 bks_plato %>%
-  select(year, hour, id_start, id_end) %>%
+  select(year, hour, id_start, id_end, member) %>%
   saveRDS(., file = file.path(processed, "data/plato/daily-rides-light.Rda"), compress = FALSE)
 
-rm(bks_plato)
+# create by hour version 
+loc <- select(key, id_proj, name_bks) # extract location info
+
+station_hr <- bks_plato %>%
+  group_by(id_start, year, hour) %>%
+  summarize(hourly_dep = n(),
+            member_pct = 100*round(mean(member),3)) %>%
+  left_join(loc, by = c('id_start'='id_proj'))
+
+saveRDS(station_hr, file = file.path(processed, "data/plato/station-hour.Rda"), compress = FALSE)
+
+
+
+rm(bks_plato, loc, station_hr)
 
 
 
