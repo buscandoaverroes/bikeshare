@@ -1,12 +1,3 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(tidyverse)
 library(sf)
 library(leaflet)
@@ -23,6 +14,8 @@ library(shinycssloaders)
 library(bslib)
 library(mapview)
 library(stplanr)
+library(leafgl)
+library(colourvalues)
 
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 mapviewOptions(fgb = F) # set to false for greater performance?
@@ -112,7 +105,8 @@ ui <- navbarPage("Bikeshare", # UI =============================================
                      actionButton('go.y2', "Update", width = "100px"))
               )), # end fluid row, wellpanel
             #verbatimTextOutput('print'),
-            withSpinner(leafletOutput('network', height = 700), type = 8, hide.ui = FALSE)
+            leafletOutput('network', height = 700),
+          verbatimTextOutput('see')
 
       )) # end tab panel, page
     ) # end UI
@@ -406,24 +400,43 @@ markersize <- eventReactive(input$go.y2, {input$y2.pointsize}, ignoreNULL=FALSE,
 net.fill <- eventReactive(input$go.y2, {input$y2.linefill}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'linefill')
 
 
+# leaflet colors 
+cols <- reactive({color_values(desire_lines()$member_pct, "viridis", summary = TRUE)})  
+
 # graph
-map.network <- reactive({
-  withProgress(message = "Building the Graph",
-  mapview(desire_lines(), zcol = net.fill(), alpha = net.al(), col.regions = network.pal,
-          at = net.at(), lwd = net.lwd(), popup = F, # popupTable(desire_lines(),zcol = c("Origin", "Destination", "nrides"))
-          layer.name = "Origin->Dest. Trips", label = "Origin") +
-    mapview(station_yr(), zcol = "departures", cex = markersize(), alpha = 0.3, label = "name_bks", 
-            lwd = 0.5,
-            color = "black", col.regions= mapviewColors(station_yr(), station_yr()$departures,
-                                                        colors = hcl.colors(7, palette = "Sunset", alpha = NULL, rev = T)),  # dot fill color
-            popup=FALSE, layer.name = "Station<br>Departures") # the popuptable argument throws error
- # mapview(breweries, zcol="founded", col.regions = hcl.colors(2, palette = "Cividis"), popup=F) 
-  ) # end withProgress
+map.gl <- reactive({
+  leaflet() %>%
+    addTiles() %>%
+    addGlPolylines(data  = desire_lines(),
+                   color = cols()
+                   )
+    # addLegend(position = "topleft",
+    #           na.label = NULL, 
+    #           title = "<font size=2>1-Year<br>Protection<br>Chance",
+    #           pal = cols,
+    #           values = desire_lines(),  
+    #           opacity = 0.4)
 })
+
+output$see <- renderPrint({str(desire_lines())})
+
+# map.network <- reactive({
+#   withProgress(message = "Building the Graph",
+#   mapview(desire_lines(), zcol = net.fill(), alpha = net.al(), col.regions = network.pal,
+#           at = net.at(), lwd = net.lwd(), popup = F, # popupTable(desire_lines(),zcol = c("Origin", "Destination", "nrides"))
+#           layer.name = "Origin->Dest. Trips", label = "Origin") +
+#     mapview(station_yr(), zcol = "departures", cex = markersize(), alpha = 0.3, label = "name_bks", 
+#             lwd = 0.5,
+#             color = "black", col.regions= mapviewColors(station_yr(), station_yr()$departures,
+#                                                         colors = hcl.colors(7, palette = "Sunset", alpha = NULL, rev = T)),  # dot fill color
+#             popup=FALSE, layer.name = "Station<br>Departures") # the popuptable argument throws error
+#  # mapview(breweries, zcol="founded", col.regions = hcl.colors(2, palette = "Cividis"), popup=F) 
+#   ) # end withProgress
+# })
 # error: Error in value[[3L]]: Couldn't normalize path in `addResourcePath`, with arguments: `prefix` = 'PopupTable-0.0.1'; `directoryPath` = ''
 
 ## render mapview --------------------------------------------------------------------
-output$network <- renderLeaflet({map.network()@map})
+output$network <- renderLeaflet({map.gl()})
 
 
 
