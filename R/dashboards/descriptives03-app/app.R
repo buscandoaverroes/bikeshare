@@ -401,21 +401,23 @@ net.fill <- eventReactive(input$go.y2, {input$y2.linefill}, ignoreNULL=FALSE, ig
 
 
 # leaflet colors 
-cols <- reactive({color_values(desire_lines()$member_pct, "viridis", summary = TRUE)})  
+col.lines <- reactive({color_values(desire_lines()$member_pct, "viridis", summary = FALSE)})  # summary arg doesn't matter?
+col.pts   <- reactive({color_values(station_yr()$departures, "heat_hcl", summary = FALSE)}) 
 
 # graph
 map.gl <- reactive({
   leaflet() %>%
     addTiles() %>%
     addGlPolylines(data  = desire_lines(),
-                   color = cols()
-                   )
-    # addLegend(position = "topleft",
-    #           na.label = NULL, 
-    #           title = "<font size=2>1-Year<br>Protection<br>Chance",
-    #           pal = cols,
-    #           values = desire_lines(),  
-    #           opacity = 0.4)
+                   color = col.lines()
+                   ) %>%
+    #addGlPoints(data = station_yr(), fillColor = col.pts(), fillOpacity = 0.6)
+    addLegend(position = "topleft",
+              na.label = NULL,
+              title = "<font size=2>Title",
+              pal = col.lines(),
+              values = desire_lines(),
+              opacity = 0.4)
 })
 
 output$see <- renderPrint({str(desire_lines())})
