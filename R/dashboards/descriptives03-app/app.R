@@ -401,22 +401,25 @@ net.fill <- eventReactive(input$go.y2, {input$y2.linefill}, ignoreNULL=FALSE, ig
 
 
 # leaflet colors 
-col.lines <- reactive({color_values(desire_lines()$member_pct, "viridis", summary = FALSE)})  # summary arg doesn't matter?
+col.lines <- reactive({color_values(desire_lines()$nrides, "viridis", summary = TRUE)})  # summary arg doesn't matter?
 col.pts   <- reactive({color_values(station_yr()$departures, "heat_hcl", summary = FALSE)}) 
+pal.quant  <- reactive({colorQuantile("plasma", desire_lines()$nrides, reverse = FALSE)})
 
 # graph
 map.gl <- reactive({
   leaflet() %>%
     addTiles() %>%
     addGlPolylines(data  = desire_lines(),
-                   color = col.lines()
+                   color = ~pal.quant()(desire_lines()$nrides),
+                   weight= 0.2, 
+                   opacity = 0.5
                    ) %>%
     #addGlPoints(data = station_yr(), fillColor = col.pts(), fillOpacity = 0.6)
     addLegend(position = "topleft",
               na.label = NULL,
               title = "<font size=2>Title",
-              pal = col.lines(),
-              values = desire_lines(),
+              pal = pal.quant(),
+              values = desire_lines()$nrides,
               opacity = 0.4)
 })
 
