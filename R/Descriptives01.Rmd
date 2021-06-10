@@ -106,7 +106,7 @@ Median ride durations are longer from bike stations that are farther away from t
 
 ```{r}
 ggplot(sum_station_yr, aes(dur_med)) +
-  geom_histogram() + facet_wrap(vars(year)) + lims(x=c(-1,50))
+  geom_histogram() + facet_wrap(vars(year)) + lims(x=c(-1,3000))
 ```
 
 Median Ride Durations, 2019
@@ -137,7 +137,7 @@ Also, we see a stark difference in the standard deviation distribution in 2020, 
 
 ```{r}
 ggplot(sum_station_yr, aes(dur_sd)) +
-  geom_histogram() + lims(x=c(-1,300)) +
+  geom_histogram() + lims(x=c(-1,18000)) +
   facet_grid(rows = vars(year))
 ```
 
@@ -149,7 +149,7 @@ The changes in median duration from each station play out between the 10th and 1
 sum_station %>%
   filter(year==2020, week_of_yr <= 20) %>%
   ggplot(., aes(dur_med)) +
-  geom_histogram() + lims(x=c(-1,50)) +
+  geom_histogram() + lims(x=c(-1,3000)) +
   facet_wrap(~week_of_yr)
 ```
 
@@ -314,7 +314,7 @@ sd <-
     sd_n_arrv = sd(n_arrv, na.rm=T)
   )
 
-ggplot(sd, aes(sd_dur_med)) + geom_histogram() + lims(x=c(-1,100) ) + facet_wrap(~year) +
+ggplot(sd, aes(sd_dur_med)) + geom_histogram() + lims(x=c(-1,6000) ) + facet_wrap(~year) +
   labs(x="Std. Dev of Daily Median Ride Duration Over the Year", y = "No. of Stations")
 ```
 
@@ -371,13 +371,14 @@ sum_station %>%
   group_by(day_of_yr, year) %>%
   summarise(dur_med=mean(dur_med, na.rm=T), weekend=first(weekend)) %>% 
   ggplot(aes(day_of_yr, dur_med, color = weekend)) +
-  geom_point() + facet_wrap(~year) + lims(y=c(0,40)) + labs(x="Day of Year", y="Median Ride Duration (in (min)")
+  geom_point() + facet_wrap(~year) + lims(y=c(0,4000)) + labs(x="Day of Year", y="Median Ride Duration (in (min)")
 ```
 
 ##### Weekday Median Ride Duration, 2017 through 2020
 
 ```{r}
-pal <- colorBin("YlOrRd", c(0,1000), bins = c(0,10,20,30,60,1000))
+pal <- colorBin("YlOrRd", bins = c(0, 600, 1200, 1800, 30000))
+
 filter(sum_station, weekend==FALSE) %>%
   group_by(id_station) %>%
   summarize(dur_med = mean(dur_med, na.rm=T), name=first(name_bks_st),
@@ -392,7 +393,7 @@ filter(sum_station, weekend==FALSE) %>%
 ##### Weekend Median Ride Duration, 2017 through 2020
 
 ```{r}
-pal <- colorBin("YlOrRd", c(0,1000), bins = c(0,10,20,30,60,1000))
+pal <- colorBin("YlOrRd", bins = c(0, 600, 1200, 1800, 30000))
 filter(sum_station, weekend==TRUE) %>%
   group_by(id_station) %>%
   summarize(dur_med = mean(dur_med, na.rm=T), name=first(name_bks_st),
@@ -412,8 +413,8 @@ Do key statistics change across different levels of flow in or out of the statio
 
 ```{r}
 ggplot(sum_station, aes(departures, dur_med)) + 
-  geom_point(alpha=0.01) + lims(y=c(0,100)) + facet_wrap(~year) +
-  labs(title="Daily Departures vs Median Ride Duration",x="N Departures",y="Med. Dur (min)")
+  geom_point(alpha=0.01) + lims(y=c(0,1000)) + facet_wrap(~year) +
+  labs(title="Daily Departures vs Median Ride Duration",x="N Departures",y="Med. Dur (sec)")
 ```
 
 #### Member Percentage

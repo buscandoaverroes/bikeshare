@@ -1,6 +1,9 @@
 # recollect.R
 # generates a new/original dataset by recollecting old data, as Plato might.
 
+
+key <- readRDS(file.path(processed, "keys/station_key.Rda"))
+
 # append + export daily rides ===============================================
 
 bks1014 <- readRDS(file.path(processed, "data/stats10-14/bks1014-weather.Rda"))
@@ -12,22 +15,45 @@ bks_plato <- bind_rows(
 )
 
 
-# load the original
-bks <- fread(file.path(raw, "bks-import.csv"), na.strings = "")
-
+# load the Rdata file containing the original number of rows
+load(file.path(processed, "data/bks-full-misc-data.Rda")) # opens `n_rides`
 
 # if the number of rows hasn't changed from the original, drop original and components
-if (assertthat::assert_that(nrow(bks) == nrow(bks_plato))) {
-  rm(bks, bks1014, bks1516, bks1720)
+if (assert_that(n_rides == nrow(bks_plato))) {
+  rm(bks1014, bks1516, bks1720)
+  
+  # filter out motivate office
+  bks_plato <- bks_plato %>%
+    ungroup() %>% 
+    filter(if_all(c("id_start", "id_end"), 
+                  ~ . != 433 & 
+                    . != 432))
 }
 
 
 # export
 saveRDS(bks_plato, file = file.path(processed, "data/plato/daily-rides.Rda"), compress = FALSE)
-rm(bks_plato)
+
+
+# create light version 
+bks_plato %>%
+  select(year, hour, id_start, id_end, member) %>%
+  saveRDS(., file = file.path(processed, "data/plato/daily-rides-light.Rda"), compress = FALSE)
+
+# create by hour version 
+loc <- select(key, id_proj, name_bks) # extract location info
+
+station_hr <- bks_plato %>%
+  group_by(id_start, year, hour) %>%
+  summarize(hourly_dep = n(),
+            member_pct = 100*round(mean(member),3)) %>%
+  left_join(loc, by = c('id_start'='id_proj'))
+
+saveRDS(station_hr, file = file.path(processed, "data/plato/station-hour.Rda"), compress = FALSE)
 
 
 
+rm(bks_plato, loc, station_hr)
 
 
 
@@ -44,6 +70,12 @@ sum_station_plato <- bind_rows(
   sum_station1014, sum_station1516, sum_station1720
 )
 
+# filter out motivate office
+sum_station_plato <- sum_station_plato %>%
+  ungroup() %>% 
+  filter(if_all(c("id_station"), 
+                ~ . != 433 & 
+                  . != 432))
 
 # export
 saveRDS(sum_station_plato,
@@ -77,6 +109,13 @@ sum_station_yr_plato <-
 assertthat::assert_that(nrow(sum_station_yr_plato) == nrow.ssyr)
 
 
+# filter out motivate office
+sum_station_yr_plato <- sum_station_yr_plato %>%
+  ungroup() %>% 
+  filter(if_all(c("id_station"), 
+                ~ . != 433 & 
+                  . != 432))
+
 # export
 saveRDS(sum_station_yr_plato,
         file = file.path(processed, "data/plato/sum-station-yr.Rda"), compress = FALSE)
@@ -89,7 +128,7 @@ rm(sum_station_yr_plato, sum_station_yr1014, sum_station_yr1516, sum_station_yr1
 
 
 # append + export day summaries ===============================================
-
+# note that to/from motivate rides will be kept here for the time being...
 days1014 <- readRDS(file.path(processed, "data/stats10-14/days.Rda"))
 days1516 <- readRDS(file.path(processed, "data/stats15-16/days.Rda"))
 days1720 <- readRDS(file.path(processed, "data/stats17-20/days.Rda"))
