@@ -19,11 +19,10 @@ library(colourvalues)
 
 options(shiny.reactlog = TRUE) # permits to launch reactlog
 mapviewOptions(fgb = F) # set to false for greater performance?
-#setwd("/Volumes/Al-Hakem-II/Scripts/bikeshare/R/dashboards/descriptives03-app")
 
 ui <- navbarPage("Bikeshare", # UI ===================================================
  
-  tabPanel("Network", # page 2 -----------------------------------------------------
+  tabPanel("Network", # network graph ----
      fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
           titlePanel("Title", windowTitle = 'browser title'), 
           tags$h3("Subtitle"),
@@ -155,118 +154,7 @@ by <- reactive({
 })
 
 ## the actual graph object----------------------------------------------------------------
-p1 <- eventReactive(input$go.y1, {
-    withProgress(message = "Building the graph", # start here.
-                 
-     plot_ly() %>%
-         # temp data
-         add_trace(data = data1w(), type='scatter', mode = 'markers', name = "Daily Temp.",
-                   x = ~date, y = ~maxtemp, 
-                   marker = list(color = brewer.pal(5,'Purples')[3],
-                                 opacity = 0.8,
-                                 size = 5), 
-                   opacity = 0.8,
-                   visible = input$y1.weather,
-                   legendgroup = "temp",
-                   hovertemplate = paste0("<b>%{y:,1f}°</b><br>",
-                                          "%{x}",
-                                          "<extra></extra>"),
-                   yaxis = "y2", alpha = 1 ) %>% #directs to layout.yaxis2
-         # rolling av temp
-         add_trace(data = data1w(), type='scatter', mode = 'lines', name = "30-day Av",
-                   x = ~date, y = ~rolling_av_30_temp, 
-                   line = list(color = brewer.pal(5,'Purples')[5]), 
-                   opacity = 0.9,
-                   visible = input$y1.weather,
-                   legendgroup = "temp",
-                   hovertemplate = paste0("<b>30-Day Average</b><br>",
-                                          "<b>%{y:,1f}°</b><br>",
-                                          "%{x}",
-                                          "<extra></extra>"),
-                   yaxis = "y2", alpha = 1 ) %>%
-         # precip
-         add_trace(data = data1p(), type = 'bar', x = ~date, y = ~precip,
-                   marker = list(color = brewer.pal(5,'Greys')[3], opacity = 0.6),
-                   name="Precipitation",
-                   legendgroup = "precip",
-                   marker=list(line=list(width=1.5)), visible = input$y1.precip,
-                   hovertemplate = paste0("<b>%{y:1f} mm</b><br>",
-                                          "%{x}",
-                                          "<extra></extra>"),
-                   yaxis = "y3", alpha = 1 ) %>%
-         # main data 
-         add_trace(data = data1main(),
-                   type = 'scatter', mode = 'markers', name = name(),
-                   x = ~date, y = ~isolate(.data[[input$y1]]),
-                   marker = list(
-                       color = if (input$y1.tempfill) {~maxtemp} else {brewer.pal(5,'Blues')[3]}, 
-                       opacity = y1.alpha(),
-                       size = 5,
-                       showscale = input$y1.tempfill,
-                       cmin = min(),
-                       cmid = mid(),
-                       cmax = max(),
-                       colorscale = "RdBu",
-                       colorbar = list(
-                           title = list(text="Observed <br>Daily High", font=list(size=14)),
-                           x = 1.17, y=0.6, len = 1, thickness=25,
-                           tickvals=ticks(), tickmode = 'array',
-                           ticksuffix=paste(if (input$y1.fahr){'℉'} else{'℃'})
-                       )),
-                   legendgroup = "bks",
-                   hovertemplate = if_else( input$y1.tempfill,
-                                            false = paste0("<b>%{y:,2f}</b><br>",
-                                                           "%{x}",
-                                                           "<extra></extra>"),
-                                            true = paste0("<b>%{y:,2f}</b><br>",
-                                                          "%{marker.color:1f}",if (input$y1.fahr){'℉'} else{'℃'},
-                                                          "<br>%{x}",
-                                                          "<extra></extra>"))
-         ) %>%
-         # rolling av: main data
-         add_trace(data = data1main(),
-                   type = 'scatter', mode = 'lines', name = paste0("30-day Av"),
-                   x = ~date, y = ~rolling_av_30, 
-                   line = list(color = brewer.pal(5,'Blues')[4]), 
-                   legendgroup = "bks",
-                   hovertemplate = paste0("<b>30-Day Average</b><br>",
-                                          "<b>%{y:,1f}</b><br>",
-                                          "%{x}",
-                                          "<extra></extra>")) %>%
-         layout( 
-             title = list(text=paste("<b>",name(),"</b>"), font=list(size=20)),
-             yaxis2= ay(),
-             yaxis3= by(),
-             yaxis = list(
-                 showgrid = F,
-                 title = list(text=paste(name()), font=list(size=16))), 
-             xaxis = list(
-                 title = list(text="<b>Date Range Selector</b>", font=list(size=16)),
-                 rangeslider = list(autorange=TRUE, thickness = 0.15),
-                 rangeselector = list(
-                     x = 0.02, y = 1.1,
-                     buttons = list(
-                         list(count=3, label="3 yr", step='year', stepmode='backward'),
-                         list(count=1, label="1 yr", step='year', stepmode='backward'),
-                         list(count=3, label='3 mo', step='month',stepmode='backward'),
-                         list(step = 'all')))),
-             font = list(family="arial"),
-             legend = list(orientation='h', y=1.30, x=0.95, xanchor = "auto"),
-             margin = list(l=80, r=100),
-             dragmode = 'pan'
-         ) %>% # end layout
-         config(modeBarButtonsToRemove = c('lasso2d', 'select2d', 'toggleSpikelines',
-                                           'autoScale2d', 'zoomIn2d', 'zoomOut2d'))
-     
-    ) # end withprogress
-    
-}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'p1-plotly')
-    
 
-## render the graph ---------------------------------------------------------------------------
-output$days <- renderPlotly({p1()})
-    
-    
 
 
 
@@ -381,7 +269,7 @@ map.gl <- reactive({
               opacity = 0.4)
 })
 
-output$see <- renderPrint({str(desire_lines())})
+#output$see <- renderPrint({str(desire_lines())})
 
 
 ## render mapview --------------------------------------------------------------------
