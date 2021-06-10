@@ -22,51 +22,7 @@ mapviewOptions(fgb = F) # set to false for greater performance?
 #setwd("/Volumes/Al-Hakem-II/Scripts/bikeshare/R/dashboards/descriptives03-app")
 
 ui <- navbarPage("Bikeshare", # UI ===================================================
-  # tabPanel("Days", # page 1 -----------------------------------------------------
-  #   fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
-  #          titlePanel("Title", windowTitle = 'browser title'),
-  #          tags$h3("Subtitle"),
-  #          tags$body("a paragraph of explanation (but not too long!) goes here."),
-  # 
-  # 
-  #          tags$h3("Graph Title"),
-  #          wellPanel(
-  #           fluidRow(
-  #          column(3,
-  #                 verticalLayout(
-  #                  tags$h4("Bikeshare Data"),
-  #                  pickerInput('y1',
-  #                              choices = c("Total Daily Rides"      =  "nrides",
-  #                                          "Median Ride Duration" =  "dur_med",
-  #                                          "Duration Inequity"    =  "dur_ineq"),
-  #                              selected = "nrides",  multiple = FALSE, width = '200px',
-  #                              options = pickerOptions(mobile = T)))),
-  #           column(3,
-  #                  verticalLayout(
-  #                  tags$h5("Options"), # spacing
-  #                  prettySwitch('y1.weather', "Show Temperature",
-  #                               value = FALSE, slim = T, fill = T, inline = T),
-  #                  prettySwitch('y1.precip', "Show Precipitation",
-  #                               value = FALSE, slim = T, fill = T, inline = T ))),
-  #             column(3,
-  #               verticalLayout(
-  #                  tags$br(),tags$br(),
-  #                  prettySwitch('y1.tempfill', "Use Temperature as color",
-  #                               value = FALSE, slim = T, fill = T, inline = T),
-  #                  prettySwitch('y1.fahr', "Use ℉",
-  #                               value = FALSE, slim = T, fill = T, inline = T))),
-  #          column(3, tags$br(), tags$br(),
-  #                          actionButton('go.y1', "Update", width = "100px")))),
-  # 
-  # 
-  #   withSpinner(plotlyOutput('days'), type = 8, hide.ui = FALSE), tags$br(),
-  #   tags$h5("Terms and Notes"),
-  #   tags$source("source"),
-  #   tags$footer("footer"),
-  #   tags$h6("header 6")
-  # 
-  # 
-  #   )), # end first page, panel, page
+ 
   tabPanel("Network", # page 2 -----------------------------------------------------
      fluidPage( theme = bs_theme(version = 4, bootswatch = "flatly"),
           titlePanel("Title", windowTitle = 'browser title'), 
@@ -427,20 +383,6 @@ map.gl <- reactive({
 
 output$see <- renderPrint({str(desire_lines())})
 
-# map.network <- reactive({
-#   withProgress(message = "Building the Graph",
-#   mapview(desire_lines(), zcol = net.fill(), alpha = net.al(), col.regions = network.pal,
-#           at = net.at(), lwd = net.lwd(), popup = F, # popupTable(desire_lines(),zcol = c("Origin", "Destination", "nrides"))
-#           layer.name = "Origin->Dest. Trips", label = "Origin") +
-#     mapview(station_yr(), zcol = "departures", cex = markersize(), alpha = 0.3, label = "name_bks", 
-#             lwd = 0.5,
-#             color = "black", col.regions= mapviewColors(station_yr(), station_yr()$departures,
-#                                                         colors = hcl.colors(7, palette = "Sunset", alpha = NULL, rev = T)),  # dot fill color
-#             popup=FALSE, layer.name = "Station<br>Departures") # the popuptable argument throws error
-#  # mapview(breweries, zcol="founded", col.regions = hcl.colors(2, palette = "Cividis"), popup=F) 
-#   ) # end withProgress
-# })
-# error: Error in value[[3L]]: Couldn't normalize path in `addResourcePath`, with arguments: `prefix` = 'PopupTable-0.0.1'; `directoryPath` = ''
 
 ## render mapview --------------------------------------------------------------------
 output$network <- renderLeaflet({map.gl()})
