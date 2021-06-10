@@ -147,7 +147,7 @@ station_yr <- eventReactive(input$go.y2, {
 }, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'station_year')
 
 
-## create the mapview graph -----------------------------------------------------
+## create the leaflet graph -----------------------------------------------------
 
 # settings dependent on by hour or year
 net.al <- reactive({ if (input$y2.hourTF) {0.7} else {0.3} }) 
@@ -166,7 +166,7 @@ pal.quant  <- reactive({colorQuantile("plasma", desire_lines()$nrides, reverse =
 pal.bin   <- reactive({colorBin("viridis", desire_lines()$nrides, bins = c(0, 300, 1000, 20000),
                                 reverse = FALSE)})
 
-# graph
+# leaflet gl graph ---------
 map.gl <- reactive({
   leaflet() %>%
     addTiles() %>%
