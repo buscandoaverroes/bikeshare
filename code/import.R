@@ -265,11 +265,15 @@ r2019 <- import_month(2019)
 
 
 
-# import 2020 manually =================================================
+# import 2020 + 2021 manually =================================================
 # note: the data structure changes a lot from the 3rd to 4th month of 2020.
 # therefore, I think it makes sense to import 2020 manually.
+# 
+# note for 2021: since 2021 is still in progress, the programs above don't 
+# account for incomplete years and will break :(, so import manually.
 
-# months 1-3:
+## import 2020 ----
+### months 1-3: ----
 m1 <- 
   data.table::fread(
    input = file.path(raw, "2020/202001-capitalbikeshare-tripdata.csv"),
@@ -304,7 +308,7 @@ r2020 <- bind_rows(m1, m2, m3)
 rm(m1,m2,m3)
 
 
-# months 4-12
+### months 4-12 ----
 m4 <- 
   data.table::fread(
     file.path(raw, "2020/202004-capitalbikeshare-tripdata.csv"),
@@ -396,6 +400,59 @@ rm(m4,m5,m6,m7,m8,m9,m10,m11,m12)
 
 
 
+## import 2021 (in-progress) ----
+
+# jan
+m1 <- 
+  data.table::fread(
+    file.path(raw, "2021/202101-capitalbikeshare-tripdata.csv"),
+    na.strings = "",
+    header = TRUE
+  ) %>%
+  rename(all_of(raw_rename2))  %>%
+  select(raw_names2, everything())
+
+
+# feb
+m2 <- 
+  data.table::fread(
+    file.path(raw, "2021/202102-capitalbikeshare-tripdata.csv"),
+    na.strings = "",
+    header = TRUE
+  ) %>%
+  rename(all_of(raw_rename2))  %>%
+  select(raw_names2, everything())
+
+
+# mar
+m3 <- 
+  data.table::fread(
+    file.path(raw, "2021/202103-capitalbikeshare-tripdata.csv"),
+    na.strings = "",
+    header = TRUE
+  ) %>%
+  rename(all_of(raw_rename2))  %>%
+  select(raw_names2, everything())
+
+
+# apr
+m4 <- 
+  data.table::fread(
+    file.path(raw, "2021/202104-capitalbikeshare-tripdata.csv"),
+    na.strings = "",
+    header = TRUE
+  ) %>%
+  rename(all_of(raw_rename2))  %>%
+  select(raw_names2, everything())
+
+
+
+# append all cumulative 2021 months
+r2021 <-
+  bind_rows(m1,m2,m3,m4) 
+
+# remove month objects
+rm(m1,m2,m3,m4)
 
 
 # append, id_ride, export ==============================================================================
@@ -415,7 +472,7 @@ rm(m4,m5,m6,m7,m8,m9,m10,m11,m12)
 append <-
   bind_rows(
     r2010, r2011, r2012, r2013, r2014, r2015,
-    r2016, r2017, r2018, r2019, r2020
+    r2016, r2017, r2018, r2019, r2020, r2021
   ) %>%
   select(-ride_id) %>%  # remove unwanted columns
   mutate(               # change start stations
@@ -458,6 +515,6 @@ fwrite(append,
 
 rm(append,
    r2010, r2011, r2012, r2013, r2014, r2015,
-   r2016, r2017, r2018, r2019, r2020)
+   r2016, r2017, r2018, r2019, r2020, r2021)
 
 
