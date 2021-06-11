@@ -62,7 +62,9 @@
 
 
 # same no matter the user.
-  scripts           <- file.path(repo,"R")
+  scripts           <- file.path(repo,"code")
+    shiny           <- file.path(repo, "visuals/shiny")
+  
   raw               <- file.path(data, "raw")
   processed         <- file.path(data, "bks")
     keys            <- file.path(processed, "keys")
@@ -138,8 +140,8 @@ if (u2 == 1) {source(file.path(scripts, "names.R"))}
             
 # markdown --------------------------------------------------------------------------------------            
             
-if (m1 == 1) {source(file.path(scripts, "Descriptives01.rmd"))}                     
-if (m2 == 1) {source(file.path(scripts, "regeressions01.rmd"))}                  
+if (m1 == 1) {source(file.path(scripts, "analysis/Descriptives01.rmd"))}                     
+if (m2 == 1) {source(file.path(scripts, "analysis/regeressions01.rmd"))}                  
             
             
             
