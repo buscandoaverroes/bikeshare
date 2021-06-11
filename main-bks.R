@@ -83,7 +83,7 @@
                                     # run scripts #
                                     #-------------#
 # main scripts
-  s1 <- 0   # import          variable harmonization, append. no data wrangling
+  s1 <- 1   # import          variable harmonization, append. no data wrangling
             #                   makes: bks-import.csv
   s2 <- 0   # stations      creates old/new station number dictionary and adds station features
             #                   makes: station_key.Rda, station-geo-objects.Rdata
