@@ -5,6 +5,7 @@
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
 library(osmdata)
+library(mapview)
 
 # key variables: first applied after merge with OSM data 
 key_df_vars <- c(
@@ -171,7 +172,6 @@ station_key <-
           left = TRUE,  # keep all obs from station key
           dist = bike_metro_dist,
           suffix = c(".x", ".y"),
-          na_matches = "never",
           largest = FALSE
           ) %>%  # only match first within x meters, otherwise NA.
   rename(  # first rename BEFORE dropping vars
@@ -292,6 +292,7 @@ assertthat::assert_that(
                   #             simple map                           =======================
                   # ---------------------------------------------------------#
 
+station_map <- mapview(station_key)
 
 
 ## export ---------------------------------------------------------------------------
@@ -306,6 +307,7 @@ saveRDS(station_key,
 save(
   osm_bike, osm_metro, osm_metro_query, station_old, cabi_coords,
   n_station_old,
+  station_map,
   file = file.path(processed, "keys/station-geo-objects.Rdata")
 )
 
