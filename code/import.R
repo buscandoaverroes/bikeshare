@@ -464,7 +464,7 @@ rm(m1,m2,m3,m4)
 
 # manage duplicates, export another version --------------------------------------------------------------
 
-# Eliminate duplicates for number_old
+
 # starting on 01 June, 2018 (inclusive), station number 31607 appears to be moved from
 # 14th/D to 13th/E  with the name change made accordingly. the station id number was not
 # changed even though the name was not. In this scenario, I will create a "new" station id
@@ -482,11 +482,11 @@ append <-
   mutate(               # change start stations
     start_number2 = case_when(
       start_name == "13th & E St SE" & start_number == 31607 ~ as.integer(99901),
-      TRUE                                                   ~ start_number,
+      TRUE                                                   ~ as.integer(start_number),
     ),                  # change end stations
     end_number2 = case_when(
       end_name == "13th & E St SE" & end_number == 31607 ~ as.integer(99901),
-      TRUE                                                   ~ end_number,
+      TRUE                                                   ~ as.integer(end_number),
     )
   ) %>%
   select(-start_number, -end_number) %>% # drop original number columns
