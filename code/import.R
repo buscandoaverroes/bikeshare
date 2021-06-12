@@ -421,9 +421,13 @@ m2 <-
     header = TRUE
   ) %>%
   rename(all_of(raw_rename2))  %>%
-  select(raw_names2, everything())
-
-
+  select(raw_names2, everything()) %>%
+  filter(!is.na(start_lat)) %>% # remove 2 observations with odd start station data that force data to string.
+  mutate(
+    start_number = as.numeric(start_number), # change storage type 
+    end_number   = as.numeric(end_number)
+  )
+  
 # mar
 m3 <- 
   data.table::fread(
