@@ -43,8 +43,9 @@ n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
                   #         create station name-number dictionary            =================
                   # ---------------------------------------------------------#
 
-# create distinct name-number dictionary: this will have duplicates across numbers because 
-# there will be stations with different spellings of names with the same number.
+## create distinct name-number dictionary: ----
+## this will have duplicates across numbers because 
+## there will be stations with different spellings of names with the same number.
 namenumb <- bks %>%
   group_by(start_name, start_number) %>%
   summarise() %>%
@@ -64,7 +65,7 @@ assertthat::assert_that(
 
 
 
-# add and remove variables ---------------------------------------------------------------------
+## add and remove variables ---------------------------------------------------------------------
 
 # remove misc var, drop unecessary objects 
 station_key <- namenumb %>%
@@ -87,7 +88,7 @@ station_key <-
 
 
 
-# merge with gps coordinates from "new" stations ----------------------------------------------------
+## merge with gps coordinates from "new" stations ----------------------------------------------------
 
 # set random number seed
 set.seed(4747) 
@@ -120,7 +121,7 @@ station_key <-
             #       incorporate open street map id numbers              =======================
             # ---------------------------------------------------------#
 
-# extract features ------------------------------------------------------------------
+## extract features ------------------------------------------------------------------
 
 ## make boundary box
 bb <- c(-77.5,38.7,-76.75,39.2)
@@ -151,7 +152,7 @@ st_crs(osm_metro) <- crs
 
 
 
-# join features with main dictionary ------------------------------------------------------
+## join features with main dictionary ------------------------------------------------------
 
 # make sf class
 station_key <- 
@@ -186,7 +187,7 @@ station_key <-
 
 
 
-# control for duplicate and na-matches ----------------------------------------------------------
+## control for duplicate and na-matches ----------------------------------------------------------
 # note: st_join doesn't have a way to control for NA matches or duplicates. What this
 # means is that if there's an observation with (NA) for geometry, it seems to get
 # matched to all observations in y. Also if there are two stations within the distnace
@@ -227,7 +228,7 @@ station_key <-
 
 
 
-# replace missings GPS info ------------------------------------------------------
+## replace missings GPS info ------------------------------------------------------
 # note: some stations did not come with valid lat/lon column data, but can either 
 # be inferred (reasonably guessed) based on same-named stations with valid GPS data
 # or from a simple query on OpenStreetMaps. Thanks to OpenStreetMap and Contributors!
@@ -264,7 +265,7 @@ st_crs(station_key) <- crs
 
 
 
-# check that there are no duplicates in number_old, id_proj -----------------------
+## check that there are no duplicates in number_old, id_proj -----------------------
 
 # check that id_project is unique project id
 assertthat::assert_that(
@@ -283,8 +284,18 @@ assertthat::assert_that(
 
 
 
-# export ---------------------------------------------------------------------------
-if (TRUE) {
+
+
+
+
+                  # ---------------------------------------------------------#
+                  #             simple map                           =======================
+                  # ---------------------------------------------------------#
+
+
+
+## export ---------------------------------------------------------------------------
+if (FALSE) {
 
 # export station_key
 saveRDS(station_key,
