@@ -7,6 +7,11 @@
 library(osmdata)
 library(mapview)
 
+
+# settings 
+query = TRUE     # set to TRUE to requery and download OSM data, FALSE to load prev saved query
+
+
 # key variables: first applied after merge with OSM data 
 key_df_vars <- c(
     "number_old",
@@ -34,7 +39,7 @@ names_bks <-
 
 # determine no of unique stations 
 # old numbers are all greater than 30,000; station numbers that are == 0 are disabled, etc. Filter those out.
-station_old <- bks %>% filter(!is.na(start_number)) %>% distinct(start_number) 
+station_old   <- bks %>% filter(!is.na(start_number)) %>% distinct(start_number) 
 n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
 
 
@@ -116,6 +121,47 @@ station_key <-
 
 
 
+## replace missings GPS info ------------------------------------------------------
+# note: some stations did not come with valid lat/lon column data, but can either 
+# be inferred (reasonably guessed) based on same-named stations with valid GPS data
+# or from a simple query on OpenStreetMaps. Thanks to OpenStreetMap and Contributors!
+
+# replace lat/long based on name -- it's possible that id could change as stations are added.
+
+station_key$lat[station_key$name1=="12th & Army Navy Dr"] <- 38.86294 
+station_key$lng[station_key$name1=="12th & Army Navy Dr"] <- -77.05276
+
+station_key$lat[station_key$name1=="14th & D St SE"] <- 38.88405 
+station_key$lng[station_key$name1=="14th & D St SE"] <- -76.9857
+
+station_key$lat[station_key$name1=="22nd & H  NW (disabled)"] <- 38.8989 # same name, assume lat/long same
+station_key$lng[station_key$name1=="22nd & H  NW (disabled)"] <- -77.0489
+
+station_key$lat[station_key$name1=="34th St & Minnesota Ave SE"] <- 38.88362
+station_key$lng[station_key$name1=="34th St & Minnesota Ave SE"] <- -76.95782
+
+station_key$lat[station_key$name1=="Solutions & Greensboro Dr"] <- 38.88362
+station_key$lng[station_key$name1=="Solutions & Greensboro Dr"] <- -76.95782
+
+station_key$lat[station_key$name1=="Taft St & E Gude Dr"] <- 38.88362
+station_key$lng[station_key$name1=="Taft St & E Gude Dr"] <- -76.95782
+
+# assume that the two office have the same coords
+station_key$lat[station_key$name1=="Motivate Tech Office"] <- station_key$lat[station_key$name1=="Motivate BX Tech office"]
+station_key$lng[station_key$name1=="Motivate Tech Office"] <- station_key$lng[station_key$name1=="Motivate BX Tech office"]
+
+
+
+# ensure each station has GPS data 
+assert_that(
+  sum(is.na(station_key$lat)) == 0
+)
+
+assert_that(
+  sum(is.na(station_key$lng)) == 0
+)
+
+
 
 
             # ---------------------------------------------------------#
@@ -124,32 +170,49 @@ station_key <-
 
 ## extract features ------------------------------------------------------------------
 
-## make boundary box
-bb <- c(-77.5,38.7,-76.75,39.2)
-
-# extract bikeshare info as sf object
-osm_bike <- 
-  opq(bbox = bb) %>% # larger box around Washington, DC metro area
-  add_osm_feature("amenity", "bicycle_rental") %>%
-  osmdata_sf()
-
-# set crs
-st_crs(osm_bike$osm_points) <- crs
-
-
-# extract metro stations info, save as sf object 
-osm_metro_query <- # note this query generates another layer of info
-  opq(bbox = bb) %>%
-  add_osm_feature(key = "public_transport",
-                  value = "station") %>%
-  osmdata_sf() # keep only metro stations
+# only re-query-download if set to TRUE
+if (query == TRUE) {
   
-osm_metro <- st_as_sf(osm_metro_query$osm_points) %>%
-  filter(operator == "Washington Metropolitan Area Transit Authority" |
-           operator == "Washington Metro Area Transit Authority") 
+  ## make boundary box
+  bb <- c(-77.5,38.7,-76.75,39.2)
+  
+  # extract bikeshare info as sf object
+  osm_bike <- 
+    opq(bbox = bb) %>% # larger box around Washington, DC metro area
+    add_osm_feature("amenity", "bicycle_rental") %>%
+    osmdata_sf()
+  
+  # set crs
+  st_crs(osm_bike$osm_points) <- crs
+  
+  
+  # extract metro stations info, save as sf object 
+  osm_metro_query <- # note this query generates another layer of info
+    opq(bbox = bb) %>%
+    add_osm_feature(key = "public_transport",
+                    value = "station") %>%
+    osmdata_sf() # keep only metro stations
+  
+  osm_metro <- st_as_sf(osm_metro_query$osm_points) %>%
+    filter(operator == "Washington Metropolitan Area Transit Authority" |
+             operator == "Washington Metro Area Transit Authority") 
+  
+  # set crs
+  st_crs(osm_metro) <- crs
+  
+  # save files 
+  save(
+    bb, osm_bike, osm_metro_query, osm_metro,
+    file = file.path(data, "data/maps/osm-bks-query.Rdata")
+  )
+  
+} else {
+  # otherwise, load saved query objects
+  
+  load(file = file.path(data, "data/maps/osm-bks-query.Rdata"))
+}
 
-# set crs
-st_crs(osm_metro) <- crs
+
 
 
 
@@ -228,46 +291,6 @@ station_key <-
 
 
 
-## replace missings GPS info ------------------------------------------------------
-# note: some stations did not come with valid lat/lon column data, but can either 
-# be inferred (reasonably guessed) based on same-named stations with valid GPS data
-# or from a simple query on OpenStreetMaps. Thanks to OpenStreetMap and Contributors!
-
-# replace lat/long based on name -- it's possible that id could change as stations are added.
-
-station_key$lat[station_key$name_bks=="12th & Army Navy Dr"] <- 38.86294 
-station_key$lng[station_key$name_bks=="12th & Army Navy Dr"] <- -77.05276
-
-station_key$lat[station_key$name_bks=="14th & D St SE"] <- 38.88405 
-station_key$lng[station_key$name_bks=="14th & D St SE"] <- -76.9857
-  
-station_key$lat[station_key$name_bks=="22nd & H  NW (disabled)"] <- 38.8989 # same name, assume lat/long same
-station_key$lng[station_key$name_bks=="22nd & H  NW (disabled)"] <- -77.0489
-
-station_key$lat[station_key$name_bks=="34th St & Minnesota Ave SE"] <- 38.88362
-station_key$lng[station_key$name_bks=="34th St & Minnesota Ave SE"] <- -76.95782
-
-station_key$lat[station_key$name_bks=="Solutions & Greensboro Dr"] <- 38.88362
-station_key$lng[station_key$name_bks=="Solutions & Greensboro Dr"] <- -76.95782
-
-station_key$lat[station_key$name_bks=="Taft St & E Gude Dr"] <- 38.88362
-station_key$lng[station_key$name_bks=="Taft St & E Gude Dr"] <- -76.95782
-
-# assume that the two office have the same coords
-station_key$lat[station_key$name_bks=="Motivate Tech Office"] <- station_key$lat[station_key$name_bks=="Motivate BX Tech office"]
-station_key$lng[station_key$name_bks=="Motivate Tech Office"] <- station_key$lng[station_key$name_bks=="Motivate BX Tech office"]
-
-
-
-# update geometry data
-#station_key <- st_drop_geometry(station_key)
-station_key <- st_as_sf(station_key, 
-                        coords = c("lng", "lat"), 
-                        na.fail = TRUE, 
-                        remove = FALSE) 
-
-# set crs
-st_crs(station_key) <- crs
 
 
 
