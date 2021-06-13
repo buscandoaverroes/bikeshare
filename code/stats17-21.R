@@ -459,7 +459,7 @@ start_end <-
 
 
 # system-day summary with weather ===========================================================================
-days1720 <- 
+days1721 <- 
   bks1721 %>% ungroup() %>%
   group_by(date, year, month, wday, day_of_yr) %>%
   summarise(
@@ -479,7 +479,7 @@ days1720 <-
 # export =============================================================================================
 
 #individual objects
-saveRDS(days1720, file.path(processed, "data/stats17-21/days.Rda"), compress = FALSE)
+saveRDS(days1721, file.path(processed, "data/stats17-21/days.Rda"), compress = FALSE)
 saveRDS(bks1721, file.path(processed, "data/stats17-21/bks1721-weather.Rda"), compress = FALSE)
 saveRDS(sum_station, file.path(processed, "data/stats17-21/sum-station.Rda"), compress = FALSE)
 saveRDS(sum_station_yr, file.path(processed, "data/stats17-21/sum-station-yr.Rda"), compress = FALSE)
