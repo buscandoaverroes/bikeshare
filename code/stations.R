@@ -233,32 +233,38 @@ station_key <-
 # be inferred (reasonably guessed) based on same-named stations with valid GPS data
 # or from a simple query on OpenStreetMaps. Thanks to OpenStreetMap and Contributors!
 
-# replace lat/long based on id
-station_key$lat[station_key$id_proj==18] <- 38.86294
-station_key$lng[station_key$id_proj==18] <- -77.05276
+# replace lat/long based on name -- it's possible that id could change as stations are added.
 
-station_key$lat[station_key$id_proj==33] <- station_key$lat[station_key$id_proj==34] # same name, assume lat/long same
-station_key$lng[station_key$id_proj==33] <- station_key$lng[station_key$id_proj==34]
+station_key$lat[station_key$name_bks=="12th & Army Navy Dr"] <- 38.86294 
+station_key$lng[station_key$name_bks=="12th & Army Navy Dr"] <- -77.05276
 
-station_key$lat[station_key$id_proj==117] <- station_key$lat[station_key$id_proj==118] # same name, assume lat/long same
-station_key$lng[station_key$id_proj==117] <- station_key$lng[station_key$id_proj==118]
+station_key$lat[station_key$name_bks=="14th & D St SE"] <- 38.88405 
+station_key$lng[station_key$name_bks=="14th & D St SE"] <- -76.9857
+  
+station_key$lat[station_key$name_bks=="22nd & H  NW (disabled)"] <- 38.8989 # same name, assume lat/long same
+station_key$lng[station_key$name_bks=="22nd & H  NW (disabled)"] <- -77.0489
 
-station_key$lat[station_key$id_proj==140] <- 38.88362
-station_key$lng[station_key$id_proj==140] <- -76.95782
+station_key$lat[station_key$name_bks=="34th St & Minnesota Ave SE"] <- 38.88362
+station_key$lng[station_key$name_bks=="34th St & Minnesota Ave SE"] <- -76.95782
 
-station_key$lat[station_key$id_proj==433] <- station_key$lat[station_key$id_proj==432] # office, big assumption but assume same for now
-station_key$lng[station_key$id_proj==433] <- station_key$lng[station_key$id_proj==432]
+station_key$lat[station_key$name_bks=="Solutions & Greensboro Dr"] <- 38.88362
+station_key$lng[station_key$name_bks=="Solutions & Greensboro Dr"] <- -76.95782
 
-station_key$lat[station_key$id_proj==547] <- 38.92357
-station_key$lng[station_key$id_proj==547] <- -77.23132
+station_key$lat[station_key$name_bks=="Taft St & E Gude Dr"] <- 38.88362
+station_key$lng[station_key$name_bks=="Taft St & E Gude Dr"] <- -76.95782
 
-station_key$lat[station_key$id_proj==561] <- 39.09425
-station_key$lng[station_key$id_proj==561] <- -77.13278
+# assume that the two office have the same coords
+station_key$lat[station_key$name_bks=="Motivate Tech Office"] <- station_key$lat[station_key$name_bks=="Motivate BX Tech office"]
+station_key$lng[station_key$name_bks=="Motivate Tech Office"] <- station_key$lng[station_key$name_bks=="Motivate BX Tech office"]
+
 
 
 # update geometry data
-station_key <- st_drop_geometry(station_key)
-station_key <- st_as_sf(station_key, coords = c("lng", "lat"), na.fail = TRUE, remove = FALSE) 
+#station_key <- st_drop_geometry(station_key)
+station_key <- st_as_sf(station_key, 
+                        coords = c("lng", "lat"), 
+                        na.fail = TRUE, 
+                        remove = FALSE) 
 
 # set crs
 st_crs(station_key) <- crs
@@ -284,7 +290,7 @@ assertthat::assert_that(
 
 
 
-
+# %% METRO tru/false run after replace coords?
 
 
 
@@ -292,7 +298,7 @@ assertthat::assert_that(
                   #             simple map                           =======================
                   # ---------------------------------------------------------#
 
-station_map <- mapview(station_key)
+station_map <- mapview(station_key, label="name_bks")
 
 
 ## export ---------------------------------------------------------------------------
