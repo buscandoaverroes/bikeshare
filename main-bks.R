@@ -83,9 +83,9 @@
                                     # run scripts #
                                     #-------------#
 # main scripts
-  s1 <- 1   # import          variable harmonization, append. no data wrangling
+  s1 <- 0    # import          variable harmonization, append. no data wrangling
             #                   makes: bks-import.csv
-  s2 <- 0   # stations      creates old/new station number dictionary and adds station features
+  s2 <- 1   # stations      creates old/new station number dictionary and adds station features
             #                   makes: station_key.Rda, station-geo-objects.Rdata
                             
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
@@ -113,8 +113,8 @@
   
   
 # rmarkdown
-  m1 <- 0   # descriptives01.Rmd     exploration markdown of basic plots     
-  m2 <- 0   # regressions01.Rmd       basic regressions
+  md1 <- 0   # descriptives01.Rmd     exploration markdown of basic plots     
+  md2 <- 0   # regressions01.Rmd       basic regressions
   
   
 
@@ -140,8 +140,8 @@ if (u2 == 1) {source(file.path(scripts, "names.R"))}
             
 # markdown --------------------------------------------------------------------------------------            
             
-if (m1 == 1) {source(file.path(scripts, "analysis/Descriptives01.rmd"))}                     
-if (m2 == 1) {source(file.path(scripts, "analysis/regeressions01.rmd"))}                  
+if (md1 == 1) {source(file.path(scripts, "analysis/Descriptives01.rmd"))}                     
+if (md2 == 1) {source(file.path(scripts, "analysis/regeressions01.rmd"))}                  
             
             
             

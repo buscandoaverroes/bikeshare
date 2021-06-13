@@ -55,7 +55,7 @@ bks %>%
    select(id_ride, bike) %>%
    fwrite(
        file = file.path(processed, "data/bks-bikenos.csv"),
-       na = "", # make missings ""
+       na = "",          # make missings ""
        compress = "none" # do not compress
       )
 
@@ -80,7 +80,7 @@ bks <-
       arrive = ymd_hms(end_date, tz = "US/Eastern")
    ) %>%
    select(-start_date, -end_date) %>% # remove start and end cols
-   mutate( # create duration in rounded minutes\
+   mutate(             # create duration in rounded minutes
       dur   = if_else(is.na(duration),
                       true = as.integer(round(leave %--% arrive)),
                       false = as.integer(round(duration))), 
@@ -99,6 +99,7 @@ bks <-
    mutate(
       electric = case_when(
          type == "electric_bike" ~ TRUE,
+         type == "classic_bike"   ~ FALSE,
          type == "docked_bike"   ~ FALSE,
          is.na(type) == TRUE     ~ FALSE
       ),
@@ -108,7 +109,8 @@ bks <-
          member_str == "guest"   ~ FALSE,
          member_str == "Guest"   ~ FALSE,
          member_str == "Casual"  ~ FALSE,
-         member_str == "casual"  ~ FALSE
+         member_str == "casual"  ~ FALSE,
+         member_str == "Unknown" ~ FALSE  # I will classify unknown riders as non-members 
       )
    ) %>%
    select(vars_bks2) # remove string member variable
@@ -154,8 +156,8 @@ assertthat::assert_that(
    n_rides == nrow(bks) # where n_rides is the original number of rows
 )
 
-# export as csv 
-fwrite(bks, 
+# export as csv
+fwrite(bks,
        file = file.path(processed, "data/bks-full.csv"),
        na = "", # make missings ""
        compress = "none" # do not compress
@@ -165,8 +167,8 @@ fwrite(bks,
 saveRDS(bks,
         file = file.path(processed, "data/bks-full.Rda"), compress = FALSE)
 
-# save Rdata files 
+# save Rdata files
 save(
    n_rides, # number of original rides
-   file = file.path(processed, "data/bks-full-misc-data.Rda")
+   file = file.path(processed, "data/bks-full-misc-data.Rdata")
 )
