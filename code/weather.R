@@ -23,12 +23,6 @@ library(lubridate)
 #   .$data # note, values given in tenths, degrees C (22.1 = 2.21 Celcius), PRCP in tenths of mm (22 = 2.2 mm)
 # 
 
-data <- ncdc(datasetid = 'GHCND',
-             datatypeid = c('TMAX', 'PRCP'),
-             stationid = 'GHCND:USC00186350',
-             startdate = paste0(2020, '-01-01'),
-             enddate = paste0(2020, '-12-31'),
-             limit = 1000) %>% .$data
 
 # function for extracting data for a certain year =================================================================
 daily_weather <- function(x) {
@@ -78,6 +72,7 @@ weather2018 <- daily_weather(2018)
 weather2019 <- daily_weather(2019)
 
 weather2020 <- daily_weather(2020)
+weather2021 <- daily_weather(2021)
 
 
 # append 
@@ -85,7 +80,7 @@ weather_daily <-
   bind_rows(
   weather2010, weather2011, weather2012, weather2013, weather2014,
   weather2015, weather2016, weather2017, weather2018, weather2019,
-  weather2020
+  weather2020, weather2021
 ) 
 
 # check for duplicates
