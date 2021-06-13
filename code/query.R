@@ -6,9 +6,9 @@
 
 # toggles --------------------------------------------------------------
 # set 1 to run
-q1 = 0 # Years 2018-2020
+q1 = 0 # Years 2018-2021
 q2 = 0 # Year 2020 
-q3 = 1 # years 2017-2020
+q3 = 1 # years 2017-2021
 q4 = 1 # years 2010-2014
 q5 = 1 # years 2015-2017
 
@@ -41,7 +41,7 @@ if (q2 == 1) {
 if (q3 == 1) {
   bks_4yr <- filter(bks, year >= 2017)
   saveRDS(bks_4yr, 
-          file.path(processed, "data/years/bks_2017-20.Rda"))
+          file.path(processed, "data/years/bks_2017-21.Rda"))
 }
 
 
