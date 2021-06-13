@@ -1,4 +1,4 @@
-# stats17-20.R
+# stats17-21.R
 # takes the file containting rides from years 2017-2020, processes, adds station info, creates summary
 # station info
 
@@ -11,7 +11,7 @@ library(leafsync)
 
 
 # load years 2017-20 file + stations ----------------------------------------------------------------------------------
-bks1720 <- readRDS(file.path(processed, "data/years/bks_2017-20.Rda"))
+bks1720 <- readRDS(file.path(processed, "data/years/bks_2017-21.Rda"))
 nrow_bks1720 <- nrow(bks1720)
 
 station_key <- readRDS(file.path(processed, "keys/station_key.Rda")) %>%
@@ -479,17 +479,17 @@ days1720 <-
 # export =============================================================================================
 
 #individual objects
-saveRDS(days1720, file.path(processed, "data/stats17-20/days.Rda"), compress = FALSE)
-saveRDS(bks1720, file.path(processed, "data/stats17-20/bks1720-weather.Rda"), compress = FALSE)
-saveRDS(sum_station, file.path(processed, "data/stats17-20/sum-station.Rda"), compress = FALSE)
-saveRDS(sum_station_yr, file.path(processed, "data/stats17-20/sum-station-yr.Rda"), compress = FALSE)
-saveRDS(start_end, file.path(processed, "data/stats17-20/start-end.Rda"), compress = FALSE)
+saveRDS(days1720, file.path(processed, "data/stats17-21/days.Rda"), compress = FALSE)
+saveRDS(bks1720, file.path(processed, "data/stats17-21/bks1720-weather.Rda"), compress = FALSE)
+saveRDS(sum_station, file.path(processed, "data/stats17-21/sum-station.Rda"), compress = FALSE)
+saveRDS(sum_station_yr, file.path(processed, "data/stats17-21/sum-station-yr.Rda"), compress = FALSE)
+saveRDS(start_end, file.path(processed, "data/stats17-21/start-end.Rda"), compress = FALSE)
 
 # rest, as Rdata
 save(
   sum_station_sf,
   sum_station_a_arrv, sum_station_a_dep, sum_station_b_arrv, sum_station_b_dep,
-  file = file.path(processed, "data/stats17-20/misc.Rdata"),
+  file = file.path(processed, "data/stats17-21/misc.Rdata"),
   compress = FALSE
 )
 
