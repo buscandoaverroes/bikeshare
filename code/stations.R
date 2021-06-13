@@ -357,7 +357,7 @@ save(
 )
 
 # remove objects not needed
-remove(bks, cabi_coords, namenumb, names_bks, osm_bike,
+remove(bks, cabi_coords, namenumb, names_bks, osm_bike, osm_metro_query, station_map,
        osm_metro, station_key, station_old) 
 
 gc()
