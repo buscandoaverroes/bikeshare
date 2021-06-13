@@ -9,8 +9,8 @@ library(mapview)
 
 
 # settings 
-query = TRUE     # set to TRUE to requery and download OSM data, FALSE to load prev saved query
-
+query  = FALSE    # set to TRUE to requery and download OSM data, FALSE to load prev saved query
+export = TRUE     # set to TRUE to export/save, FALSE to not
 
 # key variables: first applied after merge with OSM data 
 key_df_vars <- c(
@@ -203,13 +203,12 @@ if (query == TRUE) {
   # save files 
   save(
     bb, osm_bike, osm_metro_query, osm_metro,
-    file = file.path(data, "data/maps/osm-bks-query.Rdata")
+    file = file.path(data, "bks/data/maps/osm-bks-query.Rdata")
   )
   
 } else {
   # otherwise, load saved query objects
-  
-  load(file = file.path(data, "data/maps/osm-bks-query.Rdata"))
+  load(file = file.path(data, "bks/data/maps/osm-bks-query.Rdata"))
 }
 
 
@@ -221,7 +220,10 @@ if (query == TRUE) {
 # make sf class
 station_key <- 
   station_key %>%
-  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) 
+  st_as_sf(., 
+           coords = c("lng", "lat"), 
+           na.fail = TRUE, 
+           remove = FALSE) 
 
 # set crs
 st_crs(station_key) <- crs
@@ -286,10 +288,24 @@ station_key <-
     values_from = c(osm_id, name_metro),
     values_fill = NA
     ) %>%
-  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) %>% # replace geometry
+  st_as_sf(.,
+           coords = c("lng", "lat"),
+           na.fail = TRUE,
+           remove = FALSE) %>% # replace geometry
   rename(name_metro = name_metro_1) # rename first name of metro station
 
+st_crs(station_key) <- crs
 
+
+
+## final name order changes ----
+# the way that the names have been ordered has put the actual "colloquial" or more
+# common use name in lower status order, so this code will fix that here and there
+
+station_key$name_bks[station_key$name_bks == "Washington-Lee High School / N Stafford St & Generals Way"] <- 
+  "Washington-Liberty High School / N Stafford St & Generals Way"
+station_key$name_bks2[station_key$name_bks2 == "Washington-Liberty High School / N Stafford St & Generals Way"] <- 
+  "Washington-Lee High School / N Stafford St & Generals Way"
 
 
 
@@ -313,7 +329,7 @@ assertthat::assert_that(
 
 
 
-# %% METRO tru/false run after replace coords?
+
 
 
 
@@ -321,11 +337,11 @@ assertthat::assert_that(
                   #             simple map                           =======================
                   # ---------------------------------------------------------#
 
-station_map <- mapview(station_key, label="name_bks")
+station_map <- mapview(station_key, label="name_bks", zcol = "metro")
 
 
 ## export ---------------------------------------------------------------------------
-if (FALSE) {
+if (export == TRUE) {
 
 # export station_key
 saveRDS(station_key,
@@ -343,5 +359,7 @@ save(
 # remove objects not needed
 remove(bks, cabi_coords, namenumb, names_bks, osm_bike,
        osm_metro, station_key, station_old) 
+
+gc()
 
 }
