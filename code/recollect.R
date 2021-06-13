@@ -8,10 +8,10 @@ key <- readRDS(file.path(processed, "keys/station_key.Rda"))
 
 bks1014 <- readRDS(file.path(processed, "data/stats10-14/bks1014-weather.Rda"))
 bks1516 <- readRDS(file.path(processed, "data/stats15-16/bks1516-weather.Rda"))
-bks1720 <- readRDS(file.path(processed, "data/stats17-20/bks1720-weather.Rda"))
+bks1721 <- readRDS(file.path(processed, "data/stats17-21/bks1721-weather.Rda"))
 
 bks_plato <- bind_rows(
-  bks1014, bks1516, bks1720
+  bks1014, bks1516, bks1721
 )
 
 
@@ -20,7 +20,7 @@ load(file.path(processed, "data/bks-full-misc-data.Rda")) # opens `n_rides`
 
 # if the number of rows hasn't changed from the original, drop original and components
 if (assert_that(n_rides == nrow(bks_plato))) {
-  rm(bks1014, bks1516, bks1720)
+  rm(bks1014, bks1516, bks1721)
   
   # filter out motivate office
   bks_plato <- bks_plato %>%
@@ -61,13 +61,13 @@ rm(bks_plato, loc, station_hr)
 
 sum_station1014 <- readRDS(file.path(processed, "data/stats10-14/sum-station.Rda"))
 sum_station1516 <- readRDS(file.path(processed, "data/stats15-16/sum-station.Rda"))
-sum_station1720 <- readRDS(file.path(processed, "data/stats17-20/sum-station.Rda"))
+sum_station1721 <- readRDS(file.path(processed, "data/stats17-21/sum-station.Rda"))
 
 
 # Bind Rows 
 # Note: can't verify correct row number since no original by-station-day object
 sum_station_plato <- bind_rows(
-  sum_station1014, sum_station1516, sum_station1720
+  sum_station1014, sum_station1516, sum_station1721
 )
 
 # filter out motivate office
@@ -80,7 +80,7 @@ sum_station_plato <- sum_station_plato %>%
 # export
 saveRDS(sum_station_plato,
         file = file.path(processed, "data/plato/sum-station.Rda"), compress = FALSE)
-rm(sum_station_plato, sum_station1014, sum_station1516, sum_station1720)
+rm(sum_station_plato, sum_station1014, sum_station1516, sum_station1721)
 
 
 
@@ -89,13 +89,13 @@ rm(sum_station_plato, sum_station1014, sum_station1516, sum_station1720)
 
 sum_station_yr1014 <- readRDS(file.path(processed, "data/stats10-14/sum-station-yr.Rda"))
 sum_station_yr1516 <- readRDS(file.path(processed, "data/stats15-16/sum-station-yr.Rda"))
-sum_station_yr1720 <- readRDS(file.path(processed, "data/stats17-20/sum-station-yr.Rda"))
+sum_station_yr1721 <- readRDS(file.path(processed, "data/stats17-21/sum-station-yr.Rda"))
 
 
 # Bind Rows 
 # Note: can't verify correct row number since no original by-station-day object
 sum_station_yr_plato <- bind_rows(
-  sum_station_yr1014, sum_station_yr1516, sum_station_yr1720
+  sum_station_yr1014, sum_station_yr1516, sum_station_yr1721
 )
 nrow.ssyr <- nrow(sum_station_yr_plato)
 
@@ -119,7 +119,7 @@ sum_station_yr_plato <- sum_station_yr_plato %>%
 # export
 saveRDS(sum_station_yr_plato,
         file = file.path(processed, "data/plato/sum-station-yr.Rda"), compress = FALSE)
-rm(sum_station_yr_plato, sum_station_yr1014, sum_station_yr1516, sum_station_yr1720, key)
+rm(sum_station_yr_plato, sum_station_yr1014, sum_station_yr1516, sum_station_yr1721, key)
 
 
 
@@ -131,18 +131,18 @@ rm(sum_station_yr_plato, sum_station_yr1014, sum_station_yr1516, sum_station_yr1
 # note that to/from motivate rides will be kept here for the time being...
 days1014 <- readRDS(file.path(processed, "data/stats10-14/days.Rda"))
 days1516 <- readRDS(file.path(processed, "data/stats15-16/days.Rda"))
-days1720 <- readRDS(file.path(processed, "data/stats17-20/days.Rda"))
+days1721 <- readRDS(file.path(processed, "data/stats17-21/days.Rda"))
 
 
 # Bind Rows 
 # Note: can't verify correct row number since no original by-station-day object
 days_plato <- bind_rows(
-  days1014, days1516, days1720
+  days1014, days1516, days1721
 )
 
 
 # export
 saveRDS(days_plato,
         file = file.path(processed, "data/plato/days.Rda"), compress = FALSE)
-rm(days_plato, days1014, days1516, days1720)
+rm(days_plato, days1014, days1516, days1721)
 
