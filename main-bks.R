@@ -85,7 +85,7 @@
 # main scripts
   s1 <- 0    # import          variable harmonization, append. no data wrangling
             #                   makes: bks-import.csv
-  s2 <- 1   # stations      creates old/new station number dictionary and adds station features
+  s2 <- 0   # stations      creates old/new station number dictionary and adds station features
             #                   makes: station_key.Rda, station-geo-objects.Rdata
                             
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
@@ -98,8 +98,8 @@
             #                   makes: stats10-14.Rdata ~20 min
   s6 <- 0   # stats15-16       takes years 15-16 from query, processes, adds station info, stats.
             #                   makes: stats15-16.Rdata ~20 min
-  s7 <- 0   #stats17-20        takes years 17-20 from query, processes, adds station info, stats.
-            #                    makes: stats17-20.Rdata ~20 min
+  s7 <- 0   #stats17-21        takes years 17-21 from query, processes, adds station info, stats.
+            #                    makes: stats17-21.Rdata ~20 min
   
 # recollection 
   r1 <- 0   # recollect       takes the 'parallel processed' stats files and reassembles them into:
@@ -127,7 +127,7 @@
   if (s4 == 1) {source(file.path(scripts, "query.R"))} 
   if (s5 == 1) {source(file.path(scripts, "stats10-14.R"))}  
   if (s6 == 1) {source(file.path(scripts, "stats15-16.R"))}  
-  if (s7 == 1) {source(file.path(scripts, "stats17-20.R"))}  
+  if (s7 == 1) {source(file.path(scripts, "stats17-21.R"))}  
   
   if (r1 == 1) {source(file.path(scripts, "recollect.R"))}  
             
