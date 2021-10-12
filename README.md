@@ -8,7 +8,7 @@ The code is designed to pull the raw .csv files from folders named by year.
 
 ## Current Mullings and Research Questions
 _Technical_
-1. Should the project architecture+code be tweaked to fit the `stplanr` (package and workflow)[https://github.com/ropensci/stplanr]?
+1. Should the project architecture+code be tweaked to fit the `stplanr` [package and workflow](https://github.com/ropensci/stplanr)?
 
 ## Attribution
 
