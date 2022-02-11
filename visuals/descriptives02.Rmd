@@ -1,0 +1,494 @@
+---
+title: "descriptives02"
+output: 
+  html_document:
+    toc: true
+    runtime: shiny
+---
+
+```{r setup, include=FALSE}
+# knitr opts
+# fyi: plotly::schema()
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+# packages
+library(tidyverse)
+library(sf)
+library(mapview)
+library(leaflet)
+library(leafem)
+library(leafpop)
+library(leafsync)
+library(plotly)
+library(shiny)
+library(shinyWidgets)
+library(lubridate)
+library(timetk)
+library(RColorBrewer)
+library(shinycssloaders)
+
+options(shiny.reactlog = TRUE) # permits to launch reactlog
+
+processed   <- "/Volumes/Al-Hakem-II/Datasets/bks/bks"
+days    <- readRDS(file.path(processed, "data/plato/days.Rda")) %>%
+  mutate(dur_med = round((dur_med/60),1)) %>% # change to rounded minutes
+  rename(maxtemp = tempmax) # rename for variable order
+#bks     <- readRDS(file.path(processed, "data/plato/daily-rides.Rda"))
+sum_station <- readRDS(file.path(processed, "data/plato/sum-station.Rda")) %>%
+  mutate(dur_med = round((dur_med/60),1)) %>%
+  select(-starts_with("lag")) # remove lag vars, not needed here.
+  
+sum_station_yr <- readRDS(file.path(processed, "data/plato/sum-station-yr.Rda")) %>%
+select(-starts_with("lag"))  # remove lag vars, not needed here.
+
+
+# document/package settings
+theme_set(theme_minimal()) # set ggplot theme
+mapviewOptions(fgb = T) # set to false for greater performance?
+alpha = 0.2
+```
+
+Thanks to RColorBrewer for providing the color scales.
+
+# Days
+
+The daily data is plotted in blue, along with optional weather data from NOAA. Date ranges can be subset by dragging either on the *Range Selector* below or on the plot region itself. Double-clicking resets.
+
+```{r, days}
+
+inputPanel(
+  verticalLayout(
+    tags$h4("Bikeshare Data"),
+    pickerInput('y1', 
+              choices = c("Total Daily Rides"      =  "nrides",
+                          "Median Ride Duration" =  "dur_med",
+                          "Duration Inequity"    =  "dur_ineq"),
+              selected = "nrides",  multiple = FALSE,
+              options = pickerOptions(mobile = T))),
+  verticalLayout(
+      tags$h5("Options"), # spacing
+      prettySwitch('y1.weather', "Show Temperature",
+               value = FALSE, slim = T, fill = T, inline = T),
+      prettySwitch('y1.precip', "Show Precipitation",
+               value = FALSE, slim = T, fill = T, inline = T )),
+  verticalLayout(
+    tags$br(),tags$br(),
+    prettySwitch('y1.tempfill', "Use Temperature as fill color",
+                 value = FALSE, slim = T, fill = T, inline = T),
+    prettySwitch('y1.fahr', "Use ℉",
+                 value = FALSE, slim = T, fill = T, inline = T)),
+  verticalLayout(
+    tags$br(),
+    actionButton('go.y1', "Update", width = "120px"))
+) # end  input panel
+
+
+# data wrangling
+# rolling average, 30 days
+roll_av_30 <- timetk::slidify(.f = ~ mean(., na.rm=T), .period = 30, .align = 'center', .partial = TRUE)
+roll_av_3 <- timetk::slidify(.f = ~ mean(., na.rm=T), .period = 3, .align = 'center', .partial = TRUE)
+
+# midpoints
+mid <- reactive({
+  if (input$y1.fahr) {
+    60 # far midpoint 
+  } else {
+    15 # celsius
+  }
+})
+
+min <- reactive({
+  if (input$y1.fahr) {
+    0  # far min 
+  } else {
+    -12 # celsius
+  }
+})
+
+max <- reactive({
+  if (input$y1.fahr) {
+    110  # far min 
+  } else {
+    42 # celsius
+  }
+})
+
+ticks <- reactive({
+  if (input$y1.fahr) {
+    c(20,40,60,80,100)  # far min 
+  } else {
+    c(0,10,20,30,40) # celsius
+  }
+})
+
+y1.alpha <- reactive({
+  if (input$y1.precip) {0.9} else {0.4}
+})
+
+#name
+name <- eventReactive(input$go.y1, {
+  case_when(
+        input$y1 == "nrides"     ~ "Daily Rides",
+        input$y1 == "dur_med"    ~ "Median Duration (min)",
+        input$y1 == "dur_ineq"   ~ "Duration Inequity Index",
+      )
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = "name")
+
+d1 <- reactive({
+  if (input$y1.fahr) {
+    days %>% dplyr::ungroup() %>%
+      mutate(maxtemp = round(((9/5)*maxtemp)+32),2)
+  } else {
+    days %>% dplyr::ungroup()
+  }
+})
+
+data1main <- eventReactive( input$go.y1, { 
+  
+  withProgress(message = 'Assembling bikeshare data',
+  d1() %>% 
+  select(date, input$y1, maxtemp) %>%
+  mutate(
+    rolling_av_30 = case_when( # round only duration_ineq to the hundreths
+      input$y1 == "dur_ineq" ~  round(roll_av_30(.data[[input$y1]]), 2),
+      input$y1 != "dur_ineq" ~  round(roll_av_30(.data[[input$y1]]), 1))))
+  
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = "data1main")
+
+
+data1w <- reactive({ withProgress(message = "Assembling weather data",
+  d1() %>% 
+  select(date, maxtemp) %>%
+  mutate(rolling_av_30_temp =  round(roll_av_30(.data[["maxtemp"]]))))
+})
+  
+data1p <- reactive({
+  d1() %>% 
+  select(date, precip)
+})
+
+# graph
+ay <- reactive({
+  list(
+    zeroline = F, showgrid = F,
+    tickfont=list(color=brewer.pal(5,'Purples')[5]), overlaying='y',
+       side='right', 
+       title=list(text=paste('Observed Daily High',
+                             if (input$y1.fahr){'℉'} else{'℃'}),  
+                  font=list(color=brewer.pal(5,'Purples')[5])),
+       visible=input$y1.weather)
+}) 
+by <- reactive({
+  list(zeroline = F, showgrid = F,
+       tickfont=list(color=brewer.pal(5,'Greys')[4]), overlaying='y', side='right', title=list(
+    text='Observed Precipitation (mm)', standoff=35), visible=input$y1.precip)
+})
+  
+# make the graph, depending on the go, button
+  p1 <- eventReactive(input$go.y1, {
+    withProgress(message = "Building the graph", # start here.
+                 
+    plot_ly() %>%
+    # temp data
+    add_trace(data = data1w(), type='scatter', mode = 'markers', name = "Daily Temp.",
+              x = ~date, y = ~maxtemp, 
+              marker = list(color = brewer.pal(5,'Purples')[3],
+                            opacity = 0.8,
+                            size = 5), 
+              opacity = 0.8,
+              visible = input$y1.weather,
+              legendgroup = "temp",
+              hovertemplate = paste0("<b>%{y:,1f}°</b><br>",
+                                   "%{x}",
+                                   "<extra></extra>"),
+              yaxis = "y2", alpha = 1 ) %>% #directs to layout.yaxis2
+    # rolling av temp
+    add_trace(data = data1w(), type='scatter', mode = 'lines', name = "30-day Av",
+              x = ~date, y = ~rolling_av_30_temp, 
+              line = list(color = brewer.pal(5,'Purples')[5]), 
+              opacity = 0.9,
+              visible = input$y1.weather,
+              legendgroup = "temp",
+              hovertemplate = paste0("<b>30-Day Average</b><br>",
+                                  "<b>%{y:,1f}°</b><br>",
+                                   "%{x}",
+                                   "<extra></extra>"),
+              yaxis = "y2", alpha = 1 ) %>%
+    # precip
+    add_trace(data = data1p(), type = 'bar', x = ~date, y = ~precip,
+              marker = list(color = brewer.pal(5,'Greys')[3], opacity = 0.6),
+              name="Precipitation",
+              legendgroup = "precip",
+              marker=list(line=list(width=1.5)), visible = input$y1.precip,
+              hovertemplate = paste0("<b>%{y:1f} mm</b><br>",
+                                   "%{x}",
+                                   "<extra></extra>"),
+              yaxis = "y3", alpha = 1 ) %>%
+    # main data 
+    add_trace(data = data1main(),
+              type = 'scatter', mode = 'markers', name = name(),
+              x = ~date, y = ~isolate(.data[[input$y1]]),
+              marker = list(
+                color = if (input$y1.tempfill) {~maxtemp} else {brewer.pal(5,'Blues')[3]}, 
+                opacity = y1.alpha(),
+                size = 5,
+                showscale = input$y1.tempfill,
+                cmin = min(),
+                cmid = mid(),
+                cmax = max(),
+                colorscale = "RdBu",
+                colorbar = list(
+                    title = list(text="Observed <br>Daily High", font=list(size=14)),
+                    x = 1.17, y=0.6, len = 1, thickness=25,
+                    tickvals=ticks(), tickmode = 'array',
+                    ticksuffix=paste(if (input$y1.fahr){'℉'} else{'℃'})
+                  )),
+            legendgroup = "bks",
+            hovertemplate = if_else( input$y1.tempfill,
+              false = paste0("<b>%{y:,2f}</b><br>",
+                            "%{x}",
+                            "<extra></extra>"),
+              true = paste0("<b>%{y:,2f}</b><br>",
+                            "%{marker.color:1f}",if (input$y1.fahr){'℉'} else{'℃'},
+                            "<br>%{x}",
+                            "<extra></extra>"))
+            ) %>%
+    # rolling av: main data
+    add_trace(data = data1main(),
+              type = 'scatter', mode = 'lines', name = paste0("30-day Av"),
+              x = ~date, y = ~rolling_av_30, 
+              line = list(color = brewer.pal(5,'Blues')[4]), 
+            legendgroup = "bks",
+            hovertemplate = paste0("<b>30-Day Average</b><br>",
+                                  "<b>%{y:,1f}</b><br>",
+                                   "%{x}",
+                                   "<extra></extra>")) %>%
+  layout( 
+    title = list(text=""),
+    yaxis2= ay(),
+    yaxis3= by(),
+    yaxis = list(
+      showgrid = F,
+      title = list(text=paste("<b>",name(),"</b>"), font=list(size=18))), 
+    xaxis = list(
+      title = list(text="<b>Date Range Selector</b>", font=list(size=16)),
+      rangeslider = list(autorange=TRUE, thickness = 0.15),
+      rangeselector = list(
+        x = 0.02, y = 1.1,
+        buttons = list(
+        list(count=3, label="3 yr", step='year', stepmode='backward'),
+        list(count=1, label="1 yr", step='year', stepmode='backward'),
+        list(count=3, label='3 mo', step='month',stepmode='backward'),
+        list(step = 'all')))),
+    font = list(family="arial"),
+    legend = list(orientation='h', y=1.30, x=0.95, xanchor = "auto"),
+    margin = list(l=80, r=100),
+    dragmode = 'pan'
+  ) %>% # end layout
+    config(modeBarButtonsToRemove = c('lasso2d', 'select2d', 'hoverClosestCartesian', 'toggleSpikelines',
+                                      'autoScale2d', 'zoomIn2d', 'zoomOut2d'))
+    
+  ) # end withprogress
+
+}, ignoreNULL=FALSE, ignoreInit = FALSE, label = 'p1-plotly')
+  
+
+
+
+# render the graph
+renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
+
+ 
+
+```
+
+
+
+
+
+### Terms and notes
+
+**Number of Rides**: The total number of rides across the system that originated on a specific day.
+
+**Median Ride Duration**: A measure of how long the 'average' ride lasted, converted to minutes. Mathematically, the median is used in lieu of average to avoid upward-skewing from extremely long rides (such as those that forgot to properly dock the bike).
+
+**Duration Inequity**: An index from 0-1 that measures the "even-ness" of the daily ride duration distribution. Figures closer to 1 indicate that rides for that day were concentrated among just a few ride-length times, whereas figures closer to 0 indicate that rides, on aggregate, were evenly distributed across all ride-length times. This is simply a transport-oriented application of the GINI Index.
+
+**Precipitation**: (1-2 sentence methodology explanation)
+
+**Observed Daily High**: (1-2 sentence methodology explanation)
+
+# Stations
+
+## Yearly Departures
+
+```{r, echo=FALSE}
+inputPanel(
+  sliderInput('year2', "Year", 2010, 2020, 2010, sep = '', ticks = FALSE),
+  selectInput('y2', "Y Axis", 
+              choices = c("Number of Rides"      =  "departures",
+                          "Median Ride Duration" =  "dur_med",
+                          "Departure Inequity"   =  "dep_ineq",
+                          "Near Metro"           =  "metro",
+                          "Percent of Rides to Metro" = "metro_end_pct",
+                          "Member Percent"       = "member_pct",
+                          "Net Flow"             = "net_flow",
+                          "Net Median Duration"  = "net_median_dur"),
+              selected = "departures",  multiple = FALSE, selectize = TRUE),
+  materialSwitch('scaled', "Scaled", value = FALSE)
+)
+
+pal2  <- reactive({
+  if (input$scaled == FALSE) {
+    colorQuantile("YlOrRd", sum_station_yr$input$y2, 5)
+  } else {
+    colorNumeric("YlOrRd", sum_station_yr$input$y2)
+  }
+  })
+data2 <- reactive({ filter(sum_station_yr, year == input$year2) })
+
+m2 <- reactive({
+  leaflet(data = data2(), height = 800) %>%
+  addTiles() %>%
+  addCircleMarkers(color = ~pal2()(eval(as.symbol(input$y2))),
+                   fillColor = ~pal2()(eval(as.symbol(input$y2))),
+                   radius=7, stroke = TRUE, weight = 2,
+                   opacity = 0.9, fillOpacity = 0.4, 
+                   label = ~eval(as.symbol(input$y2)),
+                   popup = ~name_bks_st) # add legend later, lol
+})
+  
+renderLeaflet({m2()})
+
+
+
+# data1 <- reactive({ filter(sum_station_yr, year == input$year1) })
+# m1 <- reactive({
+#   mapview(data1(), zcol = "departures",
+#           at = c(0,1000,2000,5000,10000,20000,100000)
+#           )
+#   })
+# 
+# renderLeaflet({
+#     m1()@map
+# })
+
+
+```
+
+## Daily Departures
+
+Note the interpretation is in terms of average or summed station-days over the time period specified.
+
+```{r, echo=FALSE}
+inputPanel(
+  dateRangeInput('dt3a',"Date A","2010-01-01","2012-12-31", startview = "year"),
+  dateRangeInput('dt3b',"Date B","2017-01-01","2020-12-31", startview = "year"),
+  selectInput('y3', "Y Axis", 
+              choices = c("Number of Rides"      =  "departures",
+                          "Median Ride Duration" =  "dur_med",
+                          "Departure Inequity"   =  "dep_ineq",
+                          "Percent of Rides to Metro" = "metro_end_pct",
+                          "Member Percent"       = "member_pct",
+                          "Net Flow"             = "net_flow"),
+              selected = "departures",  multiple = FALSE, selectize = TRUE),
+  #materialSwitch('scaled3', "Scaled", value = FALSE),
+  sliderInput('n3', 'N Colors', 2, 10, 5, width = 70),
+  selectInput('name3', 'Colors', choices = hcl.pals("sequential")),
+  actionButton('go', "Go")
+)
+
+# summarize/filter dataframe based on date range.
+int3a  <- reactive({ interval(start = input$dt3a[1], end = input$dt3a[2]) }) 
+data3a <- reactive({ 
+  sum_station %>% filter(date %within% int3a() ) %>%
+    dplyr::ungroup() %>% group_by(id_station, name_bks, lng, lat) %>%
+    summarise(
+      departures    = round(mean(departures, na.rm=T), 1),
+      dur_med       = round(median(dur_med, na.rm=T), 1),
+      dep_ineq      = round(mean(dep_ineq, na.rm=T), 3),
+      metro_end_pct = round(mean(metro_end_pct, na.rm=T), 3),
+      member_pct    = round(mean(member_pct, na.rm=T), 3),
+      net_flow      = sum(net_flow)
+    )
+  })
+
+int3b  <- reactive({ interval(start = input$dt3b[1], end = input$dt3b[2]) }) 
+data3b <- reactive({ 
+  sum_station %>% filter(date %within% int3b() ) %>%
+    dplyr::ungroup() %>% group_by(id_station, name_bks, lng, lat) %>%
+    summarise(
+      departures    = round(mean(departures, na.rm=T), 1),
+      dur_med       = round(median(dur_med, na.rm=T), 1),
+      dep_ineq      = round(mean(dep_ineq, na.rm=T), 3),
+      metro_end_pct = round(mean(metro_end_pct, na.rm=T), 3),
+      member_pct    = round(mean(member_pct, na.rm=T), 3),
+      net_flow      = sum(net_flow)
+    )
+  })
+
+
+# pal3  <- reactive({ 
+#   if (input$scaled3 == FALSE) {
+#     colorQuantile("YlOrRd", sum_station$input$y3, 5)
+#   } else {
+#     colorNumeric("YlOrRd", sum_station$input$y3)
+#   }
+#   })
+# 
+# m3a <- reactive({
+#   leaflet(data = data3a(), height = 800) %>%
+#   addTiles() %>%
+#   addCircleMarkers(color = ~pal3()(eval(as.symbol(input$y3))),
+#                    fillColor = ~pal3()(eval(as.symbol(input$y3))),
+#                    radius=7, stroke = TRUE, weight = 2,
+#                    opacity = 0.9, fillOpacity = 0.4, 
+#                    label = ~eval(as.symbol(input$y3)),
+#                    popup = ~name_bks) # add legend later, lol
+# })
+# 
+# m3b <- reactive({
+#   leaflet(data = data3b(), height = 800) %>%
+#   addTiles() %>%
+#   addCircleMarkers(color = ~pal3()(eval(as.symbol(input$y3))),
+#                    fillColor = ~pal3()(eval(as.symbol(input$y3))),
+#                    radius=7, stroke = TRUE, weight = 2,
+#                    opacity = 0.9, fillOpacity = 0.4, 
+#                    label = ~eval(as.symbol(input$y3)),
+#                    popup = ~name_bks) # add legend later, lol
+# })
+
+n  <- reactive({input$n3})
+nm <- reactive({input$name3})
+
+
+mv1 <- reactive({ # fyi these takes like 10 seconds to calculate lol %%
+  data3a() %>%  st_as_sf(coords=c("lng","lat"), na.fail=F) %>%
+  mapview(., zcol = as.character(input$y3))
+})
+mv2 <- reactive({
+  data3b() %>%  st_as_sf(coords=c("lng","lat"), na.fail=F) %>%
+  mapview(., zcol = as.character(input$y3))
+})
+syncmap <- eventReactive(input$go, { 
+  
+  mapviewOptions( # change/set global options
+  vector.palette = hcl.colors(input$n3, palette = input$name3)
+  )
+  
+  sync( mv1(), mv2() )
+  })
+
+
+
+# renderLeaflet({ m3a() })
+# renderLeaflet({ m3b() })
+renderUI({syncmap()})
+# 
+# renderLeaflet({mv1()@map})
+# renderLeaflet({mv2()@map})
+
+
+
+```

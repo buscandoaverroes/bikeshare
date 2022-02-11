@@ -23,20 +23,18 @@
          readstata13,
          data.table,
          leaflet,
-         sp,
          sf,
-         tmap,
-         osmdata,
-         ggmap,
          gdata,
          lubridate,
          data.table,
-         janitor
+         janitor,
+         assertthat
         )
  
 
 
 
+      
 
                               #-------------#
                               # Set User    #
@@ -64,14 +62,14 @@
 
 
 # same no matter the user.
-  scripts           <- file.path(repo,"R")
-
-  gadm              <- "/Volumes/Al-Hakem-II/other+files/gadm"
+  scripts           <- file.path(repo,"code")
+    shiny           <- file.path(repo, "visuals/shiny")
+  
   raw               <- file.path(data, "raw")
   processed         <- file.path(data, "bks")
-  MotherData        <- file.path(data, "MotherData")
-    kpop            <- file.path(MotherData, "kpop")
-    full            <- file.path(MotherData, "years")
+    keys            <- file.path(processed, "keys")
+    plato           <- file.path(processed, 'data/plato')
+
 
 
     
@@ -85,67 +83,65 @@
                                     # run scripts #
                                     #-------------#
 # main scripts
-  s1 <- 0   # import          variable harmonization, append. no data wrangling
+  s1 <- 0    # import          variable harmonization, append. no data wrangling
             #                   makes: bks-import.csv
   s2 <- 0   # stations      creates old/new station number dictionary and adds station features
             #                   makes: station_key.Rda, station-geo-objects.Rdata
+                            
   s3 <- 0   # construct:      takes bks.Rda and makes other files, runs station-number.R
             #                   makes: bks-full.Rda, bks-full.csv
   s4 <- 0   # query:          filters/queries main database and exports files.
             #                   makes: bks_2020.Rda, bks1720.Rda
-  s5 <- 0   # stats          takes years 17-20 from query, processes, adds station info, stats.
-            #                   makes: stats17-20.Rdata ~20 min
-  s6 <- 0   # 
+            
+# Stats Processing                  
+  s5 <- 0   # stats10-14        takes years 10-14 from query, processes, adds station info, stats.
+            #                   makes: stats10-14.Rdata ~20 min
+  s6 <- 0   # stats15-16       takes years 15-16 from query, processes, adds station info, stats.
+            #                   makes: stats15-16.Rdata ~20 min
+  s7 <- 0   #stats17-21        takes years 17-21 from query, processes, adds station info, stats.
+            #                    makes: stats17-21.Rdata ~20 min
   
-# utilities: can be run independently after main.R
+# recollection 
+  r1 <- 0   # recollect       takes the 'parallel processed' stats files and reassembles them into:
+            #                   days, station-sum, rides .Rda files under the /plato directory
+  
+  
+# utilities
   u1 <- 0   # weather.R       queries weather data from NOAA to create by-day weather dictionary
             #                   makes: data/weather/weather-daily.Rda
-
+  u2 <- 0   # names.R         creates a tibble of all key variable names and text/labels for graphs,
+  
   
 # rmarkdown
-  m1 <- 0   # sandbox.Rmd     exploration markdown of basic plots and regs, using Rdata from sandbox.R    
+  md1 <- 0   # descriptives01.Rmd     exploration markdown of basic plots     
+  md2 <- 0   # regressions01.Rmd       basic regressions
+  
   
 
             
 # main scripts --------------------------------------------------------------------------------------            
-  # import
-  if (s1 == 1) {
-    source(file.path(scripts, "import.R"))
-  }
-  # create dictionary of station numbers 
-  if (s2 == 1) {
-    source(file.path(scripts, "stations.R"))
-  }
-  # construct
-  if (s3 == 1) {
-    source(file.path(scripts, "construct.R"))
-  }
-  # query
-  if (s4 == 1) {
-    source(file.path(scripts, "query.R"))
-  }       
-  # sandbox.R
-  if (s5 == 1) {
-    source(file.path(scripts, "stats17-20.R"))
-  }         
+ 
+  if (s1 == 1) {source(file.path(scripts, "import.R"))}  
+  if (s2 == 1) {source(file.path(scripts, "stations.R"))}
+  if (s3 == 1) {source(file.path(scripts, "construct.R"))} 
+  if (s4 == 1) {source(file.path(scripts, "query.R"))} 
+  if (s5 == 1) {source(file.path(scripts, "stats10-14.R"))}  
+  if (s6 == 1) {source(file.path(scripts, "stats15-16.R"))}  
+  if (s7 == 1) {source(file.path(scripts, "stats17-21.R"))}  
+  
+  if (r1 == 1) {source(file.path(scripts, "recollect.R"))}  
             
 
 # utilities --------------------------------------------------------------------------------------            
             
-# sandbox.R
-if (u1 == 1) {
-  source(file.path(scripts, "weather.R"))
-}                     
-            
+if (u1 == 1) {source(file.path(scripts, "weather.R"))}                     
+if (u2 == 1) {source(file.path(scripts, "names.R"))}              
             
             
 # markdown --------------------------------------------------------------------------------------            
             
-# sandbox.R
-if (m1 == 1) {
-  source(file.path(scripts, "sandbox.Rmd"))
-}                     
-            
+if (md1 == 1) {source(file.path(scripts, "analysis/Descriptives01.rmd"))}                     
+if (md2 == 1) {source(file.path(scripts, "analysis/regeressions01.rmd"))}                  
             
             
             

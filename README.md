@@ -7,6 +7,28 @@ Please note that while the code here is available publicly, all system data shou
 
 The code is designed to pull the raw .csv files from folders named by year. 
 
+## Interesting Findings so far...
+
+### System Rides By Week
+In pre-pandemic years, the late spring, summer, and early fall weeks see the highest monthly rides. In 2020, the first few weeks had weekly ride tallys in line with pre-pandemic years, but April of 2020 saw a drastic decrease in the number of rides compared to pre-pandemic years. Monthly rides stayed below pre-pandemic years, but nevertheless recovered after the spring dip in ridership.
+
+![system-rides](visuals/png/rides_by_week.png)
+
+### Ride Duration by Weekday and Weekend
+Median ride durations appear higher on the weekends throughout the year. But at the start of the pandemic we begin to see a pattern where median ride durations are longer -- on both weekdays and weekends.
+
+![dur-weekend](visuals/png/dur_weekend.png)
+
+### Variation in Median Duration
+The changes in median duration from each station play out between the 10th and 12th weeks of 2020, where the distribution of ride lengths becomes more spread out quite quickly.
+
+![weekly-station-dur](visuals/png/weekly_station_dur.png)
+
+### Percent of rides going to a Bikeshare station near a subway station
+In 2020, we also see a more accentuated relationship between membership and metro-going percentages: the higher proportion of users that check out a bike that are members, the more likely the ride patterns from that station are headed to a another station near a metro.
+
+![station-member-pct](visuals/png/station_member_pct.png)
+
 ## Current Status and Research Questions
 __note: main project currently on pause due to development of [cycleR](https://github.com/buscandoaverroes/cycleR), which should hopefully make this project better :)__ 
 

@@ -4,6 +4,14 @@
 # Note: this is run within the station-number script so no packages/data should be needed.
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- #
 
+library(osmdata)
+library(mapview)
+
+
+# settings 
+query  = FALSE    # set to TRUE to requery and download OSM data, FALSE to load prev saved query
+export = TRUE     # set to TRUE to export/save, FALSE to not
+
 # key variables: first applied after merge with OSM data 
 key_df_vars <- c(
     "number_old",
@@ -31,7 +39,7 @@ names_bks <-
 
 # determine no of unique stations 
 # old numbers are all greater than 30,000; station numbers that are == 0 are disabled, etc. Filter those out.
-station_old <- bks %>% filter(!is.na(start_number)) %>% distinct(start_number) 
+station_old   <- bks %>% filter(!is.na(start_number)) %>% distinct(start_number) 
 n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
 
 
@@ -41,8 +49,9 @@ n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
                   #         create station name-number dictionary            =================
                   # ---------------------------------------------------------#
 
-# create distinct name-number dictionary: this will have duplicates across numbers because 
-# there will be stations with different spellings of names with the same number.
+## create distinct name-number dictionary: ----
+## this will have duplicates across numbers because 
+## there will be stations with different spellings of names with the same number.
 namenumb <- bks %>%
   group_by(start_name, start_number) %>%
   summarise() %>%
@@ -62,7 +71,7 @@ assertthat::assert_that(
 
 
 
-# add and remove variables ---------------------------------------------------------------------
+## add and remove variables ---------------------------------------------------------------------
 
 # remove misc var, drop unecessary objects 
 station_key <- namenumb %>%
@@ -85,7 +94,7 @@ station_key <-
 
 
 
-# merge with gps coordinates from "new" stations ----------------------------------------------------
+## merge with gps coordinates from "new" stations ----------------------------------------------------
 
 # set random number seed
 set.seed(4747) 
@@ -112,41 +121,109 @@ station_key <-
 
 
 
+## replace missings GPS info ------------------------------------------------------
+# note: some stations did not come with valid lat/lon column data, but can either 
+# be inferred (reasonably guessed) based on same-named stations with valid GPS data
+# or from a simple query on OpenStreetMaps. Thanks to OpenStreetMap and Contributors!
+
+# replace lat/long based on name -- it's possible that id could change as stations are added.
+
+station_key$lat[station_key$name1=="12th & Army Navy Dr"] <- 38.86294 
+station_key$lng[station_key$name1=="12th & Army Navy Dr"] <- -77.05276
+
+station_key$lat[station_key$name1=="14th & D St SE"] <- 38.88405 
+station_key$lng[station_key$name1=="14th & D St SE"] <- -76.9857
+
+station_key$lat[station_key$name1=="22nd & H  NW (disabled)"] <- 38.8989 # same name, assume lat/long same
+station_key$lng[station_key$name1=="22nd & H  NW (disabled)"] <- -77.0489
+
+station_key$lat[station_key$name1=="34th St & Minnesota Ave SE"] <- 38.88362
+station_key$lng[station_key$name1=="34th St & Minnesota Ave SE"] <- -76.95782
+
+station_key$lat[station_key$name1=="Solutions & Greensboro Dr"] <- 38.88362
+station_key$lng[station_key$name1=="Solutions & Greensboro Dr"] <- -76.95782
+
+station_key$lat[station_key$name1=="Taft St & E Gude Dr"] <- 38.88362
+station_key$lng[station_key$name1=="Taft St & E Gude Dr"] <- -76.95782
+
+# assume that the two office have the same coords
+station_key$lat[station_key$name1=="Motivate Tech Office"] <- station_key$lat[station_key$name1=="Motivate BX Tech office"]
+station_key$lng[station_key$name1=="Motivate Tech Office"] <- station_key$lng[station_key$name1=="Motivate BX Tech office"]
+
+
+
+# ensure each station has GPS data 
+assert_that(
+  sum(is.na(station_key$lat)) == 0
+)
+
+assert_that(
+  sum(is.na(station_key$lng)) == 0
+)
+
+
 
 
             # ---------------------------------------------------------#
             #       incorporate open street map id numbers              =======================
             # ---------------------------------------------------------#
 
-# extract features ------------------------------------------------------------------
+## extract features ------------------------------------------------------------------
 
-# extract bikeshare info as sf object
-osm_bike <- getbb("Washington, DC") %>% # query...and add features
-  opq() %>%
-  add_osm_feature("amenity", "bicycle_rental") %>%
-  osmdata_sf()
+# only re-query-download if set to TRUE
+if (query == TRUE) {
+  
+  ## make boundary box
+  bb <- c(-77.5,38.7,-76.75,39.2)
+  
+  # extract bikeshare info as sf object
+  osm_bike <- 
+    opq(bbox = bb) %>% # larger box around Washington, DC metro area
+    add_osm_feature("amenity", "bicycle_rental") %>%
+    osmdata_sf()
+  
+  # set crs
+  st_crs(osm_bike$osm_points) <- crs
+  
+  
+  # extract metro stations info, save as sf object 
+  osm_metro_query <- # note this query generates another layer of info
+    opq(bbox = bb) %>%
+    add_osm_feature(key = "public_transport",
+                    value = "station") %>%
+    osmdata_sf() # keep only metro stations
+  
+  osm_metro <- st_as_sf(osm_metro_query$osm_points) %>%
+    filter(operator == "Washington Metropolitan Area Transit Authority" |
+             operator == "Washington Metro Area Transit Authority") 
+  
+  # set crs
+  st_crs(osm_metro) <- crs
+  
+  # save files 
+  save(
+    bb, osm_bike, osm_metro_query, osm_metro,
+    file = file.path(data, "bks/data/maps/osm-bks-query.Rdata")
+  )
+  
+} else {
+  # otherwise, load saved query objects
+  load(file = file.path(data, "bks/data/maps/osm-bks-query.Rdata"))
+}
 
-# set crs
-st_crs(osm_bike$osm_points) <- crs
-
-
-# extract metro stations info, save as sf object
-osm_metro <- getbb("Washington, DC") %>% # query and add metro features
-  opq() %>%
-  add_osm_feature("railway", "station") %>%
-  osmdata_sf() 
-
-# set crs
-st_crs(osm_metro$osm_points) <- crs
 
 
 
-# join features with main dictionary ------------------------------------------------------
+
+## join features with main dictionary ------------------------------------------------------
 
 # make sf class
 station_key <- 
   station_key %>%
-  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) 
+  st_as_sf(., 
+           coords = c("lng", "lat"), 
+           na.fail = TRUE, 
+           remove = FALSE) 
 
 # set crs
 st_crs(station_key) <- crs
@@ -155,12 +232,11 @@ st_crs(station_key) <- crs
 station_key <- 
   station_key %>%
   st_join(.,  # imported gps coordinates of bikeshare stations from cabi
-          osm_metro$osm_points, # bikeshare station info from osm
+          osm_metro, # bikeshare station info from osm
           join = st_is_within_distance,
           left = TRUE,  # keep all obs from station key
           dist = bike_metro_dist,
           suffix = c(".x", ".y"),
-          na_matches = "never",
           largest = FALSE
           ) %>%  # only match first within x meters, otherwise NA.
   rename(  # first rename BEFORE dropping vars
@@ -176,7 +252,7 @@ station_key <-
 
 
 
-# control for duplicate and na-matches ----------------------------------------------------------
+## control for duplicate and na-matches ----------------------------------------------------------
 # note: st_join doesn't have a way to control for NA matches or duplicates. What this
 # means is that if there's an observation with (NA) for geometry, it seems to get
 # matched to all observations in y. Also if there are two stations within the distnace
@@ -212,11 +288,29 @@ station_key <-
     values_from = c(osm_id, name_metro),
     values_fill = NA
     ) %>%
-  st_as_sf(., coords = c("lng", "lat"), na.fail = FALSE, remove = FALSE) %>% # replace geometry
+  st_as_sf(.,
+           coords = c("lng", "lat"),
+           na.fail = TRUE,
+           remove = FALSE) %>% # replace geometry
   rename(name_metro = name_metro_1) # rename first name of metro station
 
+st_crs(station_key) <- crs
 
-# check that there are no duplicates in number_old, id_proj -----------------------
+
+
+## final name order changes ----
+# the way that the names have been ordered has put the actual "colloquial" or more
+# common use name in lower status order, so this code will fix that here and there
+
+station_key$name_bks[station_key$name_bks == "Washington-Lee High School / N Stafford St & Generals Way"] <- 
+  "Washington-Liberty High School / N Stafford St & Generals Way"
+station_key$name_bks2[station_key$name_bks2 == "Washington-Liberty High School / N Stafford St & Generals Way"] <- 
+  "Washington-Lee High School / N Stafford St & Generals Way"
+
+
+
+
+## check that there are no duplicates in number_old, id_proj -----------------------
 
 # check that id_project is unique project id
 assertthat::assert_that(
@@ -228,12 +322,26 @@ assertthat::assert_that(
   nrow(station_key) == n_station_old
 )
 
+# check that all rows have non-missing geometry 
+assertthat::assert_that(
+  sum(st_is_empty(station_key$geometry)) == 0
+)
 
 
 
 
-# export ---------------------------------------------------------------------------
-if (TRUE) {
+
+
+
+                  # ---------------------------------------------------------#
+                  #             simple map                           =======================
+                  # ---------------------------------------------------------#
+
+station_map <- mapview(station_key, label="name_bks", zcol = "metro")
+
+
+## export ---------------------------------------------------------------------------
+if (export == TRUE) {
 
 # export station_key
 saveRDS(station_key,
@@ -242,13 +350,16 @@ saveRDS(station_key,
 
 # export objects we may need later as Rdata
 save(
-  osm_bike, osm_metro, station_old, cabi_coords,
+  osm_bike, osm_metro, osm_metro_query, station_old, cabi_coords,
   n_station_old,
-  file = file.path(processed, "data/station-geo-objects.Rdata")
+  station_map,
+  file = file.path(processed, "keys/station-geo-objects.Rdata")
 )
 
 # remove objects not needed
-remove(bks, cabi_coords, namenumb, names_bks, osm_bike,
+remove(bks, cabi_coords, namenumb, names_bks, osm_bike, osm_metro_query, station_map,
        osm_metro, station_key, station_old) 
+
+gc()
 
 }
