@@ -29,7 +29,6 @@ In 2020, we also see a more accentuated relationship between membership and metr
 
 ![station-member-pct](visuals/png/station_member_pct.png)
 
-
 ## Current Status and Research Questions
 __note: main project currently on pause due to development of [cycleR](https://github.com/buscandoaverroes/cycleR), which should hopefully make this project better :)__ 
 
