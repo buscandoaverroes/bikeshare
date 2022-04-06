@@ -82,3 +82,4 @@
 # password or passwords are also ignored. NOTE that your project might be
 # using different names and then you must edit the lines below accordingly.
 
+.Rproj.user
