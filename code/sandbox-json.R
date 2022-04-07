@@ -2,9 +2,12 @@
 # a sandbox for accessing system data from https://gbfs.capitalbikeshare.com/gbfs/gbfs.json
 library(jsonlite)
 library(dplyr)
-library(RCurl)
 
-url <- "https://gbfs.capitalbikeshare.com/gbfs/en/station_information.json"
-json <- fromJSON(url)
+stations <- "https://gbfs.capitalbikeshare.com/gbfs/en/station_information.json"
+regions <- "https://gbfs.capitalbikeshare.com/gbfs/en/system_regions.json"
 
-stations <- json$data$stations
+json_stations <- fromJSON(stations)
+json_regions <- fromJSON(regions)
+
+stations <- json_stations$data$stations
+regions <- json_regions$data$regions
