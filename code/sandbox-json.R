@@ -3,6 +3,7 @@
 library(jsonlite)
 library(dplyr)
 library(mapview)
+library(leaflet)
 library(sf)
 
 
@@ -26,6 +27,44 @@ stations %>%
 
 # freebikes appears to have locations of current undocked electric bikes 
 
-leaflet(data = freebikes) %>%
+leaflet() %>%
   addTiles() %>%
-  addCircleMarkers(lat = ~lat, lng = ~lon)
+  addCircleMarkers(data = freebikes, 
+                   lat = ~lat, 
+                   lng = ~lon, 
+                   label = ~type) %>%
+  addCircleMarkers(data = stations,
+                   radius = 5,
+                   color = "#000",
+                   lat = ~lat,
+                   lng = ~lon,
+                   label = ~name)
+
+# highlight bikes that are not within 200m of a station
+stations_sf <- st_as_sf(stations, 
+                        coords = c("lon", "lat"), 
+                        crs = st_crs(4326)) %>%
+  select(station_id, name, region_id, capacity)
+
+freebikes_sf <- st_as_sf(freebikes, 
+                        coords = c("lon", "lat"), 
+                        crs = st_crs(4326)) 
+
+
+close <-  
+  st_join(freebikes_sf,  # left side = freebikes
+    stations_sf, # right side = stations
+    join = st_is_within_distance, # join type
+    left = TRUE,  # keep all obs from station key
+    dist = 200,
+    suffix = c(".x", ".y"),
+    largest = FALSE) %>%
+  mutate(close = !is.na(station_id)) %>%
+  select(bike_id, close, is_disabled, is_reserved, station_id, name.y)
+
+
+  
+mapviewOptions(fgb = FALSE) # fix error https://github.com/r-spatial/mapview/issues/412
+
+mapview(stations_sf, label = "name") +
+  mapview(close, zcol = "close", col.regions = c("red", "green"))
