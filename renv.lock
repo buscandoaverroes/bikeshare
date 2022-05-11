@@ -1498,7 +1498,9 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "b37932b67288bc62bb81686b2f337a7d",
-      "Requirements": []
+      "Requirements": [
+        "remotes"
+      ]
     },
     "padr": {
       "Package": "padr",
@@ -1835,6 +1837,14 @@
       "Requirements": [
         "tibble"
       ]
+    },
+    "remotes": {
+      "Package": "remotes",
+      "Version": "2.4.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "227045be9aee47e6dda9bb38ac870d67",
+      "Requirements": []
     },
     "renv": {
       "Package": "renv",
