@@ -61,6 +61,7 @@ close <-
     largest = FALSE) %>%
   mutate(close = !is.na(station_id)) %>%
   select(bike_id, close, is_disabled, is_reserved, station_id, name.y)
+  # note this produces duplicates of bike_id
 
 
   
