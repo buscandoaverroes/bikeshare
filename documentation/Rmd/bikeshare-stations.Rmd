@@ -17,4 +17,41 @@ knit: (function(input, ...) {
   })
 ---
 
-Testing
+# Making a Bikeshare Station Dictionary
+
+A station dictionary is a list of all unique bikeshare stations, name,
+id numbers, coordinates, and other relevant information.
+
+## Construction Overview
+
+Two scripts are responsible for it's creation, `stations.R` and
+`stations2.R` . The former is conceptually simple but computationally
+expensive and, so, is only run when needed. The code loads in all
+bikeshare data saved on disk and creates a unique list of station name
+and id number, along with basic cleaning for duplicates, etc. Ideally
+this would be done in something faster like Julia, but a project for
+another day. Besides the memory cost, this method is imperfect for a
+second reason: the incomplete lat/lon data. Only partway through the
+data history are lat/lon included, so some gymnastics is needed to
+complete all the gps data.
+
+`stations2.R` pulls current system station data using the Capital
+Bikeshare API, which is more complete than what you get from the method
+above. However, the list of current stations is not cumulative: some
+stations that existed in past data have been moved or removed and thus
+do not appear in the call results from the API.
+
+As of now, I'm combining approaches. I will run `stations.R`
+periodically and save the resulting "historical" dictionary output in a
+light .Rda file. Whenever I rerun the code or retrieve new data, I'll
+run `stations2.R` to obtain "current" station data and compare it with
+the "historical" dictionary file and create date-time variables when
+appropriate. In this way, I can throw in any stations that appear in the
+historical dictionary but not in the current API data.
+
+The resulting global dictionary should, in theory, have a complete list
+of all stations both past and present. A binary column along the lines
+of `inservice` will indicate if a station is currently in use or was
+disabled for some reason. A `FALSE` here essentially tells us that the
+data came from the historical dictionary and was not present in the
+current API call.
