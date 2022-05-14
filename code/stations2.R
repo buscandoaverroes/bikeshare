@@ -6,43 +6,55 @@
 
 library(osmdata)
 library(mapview)
+library(jsonlite)
+library(dplyr)
+library(mapview)
+library(leaflet)
+library(sf)
+library(janitor)
 
 
 # settings 
 query  = FALSE    # set to TRUE to requery and download OSM data, FALSE to load prev saved query
 export = TRUE     # set to TRUE to export/save, FALSE to not
 
-# key variables: first applied after merge with OSM data 
-key_df_vars <- c(
-    "number_old",
-    "id_proj",
-    "name_bks", "name_bks2", "name_bks3",
-    "lat",       "lng",
-    "geometry",
-    "osm_id", "metro",    "name_metro"
-)
 
 
+                  # ---------------------------------------------------------#
+                  #         download json data                                =================
+                  # ---------------------------------------------------------#
+                  
+# save url and download
+url_stations <- "https://gbfs.capitalbikeshare.com/gbfs/en/station_information.json"
+json_stations <- fromJSON(url_stations)
+
+# extract station data
+stations <- json_stations$data$stations
+
+# uniqueness checks
+assertthat::assert_that( nrow(stations) == n_distinct(stations$legacy_id) ) # old number
+assertthat::assert_that( nrow(stations) == n_distinct(stations$short_name) ) # new number
+assertthat::assert_that( nrow(stations) == n_distinct(stations$name) ) # string name
+
+# check that each station has non-missing data
+assertthat::assert_that( sum(is.na(stations$lat)) == 0 )
+assertthat::assert_that( sum(is.na(stations$lon)) == 0 )
+
+oldkey <- readRDS("/Volumes/Al-Hakem-II/Datasets/bks/bks/keys/station_key.Rda")
 
 
-# load csv 
-bks <- data.table::fread(
-  file.path(raw, "bks-import.csv"),
-  header = TRUE,
-  na.strings = "" 
-)
+# oldkey = 640 rows, new = 681
+# create negation function 
+`%!in%` = Negate(`%in%`)
 
-# make names object 
-names_bks <- 
-  as_tibble(names(bks)) %>%
-  gather()
+newnotinold <- stations$short_name %!in% oldkey$number_old
+oldnotinnew <- oldkey$number_old %!in% stations$short_name
 
-# determine no of unique stations 
-# old numbers are all greater than 30,000; station numbers that are == 0 are disabled, etc. Filter those out.
-station_old   <- bks %>% filter(!is.na(start_number)) %>% distinct(start_number) 
-n_station_old <- n_distinct(station_old$start_number, na.rm = TRUE)
+oldnotinnew_df <- oldkey %>%
+  filter( number_old %!in% stations$short_name ) 
 
-
+newnotinold_df <- stations %>%
+  filter( short_name %!in% oldkey$number_old )
 
 
                   # ---------------------------------------------------------#
