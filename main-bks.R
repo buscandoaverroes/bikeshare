@@ -6,36 +6,6 @@
 
 
 
-
-
-                              # ---- Opening  ----
-
-                              #-------------#
-                              # packages    #
-                              #-------------#
-                              
-      if (!is.element("pacman", installed.packages())) {
-        install.packages("pacman", dep= T)
-      }
-                           
-      pacman::p_load(
-        tidyverse,
-         readstata13,
-         data.table,
-         leaflet,
-         sf,
-         gdata,
-         lubridate,
-         data.table,
-         janitor,
-         assertthat
-        )
- 
-
-
-
-      
-
                               #-------------#
                               # Set User    #
                               #-------------#
@@ -145,7 +115,7 @@ if (md2 == 1) {source(file.path(scripts, "analysis/regeressions01.rmd"))}
             
             
             
-# credits: =======================================================================================
+# extra special credits: =======================================================================================
 # OpenStreetMaps, GADM, Dominic Royé, https://dominicroye.github.io/en/2018/accessing-openstreetmap-data-with-r/
       # Matthias: https://www.gis-blog.com/nearest-neighbour-search-for-spatial-points-in-r/
        # bzki: https://stackoverflow.com/questions/21977720/r-finding-closest-neighboring-point-and-number-of-neighbors-within-a-given-rad
