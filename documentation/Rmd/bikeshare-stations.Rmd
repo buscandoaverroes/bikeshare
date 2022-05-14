@@ -1,0 +1,20 @@
+---
+title: "Bikeshare Stations"
+output: 
+  github_document:
+    html_preview: false
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+knit: (function(input, ...) {
+    rmarkdown::render(
+      input,
+      output_dir = here::here("documentation"),
+      envir = globalenv()
+    )
+  })
+---
+
+Testing
