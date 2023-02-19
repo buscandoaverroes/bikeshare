@@ -303,10 +303,6 @@ renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
 
 ```
 
-
-
-
-
 ### Terms and notes
 
 **Number of Rides**: The total number of rides across the system that originated on a specific day.
