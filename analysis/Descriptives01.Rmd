@@ -38,7 +38,15 @@ theme_set(theme_minimal())
 alpha = 0.2
 ```
 
-Thanks to RColorBrewer for providing the color scales.
+
+## Attribution
+
+All bikeshare system data are obtained from the Capital Bikeshare [website](https://www.capitalbikeshare.com/system-data), as per their [license agreement](https://www.capitalbikeshare.com/data-license-agreement). The full usage data is quite large (~4gb), so please make the appropriate adjustments or time allotments when running the code.
+
+Data come from OpenStreetMap and from CapitalBikeShare (as described above). Upon the request of OSM, here's the attribution:  "© OpenStreetMap contributors". The data derived from OpenStreetMap should be maintained under the [Open Database License](www.opendatacommons.org/licenses/odbl). 
+
+Thanks to RColorBrewer for providing the color scales. 
+
 
 # By stations
 
