@@ -313,9 +313,9 @@ renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
 
 **Duration Inequity**: An index from 0-1 that measures the "even-ness" of the daily ride duration distribution. Figures closer to 1 indicate that rides for that day were concentrated among just a few ride-length times, whereas figures closer to 0 indicate that rides, on aggregate, were evenly distributed across all ride-length times. This is simply a transport-oriented application of the GINI Index.
 
-**Precipitation**: (1-2 sentence methodology explanation)
+**Precipitation**: The summed daily precipitation in millimeters for The National Arboredom weather station (geographically central location). Data from NOAA.
 
-**Observed Daily High**: (1-2 sentence methodology explanation)
+**Observed Daily High**: The measured maximum temperature in the day's 24-hour period for The National Arboredom weather station (geographically central location).
 
 # Stations
 
