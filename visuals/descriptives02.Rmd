@@ -49,11 +49,13 @@ mapviewOptions(fgb = T) # set to false for greater performance?
 alpha = 0.2
 ```
 
-Thanks to RColorBrewer for providing the color scales.
+# Introduction 
+
+I generally consider bikeshare data under two primary units of analysis: day and station. We can think of system-wide patterns on discrete days or, in aggregate, by week, month, or year. Essential questions like "Did ridership increase compared to last month?" can be answered from daily system data. Furthermore, station-based data allows us to examine differences in ride patterns to and from different stations. Questions that address variations in geography, cityscape, and the system's interface with other forms of transit would use station data.
 
 # Days
 
-The daily data is plotted in blue, along with optional weather data from NOAA. Date ranges can be subset by dragging either on the *Range Selector* below or on the plot region itself. Double-clicking resets.
+I plot discrete points of system-wide daily rides with a 30-day rolling average line. The user can toggle weather data from NOAA. Date ranges can be subset by dragging either on the *Range Selector* below or on the plot region itself. Double-clicking resets.
 
 ```{r, days}
 
@@ -317,6 +319,8 @@ renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
 
 # Stations
 
+This section is dedicated to node/station analysis
+
 ## Yearly Departures
 
 ```{r, echo=FALSE}
@@ -373,4 +377,6 @@ renderLeaflet({m2()})
 
 ```
 
+## Thanks etc
 
+Thanks to RColorBrewer for providing the color scales.
