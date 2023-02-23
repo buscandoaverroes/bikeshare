@@ -1,5 +1,5 @@
 ---
-title: "descriptives02"
+title: "Basic Descriptives"
 output: 
   html_document:
     toc: true
@@ -396,6 +396,8 @@ renderLeaflet({m2()})
 Also, stations were added over the course of the system life so some stations that appear in later years may not yet exist in earlier ones.
 
 
-## Thanks etc
+## Thanks
 
-Thanks to RColorBrewer for providing the color scales.
+Thanks to RColorBrewer for providing the color scales. Here's a link to the [Capital Bikeshare website](https://www.capitalbikeshare.com/system-data) and their [license agreement](https://www.capitalbikeshare.com/data-license-agreement). 
+
+Data come from OpenStreetMap and from CapitalBikeShare. Upon the request of OSM, here's the attribution: "© OpenStreetMap contributors". The data derived from OpenStreetMap should be maintained under the [Open Database License](www.opendatacommons.org/licenses/odbl). Weather data are from NOAA; thanks to their [help and documentation](https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt).
