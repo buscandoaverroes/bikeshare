@@ -317,16 +317,15 @@ renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
 
 **Observed Daily High**: The measured maximum temperature in the day's 24-hour period for The National Arboredom weather station (geographically central location).
 
-# Stations
+# Stations - Yearly
 
-This section is dedicated to node/station analysis
+Station-based data naturally reflects the variations in point-to-point patterns across geography. This map provides average values across the calendar year. Hovering over the points provides the exact value; toggle the "scaled" button to bin each observed value into quintiles for the graph (the values themselves are not changed).
 
-## Yearly Departures
 
 ```{r, echo=FALSE}
 inputPanel(
   sliderInput('year2', "Year", 2010, 2020, 2010, sep = '', ticks = FALSE),
-  selectInput('y2', "Y Axis", 
+  selectInput('y2', "Indicator", 
               choices = c("Number of Rides"      =  "departures",
                           "Median Ride Duration" =  "dur_med",
                           "Departure Inequity"   =  "dep_ineq",
@@ -376,6 +375,26 @@ renderLeaflet({m2()})
 
 
 ```
+
+### Terms and notes
+
+
+**Number of Rides**: A yearly count of rides departing from the station.
+
+**Median Ride Duration**: A measure of how long the 'average' ride lasted, converted to minutes. Mathematically, the median is used in lieu of average to avoid upward-skewing from extremely long rides (such as those that forgot to properly dock the bike).
+
+**Duration Inequity**: An index from 0-1 that measures the "even-ness" of the daily ride duration distribution. Figures closer to 1 indicate that rides for that day were concentrated among just a few ride-length times, whereas figures closer to 0 indicate that rides, on aggregate, were evenly distributed across all ride-length times. This is simply a transport-oriented application of the GINI Index.
+
+**Near Metro**: A boolean yes/no value, where "yes" indicates that the station is within meters of a subway station (as the bird flies).
+
+**Percent of Rides to Metro**: The percent of departing rides that ended up at a station "near Metro" as defined above.
+
+**Member Percent**: The percent of departing rides checked-out under a yearly Bikeshare membership.
+
+**Net Flow**: Simply (total year arrivals - total yearly departures). A negative number indicates that, over the course of the year, more rides departed the station than finished there. Note that large disparities are possible because system-operated trucks move bicycles around to balance out the distribution of standby bikes (not counted in ride total). 
+
+Also, stations were added over the course of the system life so some stations that appear in later years may not yet exist in earlier ones.
+
 
 ## Thanks etc
 
