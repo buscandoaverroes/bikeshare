@@ -1,5 +1,5 @@
 ---
-title: "descriptives02"
+title: "Basic Descriptives"
 output: 
   html_document:
     toc: true
@@ -35,12 +35,13 @@ days    <- readRDS(file.path(processed, "data/plato/days.Rda")) %>%
   mutate(dur_med = round((dur_med/60),1)) %>% # change to rounded minutes
   rename(maxtemp = tempmax) # rename for variable order
 #bks     <- readRDS(file.path(processed, "data/plato/daily-rides.Rda"))
-sum_station <- readRDS(file.path(processed, "data/plato/sum-station.Rda")) %>%
-  mutate(dur_med = round((dur_med/60),1)) %>%
-  select(-starts_with("lag")) # remove lag vars, not needed here.
+# sum_station <- readRDS(file.path(processed, "data/plato/sum-station.Rda")) %>%
+#   mutate(dur_med = round((dur_med/60),1)) %>%
+#   select(-starts_with("lag")) # remove lag vars, not needed here.
   
 sum_station_yr <- readRDS(file.path(processed, "data/plato/sum-station-yr.Rda")) %>%
-select(-starts_with("lag"))  # remove lag vars, not needed here.
+  select(-starts_with("lag")) %>% # remove lag vars, not needed here.
+  mutate(dur_med = dur_med/60) # compute dur_med in minutes
 
 
 # document/package settings
@@ -49,11 +50,13 @@ mapviewOptions(fgb = T) # set to false for greater performance?
 alpha = 0.2
 ```
 
-Thanks to RColorBrewer for providing the color scales.
+# Introduction 
+
+I generally consider bikeshare data under two primary units of analysis: day and station. We can think of system-wide patterns on discrete days or, in aggregate, by week, month, or year. Essential questions like "Did ridership increase compared to last month?" can be answered from daily system data. Furthermore, station-based data allows us to examine differences in ride patterns to and from different stations. Questions that address variations in geography, cityscape, and the system's interface with other forms of transit would use station data.
 
 # Days
 
-The daily data is plotted in blue, along with optional weather data from NOAA. Date ranges can be subset by dragging either on the *Range Selector* below or on the plot region itself. Double-clicking resets.
+I plot discrete points of system-wide daily rides with a 30-day rolling average line. The user can toggle weather data from NOAA. Date ranges can be subset by dragging either on the *Range Selector* below or on the plot region itself. Double-clicking resets.
 
 ```{r, days}
 
@@ -311,26 +314,28 @@ renderPlotly({withProgress(p1(), message = 'Rendering Graph')})
 
 **Duration Inequity**: An index from 0-1 that measures the "even-ness" of the daily ride duration distribution. Figures closer to 1 indicate that rides for that day were concentrated among just a few ride-length times, whereas figures closer to 0 indicate that rides, on aggregate, were evenly distributed across all ride-length times. This is simply a transport-oriented application of the GINI Index.
 
-**Precipitation**: (1-2 sentence methodology explanation)
+**Precipitation**: The summed daily precipitation in millimeters for The National Arboredom weather station (geographically central location). Data from NOAA.
 
-**Observed Daily High**: (1-2 sentence methodology explanation)
+**Observed Daily High**: The measured maximum temperature in the day's 24-hour period for The National Arboredom weather station (geographically central location).
 
-# Stations
+# Stations - Yearly
 
-## Yearly Departures
+Station-based data naturally reflects the variations in point-to-point patterns across geography. This map provides average values across the calendar year. Hovering over the points provides the exact value; toggle the "scaled" button to bin each observed value into quintiles for the graph (the values themselves are not changed).
+
 
 ```{r, echo=FALSE}
 inputPanel(
   sliderInput('year2', "Year", 2010, 2020, 2010, sep = '', ticks = FALSE),
-  selectInput('y2', "Y Axis", 
+  selectInput('y2', "Indicator", 
               choices = c("Number of Rides"      =  "departures",
                           "Median Ride Duration" =  "dur_med",
                           "Departure Inequity"   =  "dep_ineq",
-                          "Near Metro"           =  "metro",
+                          #"Near Metro"           =  "metro",
                           "Percent of Rides to Metro" = "metro_end_pct",
                           "Member Percent"       = "member_pct",
-                          "Net Flow"             = "net_flow",
-                          "Net Median Duration"  = "net_median_dur"),
+                          "Net Flow"             = "net_flow"
+                          #"Net Median Duration"  = "net_median_dur"
+                          ),
               selected = "departures",  multiple = FALSE, selectize = TRUE),
   materialSwitch('scaled', "Scaled", value = FALSE)
 )
@@ -351,7 +356,7 @@ m2 <- reactive({
                    fillColor = ~pal2()(eval(as.symbol(input$y2))),
                    radius=7, stroke = TRUE, weight = 2,
                    opacity = 0.9, fillOpacity = 0.4, 
-                   label = ~eval(as.symbol(input$y2)),
+                   label = ~round(eval(as.symbol(input$y2)), 2),
                    popup = ~name_bks_st) # add legend later, lol
 })
   
@@ -373,118 +378,26 @@ renderLeaflet({m2()})
 
 ```
 
-## Daily Departures
-
-Note the interpretation is in terms of average or summed station-days over the time period specified.
-
-```{r, echo=FALSE}
-inputPanel(
-  dateRangeInput('dt3a',"Date A","2010-01-01","2012-12-31", startview = "year"),
-  dateRangeInput('dt3b',"Date B","2017-01-01","2020-12-31", startview = "year"),
-  selectInput('y3', "Y Axis", 
-              choices = c("Number of Rides"      =  "departures",
-                          "Median Ride Duration" =  "dur_med",
-                          "Departure Inequity"   =  "dep_ineq",
-                          "Percent of Rides to Metro" = "metro_end_pct",
-                          "Member Percent"       = "member_pct",
-                          "Net Flow"             = "net_flow"),
-              selected = "departures",  multiple = FALSE, selectize = TRUE),
-  #materialSwitch('scaled3', "Scaled", value = FALSE),
-  sliderInput('n3', 'N Colors', 2, 10, 5, width = 70),
-  selectInput('name3', 'Colors', choices = hcl.pals("sequential")),
-  actionButton('go', "Go")
-)
-
-# summarize/filter dataframe based on date range.
-int3a  <- reactive({ interval(start = input$dt3a[1], end = input$dt3a[2]) }) 
-data3a <- reactive({ 
-  sum_station %>% filter(date %within% int3a() ) %>%
-    dplyr::ungroup() %>% group_by(id_station, name_bks, lng, lat) %>%
-    summarise(
-      departures    = round(mean(departures, na.rm=T), 1),
-      dur_med       = round(median(dur_med, na.rm=T), 1),
-      dep_ineq      = round(mean(dep_ineq, na.rm=T), 3),
-      metro_end_pct = round(mean(metro_end_pct, na.rm=T), 3),
-      member_pct    = round(mean(member_pct, na.rm=T), 3),
-      net_flow      = sum(net_flow)
-    )
-  })
-
-int3b  <- reactive({ interval(start = input$dt3b[1], end = input$dt3b[2]) }) 
-data3b <- reactive({ 
-  sum_station %>% filter(date %within% int3b() ) %>%
-    dplyr::ungroup() %>% group_by(id_station, name_bks, lng, lat) %>%
-    summarise(
-      departures    = round(mean(departures, na.rm=T), 1),
-      dur_med       = round(median(dur_med, na.rm=T), 1),
-      dep_ineq      = round(mean(dep_ineq, na.rm=T), 3),
-      metro_end_pct = round(mean(metro_end_pct, na.rm=T), 3),
-      member_pct    = round(mean(member_pct, na.rm=T), 3),
-      net_flow      = sum(net_flow)
-    )
-  })
+### Terms and notes
 
 
-# pal3  <- reactive({ 
-#   if (input$scaled3 == FALSE) {
-#     colorQuantile("YlOrRd", sum_station$input$y3, 5)
-#   } else {
-#     colorNumeric("YlOrRd", sum_station$input$y3)
-#   }
-#   })
-# 
-# m3a <- reactive({
-#   leaflet(data = data3a(), height = 800) %>%
-#   addTiles() %>%
-#   addCircleMarkers(color = ~pal3()(eval(as.symbol(input$y3))),
-#                    fillColor = ~pal3()(eval(as.symbol(input$y3))),
-#                    radius=7, stroke = TRUE, weight = 2,
-#                    opacity = 0.9, fillOpacity = 0.4, 
-#                    label = ~eval(as.symbol(input$y3)),
-#                    popup = ~name_bks) # add legend later, lol
-# })
-# 
-# m3b <- reactive({
-#   leaflet(data = data3b(), height = 800) %>%
-#   addTiles() %>%
-#   addCircleMarkers(color = ~pal3()(eval(as.symbol(input$y3))),
-#                    fillColor = ~pal3()(eval(as.symbol(input$y3))),
-#                    radius=7, stroke = TRUE, weight = 2,
-#                    opacity = 0.9, fillOpacity = 0.4, 
-#                    label = ~eval(as.symbol(input$y3)),
-#                    popup = ~name_bks) # add legend later, lol
-# })
+**Number of Rides**: A yearly count of rides departing from the station.
 
-n  <- reactive({input$n3})
-nm <- reactive({input$name3})
+**Median Ride Duration**: A measure of how long the 'average' ride lasted, in minutes. Mathematically, the median is used in lieu of average to avoid upward-skewing from extremely long rides (such as those that forgot to properly dock the bike).
+
+**Duration Inequity**: An index from 0-1 that measures the "even-ness" of the daily ride duration distribution. Figures closer to 1 indicate that rides for that day were concentrated among just a few ride-length times, whereas figures closer to 0 indicate that rides, on aggregate, were evenly distributed across all ride-length times. This is simply a transport-oriented application of the GINI Index.
+
+**Percent of Rides to Metro**: The percent of departing rides that ended up at a station "near Metro" as defined above.
+
+**Member Percent**: The percent of departing rides checked-out under a yearly Bikeshare membership.
+
+**Net Flow**: Simply (total year arrivals - total yearly departures). A negative number indicates that, over the course of the year, more rides departed the station than finished there. Note that large disparities are possible because system-operated trucks move bicycles around to balance out the distribution of standby bikes (not counted in ride total). 
+
+Also, stations were added over the course of the system life so some stations that appear in later years may not yet exist in earlier ones.
 
 
-mv1 <- reactive({ # fyi these takes like 10 seconds to calculate lol %%
-  data3a() %>%  st_as_sf(coords=c("lng","lat"), na.fail=F) %>%
-  mapview(., zcol = as.character(input$y3))
-})
-mv2 <- reactive({
-  data3b() %>%  st_as_sf(coords=c("lng","lat"), na.fail=F) %>%
-  mapview(., zcol = as.character(input$y3))
-})
-syncmap <- eventReactive(input$go, { 
-  
-  mapviewOptions( # change/set global options
-  vector.palette = hcl.colors(input$n3, palette = input$name3)
-  )
-  
-  sync( mv1(), mv2() )
-  })
+## Thanks
 
+Thanks to RColorBrewer for providing the color scales. Here's a link to the [Capital Bikeshare website](https://www.capitalbikeshare.com/system-data) and their [license agreement](https://www.capitalbikeshare.com/data-license-agreement). 
 
-
-# renderLeaflet({ m3a() })
-# renderLeaflet({ m3b() })
-renderUI({syncmap()})
-# 
-# renderLeaflet({mv1()@map})
-# renderLeaflet({mv2()@map})
-
-
-
-```
+Data come from OpenStreetMap and from CapitalBikeShare. Upon the request of OSM, here's the attribution: "© OpenStreetMap contributors". The data derived from OpenStreetMap should be maintained under the [Open Database License](www.opendatacommons.org/licenses/odbl). Weather data are from NOAA; thanks to their [help and documentation](https://www1.ncdc.noaa.gov/pub/data/ghcn/daily/readme.txt).
